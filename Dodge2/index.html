@@ -1,6 +1,106 @@
-<script>
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>躲彈大作戰（使用 abc.jpg 作為玩家）</title>
+  <style>
+    :root{ --bg:#0b1220; --panel: rgba(255,255,255,0.04); --accent:#00ffd6; --muted:rgba(255,255,255,0.45); }
+    html,body { height:100%; margin:0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans TC", "Helvetica Neue", Arial; background: radial-gradient(1200px 600px at 10% 10%, rgba(255,255,255,0.02), transparent), var(--bg); color:#fff; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; }
+    .wrap { max-width:1100px; margin:20px auto; padding:16px; display:flex; gap:16px; align-items:flex-start; box-sizing:border-box; }
+    .left { flex:1; min-width:320px; background: linear-gradient(180deg, rgba(255,255,255,0.02), transparent); border-radius:12px; padding:12px; box-shadow: 0 6px 18px rgba(0,0,0,0.5); }
+    .right { width:320px; min-width:240px; background: linear-gradient(180deg, rgba(255,255,255,0.02), transparent); border-radius:12px; padding:12px; box-shadow: 0 6px 18px rgba(0,0,0,0.45); display:flex; flex-direction:column; gap:12px; }
+    canvas { width:100%; height:560px; display:block; background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(0,0,0,0.12)); border-radius:10px; outline: none; }
+    .controls { display:flex; gap:8px; margin-top:8px; }
+    button { background:var(--panel); color:#fff; border:1px solid rgba(255,255,255,0.04); padding:8px 12px; border-radius:8px; cursor:pointer; }
+    .hud { display:flex; gap:8px; align-items:center; justify-content:space-between; margin-top:8px; }
+    .stat { background:rgba(255,255,255,0.03); padding:6px 10px; border-radius:8px; font-size:14px; display:flex; gap:10px; align-items:center; }
+    .hearts { display:flex; gap:6px; align-items:center; }
+    .heart.empty { opacity:0.25; }
+    #centerUI { position:absolute; left:50%; transform:translateX(-50%); top:26%; background:rgba(0,0,0,0.45); padding:18px; border-radius:12px; text-align:center; min-width:320px; display:none; z-index:80; }
+    #centerUI h2 { margin:0 0 6px 0; font-size:20px; }
+    #centerUI p { margin:0; color:var(--muted); white-space:pre-wrap; }
+    #feedbackWrap { position:fixed; left:50%; transform:translateX(-50%); bottom:22px; background:rgba(0,0,0,0.35); padding:8px 12px; border-radius:999px; transition:opacity .3s; opacity:0.0001; }
+    #feedbackWrap span { color:#fff; font-size:13px; }
+    .small { font-size:12px; color:var(--muted); }
+    .progressBar { height:8px; background:rgba(255,255,255,0.03); border-radius:6px; overflow:hidden; }
+    .progressBar > div { height:100%; width:0%; background:linear-gradient(90deg,var(--accent),#6be8ff); }
+    label { font-size:13px; color:var(--muted); display:block; margin-bottom:4px; }
+    input[type=range]{ width:100%; }
+    @media (max-width:900px){ canvas{height:420px;} .wrap{flex-direction:column;} .right{width:100%} #centerUI{min-width:80%;} }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="left">
+      <div style="position:relative;">
+        <canvas id="gameCanvas" tabindex="0" role="application" aria-label="遊戲畫布"></canvas>
+        <div id="centerUI" aria-hidden="false">
+          <h2 id="centerTitle">就緒</h2>
+          <p id="centerDesc">按「開始」或 Enter 鍵開始遊戲</p>
+        </div>
+      </div>
+
+      <div class="hud" style="margin-top:12px;">
+        <div class="stat"><strong>分數</strong><div id="displayScore" style="margin-left:8px;">0</div></div>
+        <div class="stat"><strong>時間</strong><div id="displayTimer" style="margin-left:8px;">60</div></div>
+        <div class="stat hearts" id="heartsWrap" aria-live="polite">
+          <span class="heart">❤</span>
+          <span class="heart">❤</span>
+          <span class="heart">❤</span>
+        </div>
+        <div style="flex:1"></div>
+      </div>
+
+      <div class="controls">
+        <button id="btnStart">開始</button>
+        <button id="btnPause">暫停</button>
+        <button id="btnRestart">重置</button>
+        <button id="btnHelp">說明</button>
+      </div>
+    </div>
+
+    <div class="right">
+      <div class="stat" style="justify-content:space-between;">
+        <div>
+          <div class="small">小 HUD</div>
+          <div style="font-weight:600"><span id="hudScore">0</span> — <span id="hudTimer">60</span>s</div>
+        </div>
+        <div style="width:100px;">
+          <div class="small">進度</div>
+          <div class="progressBar" aria-hidden="true"><div id="levelProgress"></div></div>
+        </div>
+      </div>
+
+      <div style="background:var(--panel); padding:10px; border-radius:8px;">
+        <label for="volume">音量 <span id="volLabel">80%</span></label>
+        <input id="volume" type="range" min="0" max="1" step="0.01" value="0.8" />
+      </div>
+
+      <div style="background:var(--panel); padding:10px; border-radius:8px;">
+        <div class="small">操作</div>
+        <ul style="margin:6px 0 0 18px;">
+          <li>方向鍵 / WASD：移動</li>
+          <li>空白：瞬移（冷卻）</li>
+          <li>P：暫停</li>
+          <li>Enter：開始 / 確認</li>
+        </ul>
+      </div>
+
+      <div style="background:var(--panel); padding:10px; border-radius:8px;">
+        <div class="small">提示</div>
+        <div style="margin-top:6px; color:var(--muted); font-size:13px;">
+          圖片檔 abc.jpg 放在與此 HTML 同一資料夾，會被用來顯示玩家角色。
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="feedbackWrap"><span id="feedbackMsg"></span></div>
+
+  <script>
   // Simple reaction dodge game (single-file)
-  // 修改：使用同資料夾內的 abc.jpg 當作玩家貼圖（若未載入則回退為原始圓形）
+  // 使用同資料夾內的 abc.jpg 當作玩家貼圖（若未載入則回退為原始圓形）
 
   (() => {
     // DOM
@@ -441,25 +541,28 @@
 
       if (playerImageLoaded){
         // drawImage 中指定寬高以適配 player.radius
-        // 若希望圖片貼圖比 radius 大一些可調整 scale
         const diameter = player.radius * 2;
-        // 若你希望圖片不被圓形裁切，可把圖片畫成正方形並以 globalCompositeOperation 裁切（此處直接畫不裁切）
         ctx.save();
-        // optional: 畫一白色框在圖片下（若無敵顯示閃）
         if (invul){
           ctx.beginPath();
           ctx.fillStyle = 'rgba(255,255,255,0.9)';
           ctx.arc(player.x, player.y, player.radius+3, 0, Math.PI*2);
           ctx.fill();
         }
-        // draw image centered on player.x, player.y
-        // 如果圖片不是方形會被拉伸；可改用等比例縮放
-        const imgW = diameter;
-        const imgH = diameter;
+        // Draw image centered. 保持比例：計算等比例尺寸以填滿直徑
+        const imgRatio = playerImage.width / playerImage.height || 1;
+        let imgW = diameter, imgH = diameter;
+        if (imgRatio > 1) { imgH = diameter; imgW = diameter * imgRatio; }
+        else { imgW = diameter; imgH = diameter / imgRatio; }
+        // 使用裁切顯示圓形（圓形遮罩）
+        ctx.beginPath();
+        ctx.arc(player.x, player.y, player.radius, 0, Math.PI*2);
+        ctx.closePath();
+        ctx.clip();
         ctx.drawImage(playerImage, player.x - imgW/2, player.y - imgH/2, imgW, imgH);
         ctx.restore();
 
-        // optional ring
+        // ring
         ctx.beginPath();
         ctx.lineWidth = 2;
         ctx.strokeStyle = invul ? 'rgba(255,255,255,0.85)' : 'rgba(0,0,0,0.25)';
@@ -531,4 +634,6 @@
     }, 50);
 
   })();
-</script>
+  </script>
+</body>
+</html>
