@@ -1,477 +1,750 @@
 <!doctype html>
 <html lang="zh-Hant">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>加法小遊戲</title>
-<style>
-  :root{
-    --bg:#f2f9ff; --card:#ffffff; --accent:#2563eb; --accent-2:#06b6d4; --good:#16a34a; --bad:#ef4444;
-    font-family: "Noto Sans TC", "Microsoft JhengHei", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
-  }
-  *{box-sizing:border-box}
-  body{margin:0; background:linear-gradient(180deg, var(--bg), #e6f2ff); color:#07304a; min-height:100vh; display:flex; align-items:center; justify-content:center; padding:18px}
-  .wrap{width:100%; max-width:980px}
-  .header{display:flex; gap:12px; align-items:center; margin-bottom:14px}
-  .title{font-size:20px; font-weight:800}
-  .subtitle{color:#145e8a; font-size:13px}
-  .game{display:grid; grid-template-columns: 1fr 320px; gap:14px}
-  @media (max-width:900px){ .game{grid-template-columns:1fr} }
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>加法小超人 — 學習加法遊戲（音效選項）</title>
+  <style>
+    :root{
+      --bg1:#fff9f2;
+      --bg2:#e8f7ff;
+      --card:#ffffff;
+      --accent:#ff7aa2;
+      --accent-2:#6ad3a5;
+      --muted:#7b8a9a;
+      --wrong:#ff5c5c;
+      --child-font: "Comic Sans MS", "Chalkboard SE", "Trebuchet MS", "Segoe UI", Arial, sans-serif;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;}
+    body{
+      margin:0;
+      background: linear-gradient(180deg,var(--bg1) 0%, var(--bg2) 100%);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+      font-family: var(--child-font);
+      color:#2b2b2b;
+    }
+    .wrap{
+      width:100%;
+      max-width:980px;
+      border-radius:18px;
+      padding:16px;
+      box-shadow: 0 14px 40px rgba(40,60,120,0.08);
+      background: linear-gradient(180deg,#fff 0%, #fffefc 100%);
+      overflow:hidden;
+    }
 
-  .card{background:var(--card); border-radius:12px; box-shadow:0 8px 30px rgba(2,6,23,0.08); padding:16px}
-  .play-area{display:flex; flex-direction:column; gap:12px; align-items:center; justify-content:center; min-height:320px}
-  .problem{font-size:56px; font-weight:900; color:var(--accent)}
-  .input-row{display:flex; gap:8px; align-items:center}
-  input.answer{
-    width:120px; font-size:28px; padding:10px 12px; border-radius:10px; border:2px solid rgba(2,6,23,0.06); text-align:center;
-  }
-  button.check{
-    background:linear-gradient(180deg,var(--accent),#1d4ed8); color:#fff; border:none; padding:12px 18px; font-weight:700; font-size:16px; border-radius:10px; cursor:pointer;
-  }
-  .controls{display:flex; gap:8px; flex-wrap:wrap}
-  select, input[type=range], button.small{
-    padding:8px 10px; border-radius:8px; border:1px solid rgba(2,6,23,0.06); background:#fff;
-  }
-  .stats{display:flex; gap:12px; flex-wrap:wrap; margin-top:8px}
-  .stat{background:linear-gradient(180deg, #ffffff, #f7fbff); padding:10px 12px; border-radius:10px; box-shadow:inset 0 1px 0 rgba(255,255,255,0.6); min-width:100px; text-align:center}
-  .stat .num{font-weight:800; font-size:20px; color:#0b4a7a}
-  .feedback{height:48px; display:flex; align-items:center; justify-content:center; font-weight:800; border-radius:10px}
-  .feedback.good{background:linear-gradient(90deg,#dcfce7,#bbf7d0); color:var(--good)}
-  .feedback.bad{background:linear-gradient(90deg,#fee2e2,#fecaca); color:var(--bad)}
-  .history{max-height:220px; overflow:auto; padding:8px; border-radius:8px; background:#fbfdff; border:1px solid rgba(2,6,23,0.03)}
-  .hint{color:#0b4a7a; font-size:14px}
-  .meter{height:10px; background:#e6f3ff; border-radius:999px; overflow:hidden}
-  .meter > i{display:block; height:100%; background:linear-gradient(90deg,var(--accent-2),var(--accent)); width:0%}
+    header.main{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      justify-content:space-between;
+      padding:10px 6px 0 6px;
+    }
+    h1{font-size:28px;margin:0;color:var(--accent);letter-spacing:1px;text-shadow:0 2px 0 rgba(255,255,255,0.6)}
+    .sub{font-size:13px;color:var(--muted)}
 
-  /* 小動畫 */
-  .pop{ animation: pop 360ms ease; }
-  @keyframes pop {
-    0%{ transform: scale(.92); opacity:0 }
-    50%{ transform: scale(1.04); opacity:1 }
-    100%{ transform: scale(1); opacity:1 }
-  }
+    /* Start screen */
+    .start-screen{
+      display:flex;
+      gap:18px;
+      align-items:center;
+      padding:18px;
+      background: linear-gradient(180deg,#fffdf5,#fff8f0);
+      border-radius:14px;
+      margin-top:12px;
+    }
+    .start-left{flex:1}
+    .mascot{
+      width:160px;height:160px;border-radius:18px;background:
+        radial-gradient(circle at 30% 30%, #fff 0 25%, transparent 26%),
+        linear-gradient(135deg,#ffd4e0,#ffd7b3);
+      display:flex;align-items:center;justify-content:center;flex-direction:column;
+      box-shadow:0 8px 20px rgba(250,120,160,0.08);border:4px solid rgba(255,255,255,0.6);
+      transform:rotate(-6deg);
+    }
+    .mascot .face{font-size:48px}
+    .start-right{flex:2}
+    .card-small{
+      background: linear-gradient(180deg,#fff,#fffaf8);
+      padding:12px;border-radius:12px;border:2px dashed rgba(0,0,0,0.04);
+      margin-bottom:10px;
+    }
+    .controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    select,input[type="number"]{
+      padding:8px 10px;border-radius:10px;border:2px solid #fff3f5;background:linear-gradient(180deg,#fff,#fffaf8);
+      font-size:15px;color:#2b2b2b;box-shadow:0 4px 12px rgba(200,200,200,0.06);
+    }
+    button.primary{
+      background:linear-gradient(180deg,var(--accent),#ff5f8e);
+      color:white;border:0;padding:12px 18px;border-radius:14px;font-weight:800;font-size:16px;
+      box-shadow:0 8px 22px rgba(255,122,160,0.14);cursor:pointer;
+    }
+    button.ghost{
+      background:transparent;border:2px dashed rgba(0,0,0,0.06);padding:10px 14px;border-radius:12px;
+      cursor:pointer;
+    }
 
-  /* 底部說明 */
-  .footer-note{font-size:13px; color:#145e8a; margin-top:10px}
-</style>
+    /* Game area */
+    .game{
+      display:grid;
+      grid-template-columns:1fr 320px;
+      gap:16px;
+      margin-top:18px;
+      align-items:start;
+    }
+    @media (max-width:900px){ .game{grid-template-columns:1fr} .mascot{display:none} }
+    .panel{background:linear-gradient(180deg,#fff,#fffcff);padding:14px;border-radius:14px;border:2px solid rgba(0,0,0,0.03)}
+    .top-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
+    .meta-bubble{background:linear-gradient(180deg,#ffffff,#fffcef);padding:8px 10px;border-radius:10px;border:1px solid rgba(0,0,0,0.04);font-weight:700}
+    .expr{
+      font-size:56px;font-weight:900;color:#374151;display:flex;align-items:center;gap:12px;
+      justify-content:center;padding:18px;border-radius:12px;background:linear-gradient(180deg,#fffcf6,#fff8f8);box-shadow:inset 0 -6px 18px rgba(255,120,150,0.03)
+    }
+    .expr .op{font-size:34px;color:#ff7aa2}
+    .choices{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+    .choice{
+      background:linear-gradient(180deg,#fff,#fff8fb);
+      padding:12px;border-radius:12px;border:2px solid rgba(0,0,0,0.03);
+      font-weight:900;font-size:20px;text-align:center;cursor:pointer;color:#2b2b2b;
+      box-shadow:0 8px 18px rgba(30,60,100,0.04);transition:transform .12s ease, box-shadow .12s ease;
+    }
+    .choice:hover{transform:translateY(-6px)}
+    .choice.correct{background:linear-gradient(180deg,#e6fff2,#dfffee);border-color:rgba(90,200,140,0.8);color:#257a4a;box-shadow:0 8px 30px rgba(60,180,120,0.08)}
+    .choice.wrong{background:linear-gradient(180deg,#fff0f0,#fff2f2);border-color:rgba(255,120,120,0.6);color:#a12b2b}
+    .feedback{font-size:16px;font-weight:800;padding:10px 12px;border-radius:10px;margin-top:10px;text-align:center}
+    .feedback.good{background:linear-gradient(90deg,#fff7f9,#f5fff6);color:#2f8f6d}
+    .feedback.bad{background:linear-gradient(90deg,#fff7f9,#fff7f7);color:#a63636}
+
+    .side{
+      display:flex;flex-direction:column;gap:12px;
+    }
+    .stat{
+      background:linear-gradient(180deg,#fff,#fffefc);padding:12px;border-radius:12px;border:2px solid rgba(0,0,0,0.03);
+      display:flex;justify-content:space-between;align-items:center;font-weight:900;
+    }
+    .log{background:linear-gradient(180deg,#fff,#fffaf8);padding:10px;border-radius:12px;border:1px dashed rgba(0,0,0,0.03);max-height:220px;overflow:auto;font-size:13px}
+
+    .sound-config{
+      background:linear-gradient(180deg,#fff,#fffefc);padding:10px;border-radius:12px;border:2px solid rgba(0,0,0,0.03);
+      display:flex;flex-direction:column;gap:8px;font-size:13px;
+    }
+    .sound-row{display:flex;gap:8px;align-items:center}
+    .small{font-size:13px;color:var(--muted)}
+    .hidden{display:none}
+
+    /* End screen */
+    .end-screen{
+      display:none;padding:18px;border-radius:14px;background:linear-gradient(180deg,#fffdf8,#fff8f0);margin-top:14px;
+      text-align:center;
+    }
+    .end-screen.show{display:block}
+    .big-score{font-size:48px;color:var(--accent-2);font-weight:900;margin-top:6px}
+    .cheer{font-size:20px;color:#ff6b93;margin-top:8px;font-weight:900}
+
+  </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="header">
+  <div class="wrap" role="application" aria-label="加法小超人遊戲（音效選項）">
+    <header class="main">
       <div>
-        <div class="title">快樂加法屋</div>
-        <div class="subtitle">練習加法、建立自信的小遊戲</div>
+        <h1>加法小超人</h1>
+        <div class="sub">跟著小超人快樂練習加法！</div>
       </div>
-      <div style="margin-left:auto" class="subtitle">可用鍵盤：輸入答案後按 Enter</div>
-    </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button id="enableSoundBtn" class="primary" title="點我開啟聲音">開聲音 🔊</button>
+        <div class="sub small">提示：按數字鍵 1–4 選答案，S 靜音 / 取消靜音</div>
+      </div>
+    </header>
 
-    <div class="game">
-      <div class="card">
-        <div class="play-area">
-          <div style="text-align:center">
-            <div class="hint">題目難度：<span id="difficultyLabel">0–10</span></div>
-            <div class="problem pop" id="problem">0 + 0 = ?</div>
-          </div>
-
-          <div class="input-row">
-            <input inputmode="numeric" pattern="[0-9]*" id="answerInput" class="answer" autocomplete="off" placeholder="輸入答案" />
-            <button id="checkBtn" class="check">提交</button>
-            <button id="skipBtn" class="small">略過</button>
-          </div>
-
-          <div style="width:100%">
-            <div id="feedback" class="feedback" style="visibility:hidden">好棒！</div>
-          </div>
-
-          <div style="width:100%" class="controls">
-            <label>
-              難度：
-              <select id="difficulty">
-                <option value="10">0–10</option>
-                <option value="20">0–20</option>
-                <option value="99">兩位數（0–99）</option>
-              </select>
-            </label>
-
-            <label>
-              題目數：
-              <select id="totalQuestions">
-                <option value="0">無限模式</option>
-                <option value="5">5 題</option>
-                <option value="10" selected>10 題</option>
-                <option value="20">20 題</option>
-              </select>
-            </label>
-
-            <label>
-              音效：
-              <select id="soundToggle">
-                <option value="on" selected>開</option>
-                <option value="off">關</option>
-              </select>
-            </label>
-
-            <button id="newRound" class="small">開始新回合</button>
-            <button id="practiceReset" class="small">重置分數</button>
-          </div>
-
-          <div class="stats" style="width:100%">
-            <div class="stat">
-              <div class="small">分數</div>
-              <div id="score" class="num">0</div>
-            </div>
-            <div class="stat">
-              <div class="small">連續答對</div>
-              <div id="streak" class="num">0</div>
-            </div>
-            <div class="stat">
-              <div class="small">完成題數</div>
-              <div id="done" class="num">0</div>
-            </div>
-            <div class="stat">
-              <div class="small">正確率</div>
-              <div id="acc" class="num">0%</div>
-            </div>
-          </div>
-
-          <div style="width:100%; margin-top:8px">
-            <div class="meter" title="進度"><i id="progressBar"></i></div>
-          </div>
-
+    <!-- Start screen -->
+    <section class="start-screen" id="startScreen" aria-labelledby="startTitle">
+      <div class="start-left">
+        <div class="mascot" aria-hidden="true">
+          <div class="face">😺</div>
+          <div style="font-weight:900;margin-top:6px;color:#633">我是小超人</div>
         </div>
       </div>
 
-      <div class="card">
-        <div style="display:flex; justify-content:space-between; align-items:center">
-          <div style="font-weight:800">歷史與設定</div>
-          <div style="font-size:13px; color:#0b4a7a">提示：點擊歷史可重試</div>
+      <div class="start-right">
+        <div class="card-small" id="startTitle" style="font-weight:900;font-size:18px">遊戲說明</div>
+        <div class="card-small small" style="margin-top:8px">
+          1. 選擇難度後按「開始冒險！」。<br>
+          2. 題型：加法（不會出現 0）。<br>
+          3. 難度說明：<br>
+          &nbsp;&nbsp;• 簡單：個位 + 個位（1–9 與 1–9）<br>
+          &nbsp;&nbsp;• 中等：十位 + 個位（10–29 與 1–9，且答案不超過 30）<br>
+          4. 每題有 4 個選項，答對會有快樂音效，答錯有提示音。<br>
+          5. 在右邊可以設定音效種類與預聽。按上方「開聲音」可一次啟用音效（解決瀏覽器自動播放限制）。
         </div>
 
-        <hr style="border:none;border-top:1px solid #eef6ff; margin:10px 0">
+        <div style="margin-top:12px;display:flex;gap:10px;align-items:center" class="controls">
+          <label class="small">難度</label>
+          <select id="difficulty" title="選擇難度">
+            <option value="easy">簡單（個位+個位）</option>
+            <option value="medium">中等（十位+個位，答案 ≤ 30）</option>
+          </select>
 
-        <div style="margin-bottom:8px">
-          <div style="font-size:13px; color:#0b4a7a; margin-bottom:6px">答題紀錄</div>
-          <div id="history" class="history"></div>
+          <button class="primary" id="startBtn">開始冒險！</button>
+          <button class="ghost" id="howBtn" type="button">如何玩</button>
         </div>
 
-        <div style="margin-top:8px">
-          <div style="font-size:13px; color:#0b4a7a; margin-bottom:6px">教學小貼士</div>
-          <div style="font-size:14px; color:#07415d; line-height:1.5">
-            - 鼓勵先估算答案，再填入。<br>
-            - 可使用「略過」來跳過較難題目（不計分）。<br>
-            - 適合家長/老師用於口頭練習或小測驗。
+        <div class="small" style="margin-top:10px">難度適合 6–9 歲的小朋友。祝你玩得開心！</div>
+      </div>
+    </section>
+
+    <!-- Game area -->
+    <main class="game" id="gameArea" aria-hidden="true">
+      <section class="panel" id="playPanel" aria-live="polite">
+        <div class="top-row">
+          <div class="meta-bubble" id="progress">第 0 題</div>
+          <div class="meta-bubble" id="timer">時間: 0s</div>
+          <div class="meta-bubble" id="score">分數: 0</div>
+        </div>
+
+        <div class="expr" role="img" aria-label="現在題目">
+          <div id="a" style="min-width:48px;text-align:right">0</div>
+          <div class="op">+</div>
+          <div id="b" style="min-width:48px;text-align:left">0</div>
+          <div style="font-size:28px;color:#999">=</div>
+          <div id="q" style="min-width:60px;text-align:center">?</div>
+        </div>
+
+        <div class="choices" id="choices" aria-label="選項區">
+          <!-- options -->
+        </div>
+
+        <div id="feedback" class="feedback small" style="visibility:hidden">準備好了！</div>
+
+        <div style="margin-top:12px;display:flex;gap:8px;justify-content:center">
+          <button id="nextBtn" class="ghost hidden">下一題</button>
+        </div>
+      </section>
+
+      <aside class="side">
+        <div class="stat">
+          <div>
+            <div class="small">答對</div>
+            <div id="correctCount" style="font-size:20px;color:#2b9f6b;font-weight:900">0</div>
+          </div>
+          <div>
+            <div class="small">答錯</div>
+            <div id="wrongCount" style="font-size:20px;color:#d04e4e;font-weight:900">0</div>
           </div>
         </div>
 
-        <div style="margin-top:12px; display:flex; gap:8px; align-items:center">
-          <button id="exportBtn" class="small">匯出成績</button>
-          <button id="importBtn" class="small">載入成績</button>
-          <input id="importFile" type="file" accept="application/json" style="display:none" />
+        <div class="stat">
+          <div>
+            <div class="small">題目總數</div>
+            <div id="totalCount" style="font-size:18px;font-weight:900">10</div>
+          </div>
+          <div>
+            <div class="small">已作題數</div>
+            <div id="currentNum" style="font-size:18px;font-weight:900">0</div>
+          </div>
         </div>
 
-        <div class="footer-note">此遊戲會在本機暫存分數（localStorage），關閉瀏覽器仍會保留。</div>
+        <div class="log small" id="log" aria-live="polite">
+          歡迎！按「開始冒險」開始你的任務。
+        </div>
+
+        <div class="sound-config" aria-label="音效設定">
+          <div style="font-weight:900">音效設定</div>
+
+          <div class="sound-row">
+            <label class="small" style="min-width:78px">正確音效</label>
+            <select id="correctSoundSelect" style="flex:1">
+              <option value="default">預設（彈跳）</option>
+              <option value="soft">柔和（溫柔鼓掌）</option>
+              <option value="clap">鼓掌（歡呼）</option>
+              <option value="none">無聲</option>
+            </select>
+            <button id="previewCorrect" class="ghost" type="button">預聽</button>
+          </div>
+
+          <div class="sound-row">
+            <label class="small" style="min-width:78px">錯誤音效</label>
+            <select id="wrongSoundSelect" style="flex:1">
+              <option value="default">預設（輕嗶）</option>
+              <option value="soft">溫和（輕敲）</option>
+              <option value="buzz">嗶—（短促）</option>
+              <option value="none">無聲</option>
+            </select>
+            <button id="previewWrong" class="ghost" type="button">預聽</button>
+          </div>
+
+          <div class="sound-row" style="justify-content:space-between;align-items:center">
+            <div style="display:flex;gap:8px;align-items:center">
+              <label class="small">全域聲音</label>
+              <button id="toggleSoundBtn" class="ghost" type="button">靜音</button>
+            </div>
+            <div class="small">按 S 可切換靜音</div>
+          </div>
+
+          <div class="sound-row" style="margin-top:6px;gap:6px">
+            <button id="enableSoundQuick" class="primary" style="flex:1">開聲音（快捷）</button>
+            <div class="small" style="align-self:center">點擊以啟用所有預聽與遊戲音效</div>
+          </div>
+
+        </div>
+
+        <div style="margin-top:auto">
+          <button id="resetBtn" class="ghost" type="button">重設遊戲</button>
+        </div>
+      </aside>
+    </main>
+
+    <!-- End screen -->
+    <section class="end-screen" id="endScreen" aria-hidden="true">
+      <div style="font-weight:900;font-size:22px;color:#333">任務完成！小超人很驕傲你！</div>
+      <div class="big-score" id="finalScore">分數：0</div>
+      <div id="finalSummary" class="small" style="margin-top:6px"></div>
+      <div class="cheer" id="cheerText">你真棒！再接再厲！🎉</div>
+
+      <div style="margin-top:12px;display:flex;gap:12px;justify-content:center">
+        <button class="primary" id="replayBtn">再玩一次</button>
+        <button class="ghost" id="toStartBtn" type="button">回到主畫面</button>
       </div>
-    </div>
+    </section>
+
   </div>
 
-<script>
-  // 遊戲狀態
-  const stateTemplate = {
-    score:0, streak:0, correct:0, wrong:0, done:0, totalQuestions:10, currentQ: null, difficultyMax:10, inRound:false, sound:'on'
-  };
-  let state = loadState() || {...stateTemplate};
+  <!-- Audio elements -->
+  <!-- NOTE: These base64 audio data are placeholders (silent). Replace with real short clips for good UX. -->
+  <audio id="snd_correct_default" preload="auto">
+    <source src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=" type="audio/wav">
+  </audio>
+  <audio id="snd_correct_soft" preload="auto">
+    <source src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=" type="audio/wav">
+  </audio>
+  <audio id="snd_correct_clap" preload="auto">
+    <source src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=" type="audio/wav">
+  </audio>
 
-  // DOM
-  const problemEl = document.getElementById('problem');
-  const answerInput = document.getElementById('answerInput');
-  const checkBtn = document.getElementById('checkBtn');
-  const skipBtn = document.getElementById('skipBtn');
-  const difficulty = document.getElementById('difficulty');
-  const difficultyLabel = document.getElementById('difficultyLabel');
-  const totalQuestions = document.getElementById('totalQuestions');
-  const newRound = document.getElementById('newRound');
-  const practiceReset = document.getElementById('practiceReset');
-  const scoreEl = document.getElementById('score');
-  const streakEl = document.getElementById('streak');
-  const doneEl = document.getElementById('done');
-  const accEl = document.getElementById('acc');
-  const historyEl = document.getElementById('history');
-  const progressBar = document.getElementById('progressBar');
-  const feedback = document.getElementById('feedback');
-  const soundToggle = document.getElementById('soundToggle');
-  const exportBtn = document.getElementById('exportBtn');
-  const importBtn = document.getElementById('importBtn');
-  const importFile = document.getElementById('importFile');
+  <audio id="snd_wrong_default" preload="auto">
+    <source src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=" type="audio/wav">
+  </audio>
+  <audio id="snd_wrong_soft" preload="auto">
+    <source src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=" type="audio/wav">
+  </audio>
+  <audio id="snd_wrong_buzz" preload="auto">
+    <source src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=" type="audio/wav">
+  </audio>
 
-  // 聲音（簡單）
-  const audioCtx = typeof AudioContext !== 'undefined' ? new AudioContext() : null;
-  function playTone(freq, dur=0.12){
-    if(!audioCtx || state.sound === 'off') return;
-    const o = audioCtx.createOscillator();
-    const g = audioCtx.createGain();
-    o.frequency.value = freq;
-    o.type = 'sine';
-    o.connect(g); g.connect(audioCtx.destination);
-    g.gain.value = 0.0001;
-    const now = audioCtx.currentTime;
-    g.gain.linearRampToValueAtTime(0.12, now+0.01);
-    o.start(now);
-    g.gain.exponentialRampToValueAtTime(0.0001, now+dur);
-    o.stop(now+dur+0.02);
-  }
+  <script>
+    // DOM
+    const startScreen = document.getElementById('startScreen');
+    const startBtn = document.getElementById('startBtn');
+    const howBtn = document.getElementById('howBtn');
+    const difficultyEl = document.getElementById('difficulty');
+    const gameArea = document.getElementById('gameArea');
+    const aEl = document.getElementById('a');
+    const bEl = document.getElementById('b');
+    const qEl = document.getElementById('q');
+    const choicesEl = document.getElementById('choices');
+    const progressEl = document.getElementById('progress');
+    const timerEl = document.getElementById('timer');
+    const scoreEl = document.getElementById('score');
+    const feedbackEl = document.getElementById('feedback');
+    const nextBtn = document.getElementById('nextBtn');
+    const correctCountEl = document.getElementById('correctCount');
+    const wrongCountEl = document.getElementById('wrongCount');
+    const totalCountEl = document.getElementById('totalCount');
+    const currentNumEl = document.getElementById('currentNum');
+    const logEl = document.getElementById('log');
+    const resetBtn = document.getElementById('resetBtn');
+    const endScreen = document.getElementById('endScreen');
+    const finalScoreEl = document.getElementById('finalScore');
+    const finalSummaryEl = document.getElementById('finalSummary');
+    const cheerTextEl = document.getElementById('cheerText');
+    const replayBtn = document.getElementById('replayBtn');
+    const toStartBtn = document.getElementById('toStartBtn');
 
-  // 初始化 UI 與事件
-  function init(){
-    difficulty.value = state.difficultyMax.toString();
-    difficultyLabel.textContent = labelForDifficulty(state.difficultyMax);
-    totalQuestions.value = state.totalQuestions.toString();
-    soundToggle.value = state.sound === 'on' ? 'on' : 'off';
-    syncUI();
-    if(state.inRound && state.currentQ) renderProblem(state.currentQ);
-  }
+    // sound controls
+    const correctSoundSelect = document.getElementById('correctSoundSelect');
+    const wrongSoundSelect = document.getElementById('wrongSoundSelect');
+    const previewCorrect = document.getElementById('previewCorrect');
+    const previewWrong = document.getElementById('previewWrong');
+    const toggleSoundBtn = document.getElementById('toggleSoundBtn');
+    const enableSoundBtn = document.getElementById('enableSoundBtn');
+    const enableSoundQuick = document.getElementById('enableSoundQuick');
 
-  function labelForDifficulty(max){
-    if(max===10) return '0–10';
-    if(max===20) return '0–20';
-    return '0–99';
-  }
+    // audio elements map
+    const audioMap = {
+      correct: {
+        default: document.getElementById('snd_correct_default'),
+        soft: document.getElementById('snd_correct_soft'),
+        clap: document.getElementById('snd_correct_clap'),
+        none: null
+      },
+      wrong: {
+        default: document.getElementById('snd_wrong_default'),
+        soft: document.getElementById('snd_wrong_soft'),
+        buzz: document.getElementById('snd_wrong_buzz'),
+        none: null
+      }
+    };
 
-  function startRound(){
-    state.score = 0;
-    state.streak = 0;
-    state.correct = 0;
-    state.wrong = 0;
-    state.done = 0;
-    state.totalQuestions = parseInt(totalQuestions.value,10);
-    state.difficultyMax = parseInt(difficulty.value,10);
-    state.inRound = true;
-    state.currentQ = newProblem();
-    saveState();
-    renderProblem(state.currentQ);
-  }
+    // state
+    let state = {
+      running: false,
+      difficulty: 'easy',
+      total: 10,
+      currentIndex: 0,
+      correct: 0,
+      wrong: 0,
+      score: 0,
+      startTime: 0,
+      timerInterval: null,
+      currentQuestion: null,
+      muted: true // start muted until user enables via button
+    };
 
-  function newProblem(){
-    const max = state.difficultyMax;
-    // 若要教兩位數，使用 0..99
-    const a = Math.floor(Math.random() * (max+1));
-    const b = Math.floor(Math.random() * (max+1));
-    return {a,b,answer: a+b, time: Date.now()};
-  }
+    totalCountEl.textContent = state.total;
+    updateToggleButton();
 
-  function renderProblem(q){
-    if(!q) q = newProblem();
-    problemEl.textContent = `${q.a} + ${q.b} = ?`;
-    problemEl.classList.add('pop');
-    setTimeout(()=> problemEl.classList.remove('pop'),320);
-    answerInput.value = '';
-    answerInput.focus();
-    updateProgress();
-  }
-
-  function checkAnswer(){
-    if(!state.inRound){
-      startRound();
-      return;
-    }
-    const raw = answerInput.value.trim();
-    if(raw === '') { flashFeedback('請輸入答案或按略過', 'bad'); return; }
-    // 允許鍵入非數字但自動嘗試 parseInt
-    const val = parseInt(raw, 10);
-    const q = state.currentQ;
-    if(Number.isNaN(val)) { flashFeedback('請輸入數字', 'bad'); return; }
-    // 判斷
-    if(val === q.answer){
-      // 答對
-      state.score += 10;
-      state.streak += 1;
-      state.correct += 1;
-      state.done += 1;
-      flashFeedback('答對！+10 分', 'good');
-      playTone(880, 0.12);
-    } else {
-      // 答錯
-      state.streak = 0;
-      state.wrong += 1;
-      state.done += 1;
-      state.score = Math.max(0, state.score - 5);
-      flashFeedback(`答錯！正確答案：${q.answer}`, 'bad');
-      playTone(220, 0.18);
+    // Helpers
+    function randInt(min, max){
+      return Math.floor(Math.random()*(max-min+1))+min;
     }
 
-    // 更新紀錄
-    addHistoryEntry(q.a, q.b, q.answer, val);
-    // 決定下一題或結束
-    if(state.totalQuestions > 0 && state.done >= state.totalQuestions){
-      endRound();
-    } else {
-      state.currentQ = newProblem();
-      saveState();
-      setTimeout(()=> renderProblem(state.currentQ), 600);
+    function genOperands(difficulty){
+      if(difficulty === 'easy'){
+        const a = randInt(1,9);
+        const b = randInt(1,9);
+        return [a,b];
+      } else {
+        const b = randInt(1,9);
+        const maxA = Math.min(29, 30 - b);
+        const minA = 10;
+        if(maxA < minA){
+          let nb = b;
+          while(nb > 1 && (30 - nb) < minA) nb--;
+          const b2 = nb;
+          const maxA2 = Math.min(29, 30 - b2);
+          const a2 = randInt(minA, Math.max(minA, maxA2));
+          return [a2, b2];
+        }
+        const a = randInt(minA, maxA);
+        return [a,b];
+      }
     }
-    syncUI();
-  }
 
-  function skipQuestion(){
-    if(!state.inRound) return;
-    // 略過不計分但計為已做一題
-    state.done += 1;
-    state.streak = 0;
-    addHistoryEntry(state.currentQ.a, state.currentQ.b, state.currentQ.answer, null, true);
-    flashFeedback('已略過題目', 'bad');
-    if(state.totalQuestions > 0 && state.done >= state.totalQuestions){
-      endRound();
-    } else {
-      state.currentQ = newProblem();
-      saveState();
-      setTimeout(()=> renderProblem(state.currentQ), 500);
+    function makeQuestion(){
+      const [a,b] = genOperands(state.difficulty);
+      const answer = a + b;
+      const opts = new Set();
+      opts.add(answer);
+      const spread = Math.max(3, Math.floor(answer * 0.25) + 1);
+      while(opts.size < 4){
+        let delta = randInt(1, Math.max(3, spread));
+        let sign = Math.random() < 0.5 ? -1 : 1;
+        let candidate = answer + sign * delta;
+        if(candidate <= 0) candidate = Math.abs(candidate) + 1;
+        opts.add(candidate);
+      }
+      const arr = Array.from(opts);
+      for(let i = arr.length - 1; i > 0; i--){
+        const j = Math.floor(Math.random()*(i+1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return {a,b,answer,choices:arr};
     }
-    syncUI();
-  }
 
-  function endRound(){
-    state.inRound = false;
-    flashFeedback(`回合結束！分數 ${state.score}，正確 ${state.correct} / ${state.done}`, 'good');
-    playTone(660, 0.24);
-    saveState();
-    updateProgress();
-  }
+    function updateTimer(){
+      if(!state.running) return;
+      const sec = Math.floor((Date.now() - state.startTime)/1000);
+      timerEl.textContent = '時間: ' + sec + 's';
+    }
 
-  function flashFeedback(text, kind){
-    feedback.textContent = text;
-    feedback.className = 'feedback ' + (kind==='good' ? 'good' : 'bad') + ' pop';
-    feedback.style.visibility = 'visible';
-    setTimeout(()=>{ feedback.style.visibility = 'hidden'; feedback.className = 'feedback'; }, 1400);
-  }
+    function showStartScreen(){
+      startScreen.style.display = 'flex';
+      gameArea.setAttribute('aria-hidden','true');
+      gameArea.style.display = 'none';
+      endScreen.setAttribute('aria-hidden','true');
+      endScreen.classList.remove('show');
+      state.running = false;
+      clearInterval(state.timerInterval);
+      timerEl.textContent = '時間: 0s';
+      scoreEl.textContent = '分數: 0';
+      progressEl.textContent = '第 0 題';
+      aEl.textContent = '0';
+      bEl.textContent = '0';
+      qEl.textContent = '?';
+    }
 
-  // 歷史功能
-  function addHistoryEntry(a,b,ans,given, skipped=false){
-    const row = document.createElement('div');
-    row.style.padding = '6px 6px';
-    row.style.borderBottom = '1px dashed #eef8ff';
-    row.style.cursor = 'pointer';
-    row.innerHTML = `<strong>${a} + ${b}</strong> = ${ans} ${skipped ? '(略過)' : (' | 你的答案: ' + (given===null?'-':given))}`;
-    row.addEventListener('click', ()=> {
-      // 允許使用歷史題目重試：將該題設為當前題目（但不改動分數）
-      state.currentQ = {a,b,answer:ans,time:Date.now()};
-      state.inRound = true;
-      renderProblem(state.currentQ);
+    function startGame(){
+      startScreen.style.display = 'none';
+      gameArea.style.display = 'grid';
+      gameArea.setAttribute('aria-hidden','false');
+      endScreen.setAttribute('aria-hidden','true');
+      endScreen.classList.remove('show');
+
+      state.running = true;
+      state.difficulty = difficultyEl.value;
+      state.total = 10;
+      state.currentIndex = 0;
+      state.correct = 0;
+      state.wrong = 0;
+      state.score = 0;
+      state.startTime = Date.now();
+      clearInterval(state.timerInterval);
+      state.timerInterval = setInterval(updateTimer, 300);
+      updateTimer();
+
+      totalCountEl.textContent = state.total;
+      correctCountEl.textContent = '0';
+      wrongCountEl.textContent = '0';
+      currentNumEl.textContent = '0';
+      logEl.innerHTML = '<div>準備出題！加油～</div>';
+      feedbackEl.style.visibility = 'hidden';
+      scoreEl.textContent = '分數: 0';
+      nextBtn.classList.add('hidden');
+
+      showQuestion();
+    }
+
+    function showQuestion(){
+      state.currentQuestion = makeQuestion();
+      state.currentIndex += 1;
+      aEl.textContent = state.currentQuestion.a;
+      bEl.textContent = state.currentQuestion.b;
+      qEl.textContent = '?';
+      progressEl.textContent = `第 ${state.currentIndex} 題 / ${state.total}`;
+      currentNumEl.textContent = state.currentIndex;
+      scoreEl.textContent = '分數: ' + state.score;
+
+      choicesEl.innerHTML = '';
+      state.currentQuestion.choices.forEach((c, idx) => {
+        const d = document.createElement('div');
+        d.className = 'choice';
+        d.setAttribute('role','button');
+        d.setAttribute('tabindex','0');
+        d.dataset.value = c;
+        d.innerText = c;
+        d.addEventListener('click', onChoice);
+        d.addEventListener('keydown', (e)=>{
+          if(e.key === 'Enter' || e.key === ' ') onChoice({target:d});
+        });
+        choicesEl.appendChild(d);
+      });
+
+      document.onkeydown = function(e){
+        if(!state.running) return;
+        if(e.key >= '1' && e.key <= '4'){
+          const idx = parseInt(e.key)-1;
+          const child = choicesEl.children[idx];
+          if(child) child.click();
+        } else if(e.key === 'Enter'){
+          if(!nextBtn.classList.contains('hidden')) nextBtn.click();
+        } else if(e.key.toLowerCase() === 's'){
+          state.muted = !state.muted;
+          updateToggleButton();
+          logEl.insertAdjacentHTML('afterbegin', `<div class="small">${state.muted ? '已靜音' : '聲音開啟'}</div>`);
+        }
+      };
+    }
+
+    function endIfNeeded(){
+      if(state.currentIndex >= state.total){
+        finishGame();
+        return true;
+      }
+      return false;
+    }
+
+    function finishGame(){
+      state.running = false;
+      clearInterval(state.timerInterval);
+      endScreen.setAttribute('aria-hidden','false');
+      endScreen.classList.add('show');
+      gameArea.setAttribute('aria-hidden','true');
+
+      const elapsed = Math.floor((Date.now() - state.startTime)/1000);
+      finalScoreEl.textContent = '分數：' + state.score;
+      const accuracy = state.currentIndex ? Math.round((state.correct/state.currentIndex)*100) : 0;
+      finalSummaryEl.innerHTML = `題數：${state.currentIndex} 題 &nbsp; 答對：${state.correct} 題 &nbsp; 答錯：${state.wrong} 題<br>用時：${elapsed}s &nbsp; 正確率：${accuracy}%`;
+
+      let cheer = '你真棒！再接再厲！🎉';
+      if(accuracy >= 90 && state.score >= state.currentIndex*10 - 5) cheer = '太厲害了！你是加法小超人！🚀';
+      else if(accuracy >= 70) cheer = '好棒喔，繼續練習會更快喔！🌟';
+      else if(accuracy >= 40) cheer = '不錯唷，多練習就更厲害了！💪';
+      else cheer = '沒關係，失敗是學習的好朋友！下次更棒！💖';
+      cheerTextEl.textContent = cheer;
+
+      logEl.insertAdjacentHTML('afterbegin', `<div class="small">完成：${state.score} 分，${accuracy}%</div>`);
+    }
+
+    function onChoice(e){
+      if(!state.running) return;
+      const target = e.target;
+      if(target.classList.contains('correct') || target.classList.contains('wrong')) return;
+      const val = Number(target.dataset.value);
+      const correct = state.currentQuestion.answer;
+
+      Array.from(choicesEl.children).forEach(c=>{
+        c.classList.add('disabled');
+        const cv = Number(c.dataset.value);
+        if(cv === correct) c.classList.add('correct');
+      });
+
+      qEl.textContent = correct;
+      if(val === correct){
+        state.correct += 1;
+        state.score += 10;
+        feedbackEl.textContent = '太棒了！答對了！ +10 分';
+        feedbackEl.className = 'feedback good';
+        feedbackEl.style.visibility = 'visible';
+        playConfiguredSound('correct');
+        correctCountEl.textContent = state.correct;
+      } else {
+        target.classList.add('wrong');
+        state.wrong += 1;
+        state.score = Math.max(0, state.score - 5);
+        feedbackEl.textContent = '沒關係，下次更好！';
+        feedbackEl.className = 'feedback bad';
+        feedbackEl.style.visibility = 'visible';
+        playConfiguredSound('wrong');
+        wrongCountEl.textContent = state.wrong;
+      }
+      scoreEl.textContent = '分數: ' + state.score;
+
+      const logLine = `${state.currentIndex}. ${state.currentQuestion.a} + ${state.currentQuestion.b} = ${correct} → 你的答案：${val} ${val===correct ? '（答對）' : '（答錯）'}`;
+      logEl.insertAdjacentHTML('afterbegin', `<div class="small">${logLine}</div>`);
+
+      if(!endIfNeeded()){
+        nextBtn.classList.remove('hidden');
+      } else {
+        nextBtn.classList.add('hidden');
+      }
+    }
+
+    // Sound playback according to selection
+    function playConfiguredSound(kind){
+      if(state.muted) return;
+      const sel = kind === 'correct' ? correctSoundSelect.value : wrongSoundSelect.value;
+      const audioEl = audioMap[kind][sel];
+      if(!audioEl) return;
+      try{
+        audioEl.currentTime = 0;
+        audioEl.play().catch(()=>{});
+      }catch(e){}
+    }
+
+    // Preview buttons
+    previewCorrect.addEventListener('click', ()=>{
+      const sel = correctSoundSelect.value;
+      const el = audioMap.correct[sel];
+      if(!el){
+        logEl.insertAdjacentHTML('afterbegin', `<div class="small">正確音效：無聲</div>`);
+        return;
+      }
+      try{
+        el.currentTime = 0;
+        el.play();
+        logEl.insertAdjacentHTML('afterbegin', `<div class="small">預聽正確音效：${sel}</div>`);
+      }catch(e){}
     });
-    historyEl.prepend(row);
-    // 保留最多 100 筆
-    while(historyEl.childElementCount > 100) historyEl.removeChild(historyEl.lastChild);
-  }
 
-  // UI sync
-  function syncUI(){
-    scoreEl.textContent = state.score;
-    streakEl.textContent = state.streak;
-    doneEl.textContent = state.done;
-    const acc = state.done === 0 ? 0 : Math.round((state.correct / state.done) * 100);
-    accEl.textContent = acc + '%';
-    progressBar.style.width = state.totalQuestions > 0 ? Math.round((state.done / state.totalQuestions) * 100) + '%' : '0%';
-    difficultyLabel.textContent = labelForDifficulty(state.difficultyMax);
-    // 儲存
-    saveState();
-  }
-
-  function updateProgress(){
-    progressBar.style.width = state.totalQuestions > 0 ? Math.round((state.done / state.totalQuestions) * 100) + '%' : '0%';
-  }
-
-  // 匯出 / 匯入
-  exportBtn.addEventListener('click', ()=> {
-    const blob = new Blob([JSON.stringify(state)], {type:'application/json'});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = 'addition_score.json';
-    a.click();
-    URL.revokeObjectURL(url);
-  });
-  importBtn.addEventListener('click', ()=> importFile.click());
-  importFile.addEventListener('change', async (ev)=> {
-    const f = ev.target.files[0];
-    if(!f) return;
-    try{
-      const text = await f.text();
-      const obj = JSON.parse(text);
-      if(obj && typeof obj.score !== 'undefined'){
-        state = {...stateTemplate, ...obj};
-        saveState();
-        syncUI();
-        if(state.currentQ) renderProblem(state.currentQ);
-        alert('已載入成績');
-      } else alert('檔案格式不正確');
-    }catch(e){ alert('讀取失敗'); }
-    importFile.value = '';
-  });
-
-  // 事件監聽
-  checkBtn.addEventListener('click', checkAnswer);
-  skipBtn.addEventListener('click', skipQuestion);
-  newRound.addEventListener('click', ()=> {
-    startRound();
-    syncUI();
-  });
-  practiceReset.addEventListener('click', ()=> {
-    if(confirm('確定要重置所有分數與歷史？')) {
-      state = {...stateTemplate};
-      saveState();
-      historyEl.innerHTML = '';
-      syncUI();
-      renderProblem(state.currentQ = newProblem());
-    }
-  });
-  difficulty.addEventListener('change', ()=> {
-    state.difficultyMax = parseInt(difficulty.value,10);
-    difficultyLabel.textContent = labelForDifficulty(state.difficultyMax);
-    saveState();
-  });
-  totalQuestions.addEventListener('change', ()=> {
-    state.totalQuestions = parseInt(totalQuestions.value,10);
-    saveState();
-    updateProgress();
-  });
-  soundToggle.addEventListener('change', ()=> {
-    state.sound = soundToggle.value;
-    saveState();
-  });
-
-  // 快捷鍵：Enter 提交、ArrowRight 跳過
-  answerInput.addEventListener('keydown', (e)=> {
-    if(e.key === 'Enter'){ checkAnswer(); e.preventDefault(); }
-    if(e.key === 'ArrowRight'){ skipQuestion(); e.preventDefault(); }
-  });
-
-  // localStorage
-  function saveState(){
-    try{ localStorage.setItem('addition_game_state_v1', JSON.stringify(state)); }catch(e){}
-  }
-  function loadState(){
-    try{
-      const s = localStorage.getItem('addition_game_state_v1');
-      return s ? JSON.parse(s) : null;
-    }catch(e){ return null; }
-  }
-
-  // 初始化
-  init();
-
-  // 若無進行中則啟動一題練習
-  if(!state.inRound){
-    state.currentQ = newProblem();
-    renderProblem(state.currentQ);
-  } else {
-    renderProblem(state.currentQ);
-  }
-  // 將先前紀錄載入到畫面（若有）
-  if(state.history && Array.isArray(state.history)){
-    state.history.forEach(h=>{
-      addHistoryEntry(h.a,h.b,h.ans,h.given,h.skipped);
+    previewWrong.addEventListener('click', ()=>{
+      const sel = wrongSoundSelect.value;
+      const el = audioMap.wrong[sel];
+      if(!el){
+        logEl.insertAdjacentHTML('afterbegin', `<div class="small">錯誤音效：無聲</div>`);
+        return;
+      }
+      try{
+        el.currentTime = 0;
+        el.play();
+        logEl.insertAdjacentHTML('afterbegin', `<div class="small">預聽錯誤音效：${sel}</div>`);
+      }catch(e){}
     });
-  }
 
-  // 畫面更新
-  syncUI();
-</script>
+    // Toggle global sound
+    toggleSoundBtn.addEventListener('click', ()=>{
+      state.muted = !state.muted;
+      updateToggleButton();
+      logEl.insertAdjacentHTML('afterbegin', `<div class="small">${state.muted ? '已靜音' : '聲音開啟'}</div>`);
+    });
+
+    function updateToggleButton(){
+      toggleSoundBtn.textContent = state.muted ? '取消靜音' : '靜音';
+      // also visually update enableSoundBtn
+      enableSoundBtn.disabled = !state.muted;
+      enableSoundQuick.disabled = !state.muted;
+    }
+
+    // Enable sound button: plays a very short sound under user interaction to unlock audio in browser
+    enableSoundBtn.addEventListener('click', ()=>{ enableAllSounds(true); });
+    enableSoundQuick.addEventListener('click', ()=>{ enableAllSounds(true); });
+
+    function enableAllSounds(unmute = true){
+      // Try playing a very short sound from each available audio element to "prime" audio playback
+      try{
+        // Temporarily unmute to play the test
+        const prevMuted = state.muted;
+        if(unmute) state.muted = false;
+        const testEls = [
+          audioMap.correct.default,
+          audioMap.correct.soft,
+          audioMap.correct.clap,
+          audioMap.wrong.default,
+          audioMap.wrong.soft,
+          audioMap.wrong.buzz
+        ].filter(Boolean);
+        // play them quickly (only first will be heard)
+        for(const el of testEls){
+          try{ el.currentTime = 0; el.play().catch(()=>{}); }catch(e){}
+        }
+        // update state
+        state.muted = !unmute ? prevMuted : false;
+        updateToggleButton();
+        logEl.insertAdjacentHTML('afterbegin', `<div class="small">已啟用聲音，現在可預聽與播放音效。</div>`);
+      }catch(e){
+        logEl.insertAdjacentHTML('afterbegin', `<div class="small">無法啟用聲音（瀏覽器限制）</div>`);
+      }
+    }
+
+    // Buttons
+    startBtn.addEventListener('click', startGame);
+    howBtn.addEventListener('click', ()=>{
+      alert('玩法說明：\n\n選好難度後按「開始冒險！」。每題選出正確答案，答對會有鼓勵音效，答錯會有提示音。你可在右側設定音效種類並預聽。按上方「開聲音」或右側「開聲音（快捷）」來啟用音效（瀏覽器可能要求使用者互動以允許播放）。按 S 可切換靜音。');
+    });
+
+    nextBtn.addEventListener('click', ()=>{
+      nextBtn.classList.add('hidden');
+      feedbackEl.style.visibility = 'hidden';
+      setTimeout(()=>{ showQuestion(); }, 220);
+    });
+
+    resetBtn.addEventListener('click', ()=>{
+      showStartScreen();
+    });
+
+    replayBtn.addEventListener('click', ()=>{
+      endScreen.classList.remove('show');
+      startScreen.style.display = 'none';
+      gameArea.style.display = 'grid';
+      startGame();
+    });
+
+    toStartBtn.addEventListener('click', showStartScreen);
+
+    document.addEventListener('keydown', (e)=>{
+      if(e.key.toLowerCase() === 's'){
+        state.muted = !state.muted;
+        updateToggleButton();
+        logEl.insertAdjacentHTML('afterbegin', `<div class="small">${state.muted ? '已靜音' : '聲音開啟'}</div>`);
+      }
+    });
+
+    // Initial
+    showStartScreen();
+    window.addEventListener('load', ()=>{ startBtn.focus(); });
+
+  </script>
 </body>
 </html>
