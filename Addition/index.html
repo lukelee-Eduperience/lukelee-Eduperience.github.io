@@ -1,0 +1,477 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>加法小遊戲</title>
+<style>
+  :root{
+    --bg:#f2f9ff; --card:#ffffff; --accent:#2563eb; --accent-2:#06b6d4; --good:#16a34a; --bad:#ef4444;
+    font-family: "Noto Sans TC", "Microsoft JhengHei", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0; background:linear-gradient(180deg, var(--bg), #e6f2ff); color:#07304a; min-height:100vh; display:flex; align-items:center; justify-content:center; padding:18px}
+  .wrap{width:100%; max-width:980px}
+  .header{display:flex; gap:12px; align-items:center; margin-bottom:14px}
+  .title{font-size:20px; font-weight:800}
+  .subtitle{color:#145e8a; font-size:13px}
+  .game{display:grid; grid-template-columns: 1fr 320px; gap:14px}
+  @media (max-width:900px){ .game{grid-template-columns:1fr} }
+
+  .card{background:var(--card); border-radius:12px; box-shadow:0 8px 30px rgba(2,6,23,0.08); padding:16px}
+  .play-area{display:flex; flex-direction:column; gap:12px; align-items:center; justify-content:center; min-height:320px}
+  .problem{font-size:56px; font-weight:900; color:var(--accent)}
+  .input-row{display:flex; gap:8px; align-items:center}
+  input.answer{
+    width:120px; font-size:28px; padding:10px 12px; border-radius:10px; border:2px solid rgba(2,6,23,0.06); text-align:center;
+  }
+  button.check{
+    background:linear-gradient(180deg,var(--accent),#1d4ed8); color:#fff; border:none; padding:12px 18px; font-weight:700; font-size:16px; border-radius:10px; cursor:pointer;
+  }
+  .controls{display:flex; gap:8px; flex-wrap:wrap}
+  select, input[type=range], button.small{
+    padding:8px 10px; border-radius:8px; border:1px solid rgba(2,6,23,0.06); background:#fff;
+  }
+  .stats{display:flex; gap:12px; flex-wrap:wrap; margin-top:8px}
+  .stat{background:linear-gradient(180deg, #ffffff, #f7fbff); padding:10px 12px; border-radius:10px; box-shadow:inset 0 1px 0 rgba(255,255,255,0.6); min-width:100px; text-align:center}
+  .stat .num{font-weight:800; font-size:20px; color:#0b4a7a}
+  .feedback{height:48px; display:flex; align-items:center; justify-content:center; font-weight:800; border-radius:10px}
+  .feedback.good{background:linear-gradient(90deg,#dcfce7,#bbf7d0); color:var(--good)}
+  .feedback.bad{background:linear-gradient(90deg,#fee2e2,#fecaca); color:var(--bad)}
+  .history{max-height:220px; overflow:auto; padding:8px; border-radius:8px; background:#fbfdff; border:1px solid rgba(2,6,23,0.03)}
+  .hint{color:#0b4a7a; font-size:14px}
+  .meter{height:10px; background:#e6f3ff; border-radius:999px; overflow:hidden}
+  .meter > i{display:block; height:100%; background:linear-gradient(90deg,var(--accent-2),var(--accent)); width:0%}
+
+  /* 小動畫 */
+  .pop{ animation: pop 360ms ease; }
+  @keyframes pop {
+    0%{ transform: scale(.92); opacity:0 }
+    50%{ transform: scale(1.04); opacity:1 }
+    100%{ transform: scale(1); opacity:1 }
+  }
+
+  /* 底部說明 */
+  .footer-note{font-size:13px; color:#145e8a; margin-top:10px}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="header">
+      <div>
+        <div class="title">快樂加法屋</div>
+        <div class="subtitle">練習加法、建立自信的小遊戲</div>
+      </div>
+      <div style="margin-left:auto" class="subtitle">可用鍵盤：輸入答案後按 Enter</div>
+    </div>
+
+    <div class="game">
+      <div class="card">
+        <div class="play-area">
+          <div style="text-align:center">
+            <div class="hint">題目難度：<span id="difficultyLabel">0–10</span></div>
+            <div class="problem pop" id="problem">0 + 0 = ?</div>
+          </div>
+
+          <div class="input-row">
+            <input inputmode="numeric" pattern="[0-9]*" id="answerInput" class="answer" autocomplete="off" placeholder="輸入答案" />
+            <button id="checkBtn" class="check">提交</button>
+            <button id="skipBtn" class="small">略過</button>
+          </div>
+
+          <div style="width:100%">
+            <div id="feedback" class="feedback" style="visibility:hidden">好棒！</div>
+          </div>
+
+          <div style="width:100%" class="controls">
+            <label>
+              難度：
+              <select id="difficulty">
+                <option value="10">0–10</option>
+                <option value="20">0–20</option>
+                <option value="99">兩位數（0–99）</option>
+              </select>
+            </label>
+
+            <label>
+              題目數：
+              <select id="totalQuestions">
+                <option value="0">無限模式</option>
+                <option value="5">5 題</option>
+                <option value="10" selected>10 題</option>
+                <option value="20">20 題</option>
+              </select>
+            </label>
+
+            <label>
+              音效：
+              <select id="soundToggle">
+                <option value="on" selected>開</option>
+                <option value="off">關</option>
+              </select>
+            </label>
+
+            <button id="newRound" class="small">開始新回合</button>
+            <button id="practiceReset" class="small">重置分數</button>
+          </div>
+
+          <div class="stats" style="width:100%">
+            <div class="stat">
+              <div class="small">分數</div>
+              <div id="score" class="num">0</div>
+            </div>
+            <div class="stat">
+              <div class="small">連續答對</div>
+              <div id="streak" class="num">0</div>
+            </div>
+            <div class="stat">
+              <div class="small">完成題數</div>
+              <div id="done" class="num">0</div>
+            </div>
+            <div class="stat">
+              <div class="small">正確率</div>
+              <div id="acc" class="num">0%</div>
+            </div>
+          </div>
+
+          <div style="width:100%; margin-top:8px">
+            <div class="meter" title="進度"><i id="progressBar"></i></div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center">
+          <div style="font-weight:800">歷史與設定</div>
+          <div style="font-size:13px; color:#0b4a7a">提示：點擊歷史可重試</div>
+        </div>
+
+        <hr style="border:none;border-top:1px solid #eef6ff; margin:10px 0">
+
+        <div style="margin-bottom:8px">
+          <div style="font-size:13px; color:#0b4a7a; margin-bottom:6px">答題紀錄</div>
+          <div id="history" class="history"></div>
+        </div>
+
+        <div style="margin-top:8px">
+          <div style="font-size:13px; color:#0b4a7a; margin-bottom:6px">教學小貼士</div>
+          <div style="font-size:14px; color:#07415d; line-height:1.5">
+            - 鼓勵先估算答案，再填入。<br>
+            - 可使用「略過」來跳過較難題目（不計分）。<br>
+            - 適合家長/老師用於口頭練習或小測驗。
+          </div>
+        </div>
+
+        <div style="margin-top:12px; display:flex; gap:8px; align-items:center">
+          <button id="exportBtn" class="small">匯出成績</button>
+          <button id="importBtn" class="small">載入成績</button>
+          <input id="importFile" type="file" accept="application/json" style="display:none" />
+        </div>
+
+        <div class="footer-note">此遊戲會在本機暫存分數（localStorage），關閉瀏覽器仍會保留。</div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  // 遊戲狀態
+  const stateTemplate = {
+    score:0, streak:0, correct:0, wrong:0, done:0, totalQuestions:10, currentQ: null, difficultyMax:10, inRound:false, sound:'on'
+  };
+  let state = loadState() || {...stateTemplate};
+
+  // DOM
+  const problemEl = document.getElementById('problem');
+  const answerInput = document.getElementById('answerInput');
+  const checkBtn = document.getElementById('checkBtn');
+  const skipBtn = document.getElementById('skipBtn');
+  const difficulty = document.getElementById('difficulty');
+  const difficultyLabel = document.getElementById('difficultyLabel');
+  const totalQuestions = document.getElementById('totalQuestions');
+  const newRound = document.getElementById('newRound');
+  const practiceReset = document.getElementById('practiceReset');
+  const scoreEl = document.getElementById('score');
+  const streakEl = document.getElementById('streak');
+  const doneEl = document.getElementById('done');
+  const accEl = document.getElementById('acc');
+  const historyEl = document.getElementById('history');
+  const progressBar = document.getElementById('progressBar');
+  const feedback = document.getElementById('feedback');
+  const soundToggle = document.getElementById('soundToggle');
+  const exportBtn = document.getElementById('exportBtn');
+  const importBtn = document.getElementById('importBtn');
+  const importFile = document.getElementById('importFile');
+
+  // 聲音（簡單）
+  const audioCtx = typeof AudioContext !== 'undefined' ? new AudioContext() : null;
+  function playTone(freq, dur=0.12){
+    if(!audioCtx || state.sound === 'off') return;
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.frequency.value = freq;
+    o.type = 'sine';
+    o.connect(g); g.connect(audioCtx.destination);
+    g.gain.value = 0.0001;
+    const now = audioCtx.currentTime;
+    g.gain.linearRampToValueAtTime(0.12, now+0.01);
+    o.start(now);
+    g.gain.exponentialRampToValueAtTime(0.0001, now+dur);
+    o.stop(now+dur+0.02);
+  }
+
+  // 初始化 UI 與事件
+  function init(){
+    difficulty.value = state.difficultyMax.toString();
+    difficultyLabel.textContent = labelForDifficulty(state.difficultyMax);
+    totalQuestions.value = state.totalQuestions.toString();
+    soundToggle.value = state.sound === 'on' ? 'on' : 'off';
+    syncUI();
+    if(state.inRound && state.currentQ) renderProblem(state.currentQ);
+  }
+
+  function labelForDifficulty(max){
+    if(max===10) return '0–10';
+    if(max===20) return '0–20';
+    return '0–99';
+  }
+
+  function startRound(){
+    state.score = 0;
+    state.streak = 0;
+    state.correct = 0;
+    state.wrong = 0;
+    state.done = 0;
+    state.totalQuestions = parseInt(totalQuestions.value,10);
+    state.difficultyMax = parseInt(difficulty.value,10);
+    state.inRound = true;
+    state.currentQ = newProblem();
+    saveState();
+    renderProblem(state.currentQ);
+  }
+
+  function newProblem(){
+    const max = state.difficultyMax;
+    // 若要教兩位數，使用 0..99
+    const a = Math.floor(Math.random() * (max+1));
+    const b = Math.floor(Math.random() * (max+1));
+    return {a,b,answer: a+b, time: Date.now()};
+  }
+
+  function renderProblem(q){
+    if(!q) q = newProblem();
+    problemEl.textContent = `${q.a} + ${q.b} = ?`;
+    problemEl.classList.add('pop');
+    setTimeout(()=> problemEl.classList.remove('pop'),320);
+    answerInput.value = '';
+    answerInput.focus();
+    updateProgress();
+  }
+
+  function checkAnswer(){
+    if(!state.inRound){
+      startRound();
+      return;
+    }
+    const raw = answerInput.value.trim();
+    if(raw === '') { flashFeedback('請輸入答案或按略過', 'bad'); return; }
+    // 允許鍵入非數字但自動嘗試 parseInt
+    const val = parseInt(raw, 10);
+    const q = state.currentQ;
+    if(Number.isNaN(val)) { flashFeedback('請輸入數字', 'bad'); return; }
+    // 判斷
+    if(val === q.answer){
+      // 答對
+      state.score += 10;
+      state.streak += 1;
+      state.correct += 1;
+      state.done += 1;
+      flashFeedback('答對！+10 分', 'good');
+      playTone(880, 0.12);
+    } else {
+      // 答錯
+      state.streak = 0;
+      state.wrong += 1;
+      state.done += 1;
+      state.score = Math.max(0, state.score - 5);
+      flashFeedback(`答錯！正確答案：${q.answer}`, 'bad');
+      playTone(220, 0.18);
+    }
+
+    // 更新紀錄
+    addHistoryEntry(q.a, q.b, q.answer, val);
+    // 決定下一題或結束
+    if(state.totalQuestions > 0 && state.done >= state.totalQuestions){
+      endRound();
+    } else {
+      state.currentQ = newProblem();
+      saveState();
+      setTimeout(()=> renderProblem(state.currentQ), 600);
+    }
+    syncUI();
+  }
+
+  function skipQuestion(){
+    if(!state.inRound) return;
+    // 略過不計分但計為已做一題
+    state.done += 1;
+    state.streak = 0;
+    addHistoryEntry(state.currentQ.a, state.currentQ.b, state.currentQ.answer, null, true);
+    flashFeedback('已略過題目', 'bad');
+    if(state.totalQuestions > 0 && state.done >= state.totalQuestions){
+      endRound();
+    } else {
+      state.currentQ = newProblem();
+      saveState();
+      setTimeout(()=> renderProblem(state.currentQ), 500);
+    }
+    syncUI();
+  }
+
+  function endRound(){
+    state.inRound = false;
+    flashFeedback(`回合結束！分數 ${state.score}，正確 ${state.correct} / ${state.done}`, 'good');
+    playTone(660, 0.24);
+    saveState();
+    updateProgress();
+  }
+
+  function flashFeedback(text, kind){
+    feedback.textContent = text;
+    feedback.className = 'feedback ' + (kind==='good' ? 'good' : 'bad') + ' pop';
+    feedback.style.visibility = 'visible';
+    setTimeout(()=>{ feedback.style.visibility = 'hidden'; feedback.className = 'feedback'; }, 1400);
+  }
+
+  // 歷史功能
+  function addHistoryEntry(a,b,ans,given, skipped=false){
+    const row = document.createElement('div');
+    row.style.padding = '6px 6px';
+    row.style.borderBottom = '1px dashed #eef8ff';
+    row.style.cursor = 'pointer';
+    row.innerHTML = `<strong>${a} + ${b}</strong> = ${ans} ${skipped ? '(略過)' : (' | 你的答案: ' + (given===null?'-':given))}`;
+    row.addEventListener('click', ()=> {
+      // 允許使用歷史題目重試：將該題設為當前題目（但不改動分數）
+      state.currentQ = {a,b,answer:ans,time:Date.now()};
+      state.inRound = true;
+      renderProblem(state.currentQ);
+    });
+    historyEl.prepend(row);
+    // 保留最多 100 筆
+    while(historyEl.childElementCount > 100) historyEl.removeChild(historyEl.lastChild);
+  }
+
+  // UI sync
+  function syncUI(){
+    scoreEl.textContent = state.score;
+    streakEl.textContent = state.streak;
+    doneEl.textContent = state.done;
+    const acc = state.done === 0 ? 0 : Math.round((state.correct / state.done) * 100);
+    accEl.textContent = acc + '%';
+    progressBar.style.width = state.totalQuestions > 0 ? Math.round((state.done / state.totalQuestions) * 100) + '%' : '0%';
+    difficultyLabel.textContent = labelForDifficulty(state.difficultyMax);
+    // 儲存
+    saveState();
+  }
+
+  function updateProgress(){
+    progressBar.style.width = state.totalQuestions > 0 ? Math.round((state.done / state.totalQuestions) * 100) + '%' : '0%';
+  }
+
+  // 匯出 / 匯入
+  exportBtn.addEventListener('click', ()=> {
+    const blob = new Blob([JSON.stringify(state)], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'addition_score.json';
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+  importBtn.addEventListener('click', ()=> importFile.click());
+  importFile.addEventListener('change', async (ev)=> {
+    const f = ev.target.files[0];
+    if(!f) return;
+    try{
+      const text = await f.text();
+      const obj = JSON.parse(text);
+      if(obj && typeof obj.score !== 'undefined'){
+        state = {...stateTemplate, ...obj};
+        saveState();
+        syncUI();
+        if(state.currentQ) renderProblem(state.currentQ);
+        alert('已載入成績');
+      } else alert('檔案格式不正確');
+    }catch(e){ alert('讀取失敗'); }
+    importFile.value = '';
+  });
+
+  // 事件監聽
+  checkBtn.addEventListener('click', checkAnswer);
+  skipBtn.addEventListener('click', skipQuestion);
+  newRound.addEventListener('click', ()=> {
+    startRound();
+    syncUI();
+  });
+  practiceReset.addEventListener('click', ()=> {
+    if(confirm('確定要重置所有分數與歷史？')) {
+      state = {...stateTemplate};
+      saveState();
+      historyEl.innerHTML = '';
+      syncUI();
+      renderProblem(state.currentQ = newProblem());
+    }
+  });
+  difficulty.addEventListener('change', ()=> {
+    state.difficultyMax = parseInt(difficulty.value,10);
+    difficultyLabel.textContent = labelForDifficulty(state.difficultyMax);
+    saveState();
+  });
+  totalQuestions.addEventListener('change', ()=> {
+    state.totalQuestions = parseInt(totalQuestions.value,10);
+    saveState();
+    updateProgress();
+  });
+  soundToggle.addEventListener('change', ()=> {
+    state.sound = soundToggle.value;
+    saveState();
+  });
+
+  // 快捷鍵：Enter 提交、ArrowRight 跳過
+  answerInput.addEventListener('keydown', (e)=> {
+    if(e.key === 'Enter'){ checkAnswer(); e.preventDefault(); }
+    if(e.key === 'ArrowRight'){ skipQuestion(); e.preventDefault(); }
+  });
+
+  // localStorage
+  function saveState(){
+    try{ localStorage.setItem('addition_game_state_v1', JSON.stringify(state)); }catch(e){}
+  }
+  function loadState(){
+    try{
+      const s = localStorage.getItem('addition_game_state_v1');
+      return s ? JSON.parse(s) : null;
+    }catch(e){ return null; }
+  }
+
+  // 初始化
+  init();
+
+  // 若無進行中則啟動一題練習
+  if(!state.inRound){
+    state.currentQ = newProblem();
+    renderProblem(state.currentQ);
+  } else {
+    renderProblem(state.currentQ);
+  }
+  // 將先前紀錄載入到畫面（若有）
+  if(state.history && Array.isArray(state.history)){
+    state.history.forEach(h=>{
+      addHistoryEntry(h.a,h.b,h.ans,h.given,h.skipped);
+    });
+  }
+
+  // 畫面更新
+  syncUI();
+</script>
+</body>
+</html>
