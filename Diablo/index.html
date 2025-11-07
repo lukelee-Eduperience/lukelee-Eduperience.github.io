@@ -3,797 +3,458 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Mini Diablo-like ARPG Demo</title>
+<title>ARPG Demo with Spritesheet</title>
 <style>
   :root{
-    --bg:#0b0f12;
-    --panel:#0f1720;
-    --accent:#e6b85a;
-    --muted:#9fb1b8;
-    --hud-bg: rgba(10,12,14,0.7);
-    --canvas-w: 960px;
+    --bg:#0b0f12; --panel:#0f1720; --muted:#9fb1b8;
   }
   html,body{height:100%;margin:0;background:linear-gradient(180deg,#071018,#08121a);color:#e6eef2;font-family:Inter, "Segoe UI", Roboto, Arial;display:flex;align-items:center;justify-content:center;}
-  .container{width:min(1100px,98vw);padding:16px;box-sizing:border-box;display:grid;grid-template-columns: 1fr 320px;gap:14px;align-items:start;}
-  header{grid-column:1/3;display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
-  h1{margin:0;font-size:18px}
-  .game-wrap{background:var(--panel);padding:12px;border-radius:10px;box-shadow:0 8px 30px rgba(0,0,0,.6);display:flex;flex-direction:column;align-items:center}
-  canvas#game{
-    width:100%;
-    max-width: var(--canvas-w);
-    background: linear-gradient(#12202a,#0b1619);
-    border-radius:8px;
-    display:block;
-    touch-action: none;
-  }
-  .sidebar{background:rgba(255,255,255,0.02);padding:12px;border-radius:10px;min-width:280px;box-sizing:border-box;}
-  .stat{margin-bottom:10px}
-  .stat b{display:block;font-size:12px;color:var(--muted)}
-  .bar{height:12px;background:rgba(255,255,255,0.06);border-radius:6px;overflow:hidden}
-  .bar > i{display:block;height:100%;background:linear-gradient(90deg,#e84a4a,#f6a95b);width:50%}
-  .row{display:flex;justify-content:space-between;align-items:center}
-  .controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
-  button{background:#163445;border:none;color:#dff4f8;padding:8px 10px;border-radius:6px;cursor:pointer}
-  .log{font-size:12px;color:#9fb7c6;max-height:220px;overflow:auto;padding:6px;background:rgba(255,255,255,0.02);border-radius:6px}
-  .inventory{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:8px}
-  .slot{background:rgba(255,255,255,0.02);height:48px;border-radius:6px;border:1px dashed rgba(255,255,255,0.03);display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--muted)}
-  .hud{position:relative;margin-top:8px;color:#cfe6ea}
-  .hint{font-size:12px;color:var(--muted);margin-top:8px}
-  @media(max-width:980px){
-    .container{grid-template-columns:1fr}
-    header{grid-column:1/2}
-  }
+  .wrap{width:98vw;max-width:1100px;padding:12px}
+  header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+  canvas{background:#081217;border-radius:8px;display:block;width:100%;max-width:960px}
+  .controls{margin-top:8px}
+  .hud{color:#cfe6ea}
 </style>
 </head>
 <body>
-  <div class="container">
+  <div class="wrap">
     <header>
-      <h1>Mini Diablo-like ARPG Demo</h1>
-      <div style="color:var(--muted);font-size:13px">移動：滑鼠右鍵 / WASD / 方向鍵，攻擊：滑鼠左鍵，右鍵射擊，I 開關背包，S 儲存</div>
+      <h2>ARPG Demo — Spritesheet 範例</h2>
+      <div style="color:var(--muted)">移動：WASD / 方向鍵 / 右鍵點選；攻擊：左鍵；空格或 F 發射遠程</div>
     </header>
 
-    <div class="game-wrap">
-      <canvas id="game" width="960" height="600"></canvas>
-      <div class="hud" id="hud">
-        <div class="row" style="margin-top:8px">
-          <div><b>玩家</b></div>
-          <div id="hpText">HP: --</div>
-        </div>
-        <div class="bar" aria-hidden><i id="hpBar" style="width:100%"></i></div>
-
-        <div style="margin-top:8px" class="row">
-          <div><b>經驗 / 等級</b></div>
-          <div id="xpText">XP: --</div>
-        </div>
-        <div class="bar"><i id="xpBar" style="width:10%"></i></div>
-      </div>
-    </div>
-
-    <aside class="sidebar">
-      <div class="stat"><b>屬性</b>
-        <div id="stats">
-          STR: <span id="statStr">--</span><br/>
-          SPD: <span id="statSpd">--</span><br/>
-          ATK: <span id="statAtk">--</span>
-        </div>
-      </div>
-
-      <div class="stat"><b>裝備 / 背包 (I 開關)</b>
-        <div class="inventory" id="inventory">
-          <!-- slots -->
-        </div>
-      </div>
-
-      <div class="stat"><b>目標/事件日誌</b>
-        <div class="log" id="log"></div>
-      </div>
-
-      <div class="controls">
-        <button id="btnNew">新的遊戲</button>
-        <button id="btnSave">儲存 (S)</button>
-        <button id="btnLoad">載入</button>
-      </div>
-
-      <div class="hint">建議：用滑鼠右鍵移動並靠近敵人，左鍵攻擊。右鍵可切換射擊遠程（需要箭）。</div>
-    </aside>
+    <canvas id="game" width="960" height="600"></canvas>
+    <div style="margin-top:8px;color:#9fb7c6" id="status">載入中資源...</div>
   </div>
 
 <script>
-/* Mini Diablo-like 中階原型
- - Canvas 2D
- - 玩家、敵人、投射物、簡單物品、地圖房間
- - localStorage 存檔
+/*
+  本範例示範如何使用 spritesheet（單圖）來繪製角色動畫。
+  精靈圖使用 data URL 內嵌 PNG（小尺寸示範），你可用外部圖檔替換。
+  主要流程：
+   - 建立 Image 並設定 src
+   - 定義動畫剪輯（每個剪輯的起始格、格子寬高、帧數、耗時）
+   - 在 draw 時使用 context.drawImage(sprite, sx, sy, sw, sh, dx, dy, dw, dh)
 */
 
-// 基本設置
+// 基本 canvas
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 const W = canvas.width, H = canvas.height;
+const statusEl = document.getElementById('status');
 
-let gameState = {
-  player: null,
-  entities: [],
-  projectiles: [],
-  drops: [],
-  map: null,
-  running: false,
-  showInventory: false
+// 資源（內嵌示範 spritesheet）
+// 為了保持單檔，我產生一個簡單的 128x128 PNG sprite sheet (4x4 tiles) 的 dataURL。
+// 這是用小方塊畫出的示範圖（你可用真實貼圖替換）
+const demoSpriteDataURL = (function(){
+  // 生成一個小 PNG dataURL programmatically using canvas
+  const c = document.createElement('canvas');
+  c.width = 128; c.height = 128;
+  const g = c.getContext('2d');
+  // 背景透明
+  g.clearRect(0,0,128,128);
+  const colors = ['#c8e3ff','#ffd0b0','#ffd57f','#ffc0ff'];
+  // 4x4 tiles, 每格 32x32
+  for (let row=0; row<4; row++){
+    for (let col=0; col<4; col++){
+      const x = col*32, y = row*32;
+      g.fillStyle = '#0b1316';
+      g.fillRect(x,y,32,32);
+      // 畫一圓代表角色或敵人外觀（不同顏色）
+      g.beginPath();
+      g.fillStyle = colors[(row+col)%colors.length];
+      g.arc(x+16, y+16, 10 - Math.floor((row+col)/4), 0, Math.PI*2);
+      g.fill();
+      // simple face dot
+      g.fillStyle = 'rgba(0,0,0,0.25)';
+      g.fillRect(x+13, y+14, 2, 2);
+      g.fillRect(x+17, y+14, 2, 2);
+    }
+  }
+  return c.toDataURL('image/png');
+})();
+
+// load image
+const spriteImg = new Image();
+let resourcesLoaded = false;
+spriteImg.onload = ()=>{ resourcesLoaded = true; statusEl.textContent = '資源載入完成'; initGame(); };
+spriteImg.onerror = ()=>{ statusEl.textContent = '載入精靈表失敗'; };
+spriteImg.src = demoSpriteDataURL; // 若要使用外部圖檔，改成 URL 字串
+
+// Spritesheet 布局說明（本示範）
+// 假設 spritesheet 為 grid 格式：cols x rows，每格 tileW x tileH 像素。
+// 你可以用下列 AnimationClip 定義不同動作對應的起始格、長度與播放速度。
+
+const SPRITE = {
+  img: spriteImg,
+  tileW: 32,
+  tileH: 32,
+  cols: 4,
+  rows: 4
 };
 
-// 簡單音效
-const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-function playBeep(freq=440, t=0.06, type='sine', vol=0.06){
-  const o = audioCtx.createOscillator();
-  const g = audioCtx.createGain();
-  o.type = type; o.frequency.value = freq;
-  g.gain.value = vol;
-  o.connect(g); g.connect(audioCtx.destination);
-  o.start(); o.stop(audioCtx.currentTime + t);
-}
+// 動畫剪輯
+// 每個 clip： { name, row, startCol, frames, speed } speed = 秒/帧
+// 本 demo 將利用不同列代表不同動作
+const ANIM_CLIPS = {
+  player: [
+    {name:'idle', row:0, start:0, frames:2, speed:0.4},
+    {name:'walk', row:0, start:2, frames:2, speed:0.12},
+    {name:'attack', row:1, start:0, frames:2, speed:0.08}
+  ],
+  enemy: [
+    {name:'idle', row:2, start:0, frames:2, speed:0.5},
+    {name:'walk', row:2, start:2, frames:2, speed:0.15},
+    {name:'die', row:3, start:0, frames:2, speed:0.2}
+  ]
+};
 
-// 向量工具
-function vlen(x,y){return Math.hypot(x,y);}
-function vnorm(x,y){const m = vlen(x,y)||1; return [x/m,y/m];}
-
-// 隨機小幫手
-function randInt(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
-function randChoice(arr){return arr[Math.floor(Math.random()*arr.length)];}
-
-// 地圖：房間集合（簡單）
-function generateMap(){
-  // 產生幾個房間，每個房間為矩形並連接
-  const rooms = [];
-  const n = randInt(4,6);
-  for (let i=0;i<n;i++){
-    const w = randInt(160,300);
-    const h = randInt(120,220);
-    const x = randInt(40, W - w - 40);
-    const y = randInt(40, H - h - 40);
-    rooms.push({x,y,w,h});
+// Animation helper
+class Animator {
+  constructor(clips){
+    this.clips = clips; // array of clip definitions
+    this.current = clips[0]; // default
+    this.time = 0;
+    this.frameIndex = 0;
   }
-  // 簡單連線中心點形成道路（門）
-  const map = {rooms};
-  return map;
+  play(name){
+    const c = this.clips.find(x=>x.name===name);
+    if (!c) return;
+    if (this.current === c) return;
+    this.current = c; this.time = 0; this.frameIndex = 0;
+  }
+  update(dt){
+    this.time += dt;
+    const sp = this.current.speed;
+    while (this.time >= sp){
+      this.time -= sp;
+      this.frameIndex = (this.frameIndex + 1) % this.current.frames;
+    }
+  }
+  // return source rectangle for current frame
+  frameRect(){
+    const col = this.current.start + this.frameIndex;
+    const row = this.current.row;
+    return {
+      sx: col * SPRITE.tileW,
+      sy: row * SPRITE.tileH,
+      sw: SPRITE.tileW,
+      sh: SPRITE.tileH
+    };
+  }
 }
 
-// 實體基礎
-class Entity {
-  constructor(x,y){
+// ---------- 簡單遊戲邏輯（與先前相似，但使用 animator） ----------
+let lastTs = 0;
+let player, entities = [], projectiles = [], drops = [];
+let running = false;
+
+// Entity with sprite animator
+class SpriteEntity {
+  constructor(x,y,kind='player'){
     this.x = x; this.y = y;
     this.vx = 0; this.vy = 0;
-    this.radius = 16;
-    this.hp = 10;
-    this.maxHp = 10;
-    this.color = '#ffffff';
-    this.type = 'entity';
-    this.name = 'Entity';
-    this.speed = 80; // px/s
-    this.attackCooldown = 0;
-  }
-  update(dt){}
-  draw(ctx){}
-}
-
-// 玩家
-class Player extends Entity {
-  constructor(x,y){
-    super(x,y);
     this.radius = 18;
-    this.color = '#c8e3ff';
-    this.maxHp = 100; this.hp = this.maxHp;
-    this.level = 1;
-    this.xp = 0;
-    this.nextXp = 100;
-    this.str = 5; // 攻擊力
-    this.spd = 120; // 移動速度
-    this.type = 'player';
-    this.name = 'Hero';
-    this.attackCooldown = 0;
-    this.meleeRange = 28;
-    this.ammo = 10;
-    this.gold = 0;
-  }
-  gainXp(v){
-    this.xp += v;
-    if (this.xp >= this.nextXp) {
-      this.xp -= this.nextXp;
-      this.levelUp();
-    }
-  }
-  levelUp(){
-    this.level++;
-    this.nextXp = Math.floor(this.nextXp * 1.4);
-    this.maxHp += 20;
-    this.hp = this.maxHp;
-    this.str += 2;
-    this.spd += 8;
-    log('升級！ 等級 ' + this.level);
-    playBeep(800,0.08,'saw',0.08);
+    this.kind = kind;
+    this.hp = 50; this.maxHp = 50;
+    this.speed = 100;
+    this.anim = new Animator(ANIM_CLIPS[kind]);
+    this.facing = 1; // 1 right, -1 left
+    this.attackTimer = 0;
+    this.name = kind === 'player' ? 'Hero' : 'Goblin';
   }
   update(dt){
-    // movement handled externally by target
-    if (this.attackCooldown > 0) this.attackCooldown = Math.max(0, this.attackCooldown - dt);
+    // update animator
+    this.anim.update(dt);
+    // cooldowns
+    if (this.attackTimer > 0) this.attackTimer = Math.max(0, this.attackTimer - dt);
+    // simple movement damp
+    this.x += this.vx * dt; this.y += this.vy * dt;
+    this.vx *= 0.9; this.vy *= 0.9;
   }
   draw(ctx){
-    // 身體
-    drawCharacter(ctx, this.x, this.y, this.radius, this.color, 'player', this.hp/this.maxHp);
-    // name
-    ctx.fillStyle = '#dff4f8';
-    ctx.font = '12px sans-serif';
-    ctx.fillText(this.name, this.x - 20, this.y - this.radius - 12);
+    // draw shadow
+    ctx.beginPath();
+    ctx.fillStyle = 'rgba(0,0,0,0.35)';
+    ctx.ellipse(this.x, this.y + this.radius*0.6, this.radius*0.9, this.radius*0.45, 0, 0, Math.PI*2);
+    ctx.fill();
+
+    // draw sprite frame using sprite sheet
+    const r = this.anim.frameRect();
+    if (resourcesLoaded){
+      // drawImage(img, sx, sy, sw, sh, dx, dy, dw, dh)
+      const dw = this.radius*2;
+      const dh = this.radius*2;
+      const dx = this.x - dw/2;
+      const dy = this.y - dh/2;
+      // optional flip horizontally by using save/scale
+      ctx.save();
+      if (this.facing < 0){
+        ctx.translate(dx + dw, 0);
+        ctx.scale(-1,1);
+        ctx.drawImage(SPRITE.img, r.sx, r.sy, r.sw, r.sh, 0, dy, dw, dh);
+      } else {
+        ctx.drawImage(SPRITE.img, r.sx, r.sy, r.sw, r.sh, dx, dy, dw, dh);
+      }
+      ctx.restore();
+    } else {
+      // fallback circle
+      ctx.fillStyle = '#c8e3ff';
+      ctx.beginPath(); ctx.arc(this.x, this.y, this.radius,0,Math.PI*2); ctx.fill();
+    }
+
+    // hp bar
+    const bw = this.radius*2, bh = 6;
+    ctx.fillStyle = 'rgba(0,0,0,0.5)';
+    ctx.fillRect(this.x - bw/2, this.y - this.radius - 14, bw, bh);
+    ctx.fillStyle = (this.hp/this.maxHp>0.5) ? '#7bd07a' : '#ff7b7b';
+    ctx.fillRect(this.x - bw/2, this.y - this.radius - 14, bw * Math.max(0, this.hp/this.maxHp), bh);
   }
 }
 
-// enemy (simple state machine)
-class Enemy extends Entity {
-  constructor(x,y,tier=1){
-    super(x,y);
-    this.baseSpeed = 50 + tier*6;
-    this.speed = this.baseSpeed;
-    this.radius = 16 + Math.min(8,tier*2);
-    this.maxHp = 20 + tier*10;
-    this.hp = this.maxHp;
-    this.color = '#ffb0a0';
-    this.type = 'enemy';
-    this.name = 'Goblin';
-    this.state = 'idle';
-    this.aggroRange = 200;
-    this.attackRange = this.radius + 10;
-    this.attackTimer = 0;
-    this.tier = tier;
-    this.damage = 6 + tier*2;
+// init simple world after resources loaded
+function initGame(){
+  statusEl.textContent = '按 N 開始新的遊戲；按 S 儲存；按 L 載入';
+  // attach input
+  setupInput();
+  draw();
+}
+
+// simple new game
+function newGame(){
+  player = new SpriteEntity(W/2, H/2, 'player');
+  player.maxHp = 120; player.hp = 120; player.speed = 140;
+  entities = [];
+  projectiles = []; drops = [];
+  // spawn few enemies
+  for (let i=0;i<6;i++){
+    const e = new SpriteEntity(120 + Math.random()*(W-240), 80 + Math.random()*(H-160), 'enemy');
+    e.maxHp = 30; e.hp = 30; e.speed = 70;
+    entities.push(e);
   }
-  update(dt){
-    // simple AI: idle -> wander -> chase -> attack
-    if (!gameState.player) return;
-    const dx = gameState.player.x - this.x;
-    const dy = gameState.player.y - this.y;
-    const dist = Math.hypot(dx,dy);
+  running = true;
+  lastTs = performance.now();
+  requestAnimationFrame(loop);
+}
 
-    if (dist < this.aggroRange){
-      this.state = 'chase';
-    } else {
-      // wander randomly
-      if (Math.random() < 0.002) { this.vx = randInt(-20,20); this.vy = randInt(-20,20); }
-      this.state = 'wander';
+// input
+let keys = {};
+let mouse = {x:0,y:0, down:false};
+function setupInput(){
+  canvas.addEventListener('mousemove',(e)=>{ const r = canvas.getBoundingClientRect(); mouse.x = (e.clientX - r.left) * (canvas.width / r.width); mouse.y = (e.clientY - r.top) * (canvas.height / r.height); });
+  canvas.addEventListener('mousedown',(e)=>{ mouse.down = true; if (e.button===0) tryMelee(); });
+  canvas.addEventListener('mouseup',(e)=>{ mouse.down = false; });
+  window.addEventListener('keydown',(e)=>{ keys[e.key.toLowerCase()] = true; if (e.key.toLowerCase()==='n') newGame(); if (e.key.toLowerCase()==='s') saveGame(); if (e.key.toLowerCase()==='l') loadGame(); if (e.key.toLowerCase()==='f' || e.key===' ') fireAtMouse(); });
+  window.addEventListener('keyup',(e)=>{ keys[e.key.toLowerCase()] = false; });
+}
+
+// attack
+function tryMelee(){
+  if (!player) return;
+  if (player.attackTimer > 0) return;
+  player.attackTimer = 0.4;
+  player.anim.play('attack');
+  // check enemies within range
+  for (let i=entities.length-1;i>=0;i--){
+    const en = entities[i];
+    const d = Math.hypot(en.x - player.x, en.y - player.y);
+    if (d <= 48 + en.radius){
+      en.hp -= 18; playBeep(740,0.04,'square',0.06);
+      if (en.hp <= 0) {
+        entities.splice(i,1);
+        // spawn drop
+        drops.push({x:en.x, y:en.y, kind:'gold', amount: randInt(5,20)});
+      }
+      break;
     }
+  }
+}
 
-    if (this.state === 'chase'){
-      const [nx,ny] = vnorm(dx,dy);
-      this.vx = nx * this.speed;
-      this.vy = ny * this.speed;
-      if (dist <= this.attackRange + gameState.player.radius){
-        this.vx = 0; this.vy = 0;
-        // attack timer
-        this.attackTimer -= dt;
-        if (this.attackTimer <= 0){
-          this.attackTimer = 0.9; // seconds
-          // deal damage
-          gameState.player.hp = Math.max(0, gameState.player.hp - this.damage);
-          playBeep(240,0.04,'saw',0.06);
-          log(this.name + ' 攻擊了你，造成 ' + this.damage + ' 傷害');
-          if (gameState.player.hp <= 0) {
-            log('你死亡了！按 新的遊戲 重新開始。');
-            gameState.running = false;
+// ranged
+function fireAtMouse(){
+  if (!player) return;
+  // spawn projectile toward mouse
+  const [nx,ny] = norm(mouse.x - player.x, mouse.y - player.y);
+  const speed = 420;
+  projectiles.push({x:player.x + nx*20, y:player.y + ny*20, vx:nx*speed, vy:ny*speed, dmg:12, traveled:0, range:700});
+  playBeep(880,0.05,'saw',0.06);
+}
+
+// util
+function norm(x,y){ const m = Math.hypot(x,y)||1; return [x/m,y/m]; }
+function randInt(a,b){ return Math.floor(Math.random()*(b-a+1))+a; }
+function playBeep(freq=440,t=0.06,type='sine',vol=0.06){
+  try{
+    const a = new (window.AudioContext || window.webkitAudioContext)();
+    const o=a.createOscillator(); const g=a.createGain();
+    o.type=type; o.frequency.value=freq; g.gain.value=vol;
+    o.connect(g); g.connect(a.destination); o.start(); o.stop(a.currentTime + t);
+  }catch(e){}
+}
+
+// main loop
+function loop(ts){
+  if (!running){ draw(); return; }
+  const dt = Math.min(0.05, (ts - lastTs)/1000); lastTs = ts;
+
+  // input movement
+  if (player){
+    let mvx=0,mvy=0;
+    if (keys['w']||keys['arrowup']) mvy -= 1;
+    if (keys['s']||keys['arrowdown']) mvy += 1;
+    if (keys['a']||keys['arrowleft']) mvx -= 1;
+    if (keys['d']||keys['arrowright']) mvx += 1;
+    if (mvx !==0 || mvy !==0){
+      const [nx,ny] = norm(mvx,mvy);
+      player.vx = nx * player.speed;
+      player.vy = ny * player.speed;
+      player.anim.play('walk');
+      player.facing = nx < 0 ? -1 : 1;
+    } else {
+      // move toward mouse if right button held
+      if (mouse.down){
+        const dx = mouse.x - player.x, dy = mouse.y - player.y;
+        const d = Math.hypot(dx,dy);
+        if (d > 6){
+          const [nx,ny] = norm(dx,dy);
+          player.vx = nx * player.speed;
+          player.vy = ny * player.speed;
+          player.anim.play('walk');
+          player.facing = nx < 0 ? -1 : 1;
+        } else {
+          player.vx = 0; player.vy = 0; player.anim.play('idle');
+        }
+      } else {
+        player.anim.play('idle');
+        player.vx *= 0.8; player.vy *= 0.8;
+      }
+    }
+    player.update(dt);
+  }
+
+  // update entities (simple chase)
+  for (const e of entities){
+    const dx = player.x - e.x, dy = player.y - e.y;
+    const d = Math.hypot(dx,dy);
+    if (d < 220){
+      const [nx,ny] = norm(dx,dy);
+      e.vx = nx * e.speed;
+      e.vy = ny * e.speed;
+      e.anim.play('walk');
+      e.facing = nx < 0 ? -1 : 1;
+      // if close, attack
+      if (d < 36 + player.radius){
+        // melee effect
+        if (e.attackTimer <= 0){
+          e.attackTimer = 0.9;
+          player.hp -= 8;
+          playBeep(260,0.04,'saw',0.06);
+          if (player.hp <= 0){
+            running = false; statusEl.textContent = '你死亡了。按 N 開始新的遊戲';
           }
         }
       }
     } else {
-      // wander movement
-      this.vx *= 0.98; this.vy *= 0.98;
+      e.vx *= 0.9; e.vy *= 0.9;
+      e.anim.play('idle');
     }
-
-    // apply velocity
-    this.x += this.vx * dt;
-    this.y += this.vy * dt;
-  }
-  draw(ctx){
-    drawCharacter(ctx, this.x, this.y, this.radius, this.color, 'enemy', this.hp/this.maxHp);
-    ctx.fillStyle = '#ffdeda';
-    ctx.font = '12px sans-serif';
-    ctx.fillText(this.name, this.x - 18, this.y - this.radius - 10);
-  }
-}
-
-// 投射物
-class Projectile {
-  constructor(x,y,vx,vy,owner,damage=10,range=400, color='#ffd57f'){
-    this.x = x; this.y = y;
-    this.vx = vx; this.vy = vy;
-    this.owner = owner;
-    this.damage = damage;
-    this.range = range;
-    this.traveled = 0;
-    this.radius = 6;
-    this.color = color;
-    this.type = 'proj';
-  }
-  update(dt){
-    const dx = this.vx * dt, dy = this.vy * dt;
-    this.x += dx; this.y += dy;
-    this.traveled += Math.hypot(dx,dy);
-  }
-  draw(ctx){
-    ctx.beginPath();
-    ctx.fillStyle = this.color;
-    ctx.arc(this.x, this.y, this.radius, 0, Math.PI*2);
-    ctx.fill();
-    // simple trail
-    ctx.fillStyle = 'rgba(255,200,120,0.4)';
-    ctx.fillRect(this.x - 1, this.y - 1, 2, 2);
-  }
-}
-
-// 掉落物
-class Drop {
-  constructor(x,y,kind,data){
-    this.x = x; this.y = y; this.kind = kind; this.data = data;
-    this.radius = 10 + (kind==='gold'?0:0);
-  }
-  draw(ctx){
-    if (this.kind === 'gold'){
-      // coin
-      ctx.fillStyle = '#f6d365';
-      ctx.beginPath(); ctx.ellipse(this.x,this.y,10,6,0,0,Math.PI*2); ctx.fill();
-      ctx.fillStyle='#b8862c'; ctx.fillText('G', this.x-4, this.y+4);
-    } else if (this.kind === 'potion'){
-      ctx.fillStyle='#9ee4c0'; ctx.fillRect(this.x-6,this.y-10,12,14);
-      ctx.fillStyle='#084d35'; ctx.fillRect(this.x-3,this.y-12,6,4);
-    } else {
-      ctx.fillStyle='#cfe3ff'; ctx.fillRect(this.x-8,this.y-8,16,16);
-    }
-  }
-}
-
-// 繪製角色（向量風格）
-function drawCharacter(ctx,x,y,r,color,cls,healthRatio=1){
-  // shadow
-  ctx.beginPath();
-  ctx.fillStyle = 'rgba(0,0,0,0.35)';
-  ctx.ellipse(x, y + r*0.6, r*0.9, r*0.45, 0, 0, Math.PI*2);
-  ctx.fill();
-
-  // body
-  ctx.beginPath();
-  ctx.fillStyle = color;
-  ctx.arc(x, y, r, 0, Math.PI*2);
-  ctx.fill();
-
-  // face / details
-  ctx.fillStyle = 'rgba(0,0,0,0.15)';
-  ctx.fillRect(x - r*0.4, y - r*0.2, r*0.8, r*0.5);
-
-  // hp bar
-  const bw = r*1.6, bh=6;
-  ctx.fillStyle = 'rgba(0,0,0,0.5)';
-  ctx.fillRect(x - bw/2, y - r - 14, bw, bh);
-  ctx.fillStyle = healthRatio > 0.5 ? '#7bd07a' : '#ff7b7b';
-  ctx.fillRect(x - bw/2, y - r - 14, bw * Math.max(0,healthRatio), bh);
-  ctx.strokeStyle = 'rgba(255,255,255,0.06)'; ctx.strokeRect(x - bw/2, y - r - 14, bw, bh);
-}
-
-// logging
-function log(s){ const el = document.getElementById('log'); el.innerText = s + "\\n" + el.innerText; }
-
-// 簡單碰撞
-function dist(a,b){ return Math.hypot(a.x-b.x,a.y-b.y); }
-
-// init player and map
-function newGame(){
-  const map = generateMap();
-  gameState.map = map;
-  const start = {x: W/2, y: H/2};
-  const player = new Player(start.x, start.y);
-  gameState.player = player;
-  gameState.entities = [];
-  gameState.projectiles = [];
-  gameState.drops = [];
-
-  // spawn some enemies in rooms
-  for (const r of map.rooms){
-    const cnt = randInt(1,3);
-    for (let i=0;i<cnt;i++){
-      const ex = randInt(r.x+20, r.x + r.w - 20);
-      const ey = randInt(r.y+20, r.y + r.h - 20);
-      gameState.entities.push(new Enemy(ex, ey, randInt(1,3)));
-    }
-  }
-  // UI
-  updateUI();
-  log('新的遊戲開始');
-  gameState.running = true;
-}
-
-// input handling: movement target by right click or keyboard
-let targetMove = null;
-let keys = {};
-
-canvas.addEventListener('contextmenu', e=>e.preventDefault());
-canvas.addEventListener('mousedown', (e)=>{
-  const rect = canvas.getBoundingClientRect();
-  const mx = (e.clientX - rect.left) * (canvas.width / rect.width);
-  const my = (e.clientY - rect.top) * (canvas.height / rect.height);
-  if (e.button === 2){
-    // right click: move or shoot if close? we'll set move target
-    targetMove = {x: mx, y: my};
-  } else if (e.button === 0){
-    // left click: melee attack (instant) - check enemies in range
-    if (!gameState.running) return;
-    const p = gameState.player;
-    if (!p) return;
-    // melee attack
-    tryMeleeAttack(p, mx, my);
-  }
-});
-
-// right click for ranged when holding SHIFT (or use right-click + toggle). We'll implement right mouse double role: when close, it's move; if holding 'f' key, fire ranged.
-window.addEventListener('keydown',(e)=>{ keys[e.key.toLowerCase()] = true;
-  if (e.key === 'i' || e.key === 'I') toggleInv();
-  if (e.key === 's' || e.key === 'S') saveGame();
-});
-window.addEventListener('keyup',(e)=>{ keys[e.key.toLowerCase()] = false; });
-
-// mouse move + right button for hold movement (optional)
-let mouseDown = false;
-canvas.addEventListener('mousemove',(e)=>{
-  if (!mouseDown) return;
-}, {passive:true});
-canvas.addEventListener('mouseup',(e)=>{ mouseDown=false; });
-
-// melee attack function
-function tryMeleeAttack(player, mx, my){
-  if (player.attackCooldown > 0) return;
-  // simple melee: damage nearest enemy within range
-  let hit = null;
-  let best = 9999;
-  for (const en of gameState.entities){
-    const d = Math.hypot(en.x - player.x, en.y - player.y);
-    if (d <= player.meleeRange + en.radius){
-      if (d < best){ best = d; hit = en; }
-    }
-  }
-  if (hit){
-    const dmg = 8 + player.str;
-    hit.hp -= dmg;
-    player.attackCooldown = 0.35;
-    playBeep(720,0.04,'square',0.06);
-    log('你擊中 ' + hit.name + '，造成 ' + dmg + ' 傷害');
-    if (hit.hp <= 0){
-      onEnemyDeath(hit);
-    }
-  } else {
-    // small swing effect
-    player.attackCooldown = 0.25;
-    playBeep(500,0.03,'sine',0.04);
-  }
-}
-
-// ranged fire
-function fireProjectile(fromX, fromY, tx, ty){
-  if (!gameState.player) return;
-  const p = gameState.player;
-  if (p.ammo <= 0) { log('沒有箭了！'); playBeep(220,0.04,'sine',0.04); return; }
-  const [nx,ny] = vnorm(tx - fromX, ty - fromY);
-  const speed = 420;
-  const vx = nx * speed, vy = ny * speed;
-  const proj = new Projectile(fromX + nx*20, fromY + ny*20, vx, vy, p, 12 + Math.floor(p.str/2), 700, '#ffd57f');
-  gameState.projectiles.push(proj);
-  p.ammo--;
-  playBeep(880,0.05,'saw',0.06);
-}
-
-// enemy death handling
-function onEnemyDeath(enemy){
-  // drop xp and maybe items
-  const xp = 15 + enemy.tier * 8;
-  gameState.player.gainXp(xp);
-  log(enemy.name + ' 被擊敗，獲得 ' + xp + ' XP');
-  // gold drop
-  if (Math.random() < 0.7) {
-    const g = new Drop(enemy.x + randInt(-8,8), enemy.y + randInt(-8,8), 'gold', {amount: randInt(5,20)});
-    gameState.drops.push(g);
-  }
-  if (Math.random() < 0.25){
-    gameState.drops.push(new Drop(enemy.x + randInt(-8,8), enemy.y + randInt(-8,8), 'potion', {heal: 40}));
-  }
-  // remove enemy
-  const idx = gameState.entities.indexOf(enemy);
-  if (idx >= 0) gameState.entities.splice(idx,1);
-}
-
-// update UI
-function updateUI(){
-  const p = gameState.player;
-  if (p){
-    document.getElementById('hpText').textContent = 'HP: ' + Math.floor(p.hp) + ' / ' + p.maxHp;
-    document.getElementById('hpBar').style.width = Math.max(0, (p.hp / p.maxHp) * 100) + '%';
-    document.getElementById('xpText').textContent = 'XP: ' + Math.floor(p.xp) + ' / ' + p.nextXp + ' (Lv ' + p.level + ')';
-    document.getElementById('xpBar').style.width = Math.min(100, (p.xp / p.nextXp) * 100) + '%';
-    document.getElementById('statStr').textContent = p.str;
-    document.getElementById('statSpd').textContent = Math.floor(p.spd);
-    document.getElementById('statAtk').textContent = 8 + p.str;
-    // inventory slots
-    const inv = document.getElementById('inventory');
-    inv.innerHTML = '';
-    for (let i=0;i<8;i++){
-      const s = document.createElement('div'); s.className='slot';
-      if (i===0) s.textContent = '武器';
-      else if (i===1) s.textContent = '盔甲';
-      else s.textContent = '空';
-      inv.appendChild(s);
-    }
-  } else {
-    document.getElementById('hpText').textContent = 'HP: --';
-    document.getElementById('xpText').textContent = 'XP: --';
-  }
-}
-
-// game loop
-let lastTs = 0;
-function loop(ts){
-  if (!gameState.running){ lastTs = ts; requestAnimationFrame(loop); draw(); return; }
-  const dt = Math.min(0.05, (ts - lastTs) / 1000); lastTs = ts;
-
-  // player input movement keyboard
-  const p = gameState.player;
-  if (p){
-    let mvx = 0, mvy = 0;
-    if (keys['w'] || keys['arrowup']) mvy -= 1;
-    if (keys['s'] || keys['arrowdown']) mvy += 1;
-    if (keys['a'] || keys['arrowleft']) mvx -= 1;
-    if (keys['d'] || keys['arrowright']) mvx += 1;
-    if (mvx !== 0 || mvy !== 0){
-      const [nx,ny] = vnorm(mvx, mvy);
-      p.x += nx * p.spd * dt;
-      p.y += ny * p.spd * dt;
-    } else if (targetMove){
-      // move toward target
-      const dx = targetMove.x - p.x, dy = targetMove.y - p.y;
-      const d = Math.hypot(dx,dy);
-      if (d > 6){
-        const [nx,ny] = vnorm(dx,dy);
-        p.x += nx * p.spd * dt;
-        p.y += ny * p.spd * dt;
-      } else {
-        targetMove = null;
-      }
-    }
-    // ranged fire key 'f'
-    if (keys['f']){
-      // auto fire toward mouse position if available (we use last mouse)
-      if (lastMouse) {
-        if (p.ammo > 0) fireProjectile(p.x, p.y, lastMouse.x, lastMouse.y);
-        keys['f'] = false; // single shot
-      }
-    }
-    p.update(dt);
+    e.update(dt);
   }
 
   // projectiles
-  for (let i = gameState.projectiles.length - 1; i >= 0; i--){
-    const pr = gameState.projectiles[i];
-    pr.update(dt);
-    // collision with enemies
-    let removed = false;
-    for (let j = gameState.entities.length - 1; j >= 0; j--){
-      const en = gameState.entities[j];
-      if (Math.hypot(pr.x - en.x, pr.y - en.y) <= pr.radius + en.radius){
-        en.hp -= pr.damage;
-        // impact
-        gameState.projectiles.splice(i,1);
-        removed = true;
+  for (let i = projectiles.length -1; i>=0; i--){
+    const p = projectiles[i];
+    p.x += p.vx * dt; p.y += p.vy * dt;
+    p.traveled += Math.hypot(p.vx*dt, p.vy*dt);
+    // collide with enemies
+    for (let j = entities.length -1; j>=0; j--){
+      const e = entities[j];
+      const d = Math.hypot(p.x - e.x, p.y - e.y);
+      if (d <= e.radius + 6){
+        e.hp -= p.dmg;
+        projectiles.splice(i,1);
         playBeep(640,0.04,'triangle',0.05);
-        if (en.hp <= 0){ onEnemyDeath(en); }
+        if (e.hp <= 0){
+          entities.splice(j,1);
+          drops.push({x:e.x,y:e.y,kind:'gold',amount:randInt(5,20)});
+        }
         break;
       }
     }
-    if (removed) continue;
-    if (pr.traveled >= pr.range) { gameState.projectiles.splice(i,1); continue; }
-    // remove out of bounds
-    if (pr.x < -50 || pr.x > W+50 || pr.y < -50 || pr.y > H+50) { gameState.projectiles.splice(i,1); }
+    if (p && p.traveled >= p.range) projectiles.splice(i,1);
   }
 
-  // entities update
-  for (const en of gameState.entities) en.update(dt);
-
-  // player overlaps drops
-  for (let i = gameState.drops.length - 1; i >= 0; i--){
-    const d = gameState.drops[i];
-    if (Math.hypot(d.x - p.x, d.y - p.y) <= 24){
-      // pick up
-      if (d.kind === 'gold'){ p.gold += d.data.amount; log('拾取金幣 ' + d.data.amount); playBeep(900,0.04,'sine',0.05); }
-      else if (d.kind === 'potion'){ p.hp = Math.min(p.maxHp, p.hp + d.data.heal); log('使用藥水，回復 ' + d.data.heal + ' HP'); playBeep(1000,0.04,'sine',0.05); }
-      gameState.drops.splice(i,1);
+  // pickup drops
+  for (let i = drops.length -1; i>=0; i--){
+    const d = drops[i];
+    const dd = Math.hypot(d.x - player.x, d.y - player.y);
+    if (dd < 24){
+      if (d.kind==='gold') { /* collect */ }
+      drops.splice(i,1);
     }
   }
 
-  // ensure player stays in bounds
-  p.x = Math.max(20, Math.min(W-20, p.x));
-  p.y = Math.max(20, Math.min(H-20, p.y));
-
-  updateUI();
   draw();
   requestAnimationFrame(loop);
 }
 
-// drawing world
+// drawing
 function draw(){
-  // background
   ctx.clearRect(0,0,W,H);
-  // dark ground with slight grid
+  // background tiles (simple)
   ctx.fillStyle = '#081217';
   ctx.fillRect(0,0,W,H);
-  // draw rooms
-  if (gameState.map){
-    for (const r of gameState.map.rooms){
-      ctx.fillStyle = 'rgba(255,255,255,0.02)';
-      roundRect(ctx, r.x, r.y, r.w, r.h, 8, true, false);
-      // subtle border
-      ctx.strokeStyle = 'rgba(255,255,255,0.03)';
-      ctx.strokeRect(r.x, r.y, r.w, r.h);
-    }
-  }
 
-  // drops
-  for (const d of gameState.drops) d.draw(ctx);
-
-  // entities
-  for (const en of gameState.entities) en.draw(ctx);
-
+  // draw entities
+  for (const e of entities) e.draw(ctx);
   // projectiles
-  for (const pr of gameState.projectiles) pr.draw(ctx);
-
-  // player on top
-  if (gameState.player) gameState.player.draw(ctx);
-
-  // HUD overlays: crosshair at mouse
-  if (lastMouse){
-    ctx.beginPath();
-    ctx.strokeStyle = 'rgba(255,255,255,0.08)';
-    ctx.arc(lastMouse.x, lastMouse.y, 8, 0, Math.PI*2);
-    ctx.stroke();
+  for (const p of projectiles){
+    ctx.beginPath(); ctx.fillStyle = '#ffd57f'; ctx.arc(p.x,p.y,6,0,Math.PI*2); ctx.fill();
   }
+  // drops
+  for (const d of drops){
+    ctx.fillStyle = '#f6d365'; ctx.beginPath(); ctx.ellipse(d.x,d.y,8,6,0,0,Math.PI*2); ctx.fill();
+  }
+  // player
+  if (player) player.draw(ctx);
 
-  // if not running, show overlay message
-  if (!gameState.running){
-    ctx.fillStyle = 'rgba(0,0,0,0.6)';
-    ctx.fillRect(0,0,W,H);
-    ctx.fillStyle = '#e6eef2';
-    ctx.font = '22px sans-serif';
-    ctx.fillText('按「新的遊戲」開始', W/2 - 110, H/2);
+  // HUD
+  ctx.fillStyle = '#e6eef2';
+  ctx.font = '14px sans-serif';
+  if (player){
+    ctx.fillText('HP: ' + Math.max(0,Math.floor(player.hp)) + ' / ' + player.maxHp, 12, 20);
+  }
+  // resources status
+  if (!resourcesLoaded) {
+    ctx.fillStyle = '#fff';
+    ctx.fillText('載入資源...', W/2 - 40, H/2);
   }
 }
 
-// utilities
-function roundRect(ctx,x,y,w,h,r,fill,stroke){
-  ctx.beginPath();
-  ctx.moveTo(x+r,y);
-  ctx.arcTo(x+w,y,x+w,y+h,r);
-  ctx.arcTo(x+w,y+h,x,y+h,r);
-  ctx.arcTo(x,y+h,x,y,r);
-  ctx.arcTo(x,y,x+w,y,r);
-  ctx.closePath();
-  if (fill) ctx.fill();
-  if (stroke) ctx.stroke();
-}
-
-// mouse tracking
-let lastMouse = null;
-canvas.addEventListener('mousemove',(e)=>{
-  const rect = canvas.getBoundingClientRect();
-  lastMouse = {
-    x: (e.clientX - rect.left) * (canvas.width / rect.width),
-    y: (e.clientY - rect.top) * (canvas.height / rect.height)
-  };
-});
-
-// right-click release to decide action (move or fire depending on proximity and key)
-canvas.addEventListener('mouseup',(e)=>{
-  const rect = canvas.getBoundingClientRect();
-  const mx = (e.clientX - rect.left) * (canvas.width / rect.width);
-  const my = (e.clientY - rect.top) * (canvas.height / rect.height);
-  if (e.button === 2){
-    // if holding shift -> fire projectile
-    if (keys['shift'] || keys['shiftleft'] || keys['shiftright']) {
-      fireProjectile(gameState.player.x, gameState.player.y, mx, my);
-    } else {
-      // move target set by mousedown earlier; do nothing else
-      targetMove = {x: mx, y: my};
-    }
-  } else if (e.button === 0){
-    // left click might melee (handled earlier)
-  }
-});
-
-// buttons
-document.getElementById('btnNew').addEventListener('click', ()=>{ newGame(); });
-document.getElementById('btnSave').addEventListener('click', ()=>{ saveGame(); });
-document.getElementById('btnLoad').addEventListener('click', ()=>{ loadGame(); });
-
-// save/load
+// save/load (only basic player hp & pos for demo)
 function saveGame(){
-  if (!gameState.player) return;
-  const p = gameState.player;
-  const save = {
-    player: {
-      x: p.x, y: p.y, hp: p.hp, maxHp: p.maxHp, level: p.level, xp: p.xp, nextXp: p.nextXp,
-      str: p.str, spd: p.spd, ammo: p.ammo, gold: p.gold
-    }
-  };
-  localStorage.setItem('mini_arpg_save', JSON.stringify(save));
-  log('遊戲已儲存');
+  if (!player) return;
+  const save = { x:player.x, y:player.y, hp:player.hp };
+  localStorage.setItem('arpg_save', JSON.stringify(save));
+  statusEl.textContent = '已儲存';
 }
 function loadGame(){
-  const s = localStorage.getItem('mini_arpg_save');
-  if (!s) { log('找不到儲存檔'); return; }
+  const s = localStorage.getItem('arpg_save');
+  if (!s) { statusEl.textContent = '找不到儲存'; return; }
   const data = JSON.parse(s);
-  newGame(); // create fresh world then overwrite player with saved
-  const p = gameState.player;
-  Object.assign(p, data.player);
-  updateUI();
-  log('載入儲存檔');
-}
-function quickLoadIfExists(){
-  if (localStorage.getItem('mini_arpg_save')) loadGame();
+  if (!player) newGame();
+  player.x = data.x; player.y = data.y; player.hp = data.hp;
+  statusEl.textContent = '已載入';
 }
 
-// inventory toggle
-function toggleInv(){
-  gameState.showInventory = !gameState.showInventory;
-  const inv = document.getElementById('inventory');
-  inv.style.display = gameState.showInventory ? 'grid' : 'grid';
-  // simple visual toggle: if hidden shrink
-  inv.style.opacity = gameState.showInventory ? '1' : '1';
-}
+// helper: how to replace sprite sheet with your own:
+// - 將 spriteImg.src 改為你的圖檔 URL，例如: spriteImg.src = 'sprites/player_sheet.png';
+// - 設定 SPRITE.tileW / tileH 與 SPRITE.cols / rows 對應你的 spritesheet 格子大小
+// - 修改 ANIM_CLIPS 裡的 row / start / frames / speed 來對應你圖中每個動作的位置
+//   例如：若你的行走動畫在第 2 列、第 3 欄開始、共 4 格，則 {name:'walk', row:1, start:2, frames:4, speed:0.1}
+//
+// 注意：若圖檔有透明背景，能得到更好視覺。你可以把 demoSpriteDataURL 換成外部圖檔或內嵌的更複雜 dataURL。
 
-// keyboard shortcuts for ranged shot towards mouse
-window.addEventListener('keydown',(e)=>{
-  if (e.key === ' '){ // space as ranged toward mouse
-    if (lastMouse && gameState.player) fireProjectile(gameState.player.x, gameState.player.y, lastMouse.x, lastMouse.y);
-    e.preventDefault();
-  }
-});
-
-// small auto-spawn mechanic: periodically spawn enemies if too few
-let spawnTimer = 0;
-function spawnTick(dt){
-  spawnTimer -= dt;
-  if (spawnTimer <= 0){
-    spawnTimer = 3 + Math.random()*4;
-    // spawn near random room
-    if (gameState.map && gameState.entities.length < 12){
-      const r = randChoice(gameState.map.rooms);
-      const ex = randInt(r.x+20, r.x + r.w - 20);
-      const ey = randInt(r.y+20, r.y + r.h - 20);
-      gameState.entities.push(new Enemy(ex, ey, randInt(1,3)));
-      log('新的敵人出現！');
-    }
-  }
-}
-
-// integrate spawnTick into main loop by patching loop
-const originalLoop = loop;
-function wrappedLoop(ts){
-  if (!lastTs) lastTs = ts;
-  const dt = Math.min(0.05, (ts - lastTs) / 1000);
-  lastTs = ts;
-  if (gameState.running) spawnTick(dt);
-  originalLoop(ts);
-}
-requestAnimationFrame(wrappedLoop);
-
-// start with empty draw
-draw();
-updateUI();
-quickLoadIfExists();
-
-// expose save/load to buttons and S key
-document.addEventListener('keydown', (e)=>{ if (e.key.toLowerCase()==='s'){ saveGame(); } });
-
-// small note: this is a compact prototype. You can extend it by adding:
-// - sprite images replacing drawCharacter
-// - more item types, inventory interactions, equipment stats
-// - better AI (pathfinding), animations, skill effects
 </script>
 </body>
 </html>
