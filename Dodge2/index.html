@@ -1,0 +1,534 @@
+<script>
+  // Simple reaction dodge game (single-file)
+  // 修改：使用同資料夾內的 abc.jpg 當作玩家貼圖（若未載入則回退為原始圓形）
+
+  (() => {
+    // DOM
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d', { alpha: true });
+    const startBtn = document.getElementById('btnStart');
+    const pauseBtn = document.getElementById('btnPause');
+    const restartBtn = document.getElementById('btnRestart');
+    const helpBtn = document.getElementById('btnHelp');
+    const displayTimer = document.getElementById('displayTimer');
+    const hudTimer = document.getElementById('hudTimer');
+    const displayScore = document.getElementById('displayScore');
+    const hudScore = document.getElementById('hudScore');
+    const heartsWrap = document.getElementById('heartsWrap');
+    const levelProgress = document.getElementById('levelProgress');
+    const centerUI = document.getElementById('centerUI');
+    const centerTitle = document.getElementById('centerTitle');
+    const centerDesc = document.getElementById('centerDesc');
+    const feedbackMsg = document.getElementById('feedbackMsg');
+    const volRange = document.getElementById('volume');
+    const volLabel = document.getElementById('volLabel');
+
+    // canvas resize to device pixel ratio
+    function resizeCanvas(){
+      const rect = canvas.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = Math.max(480, Math.floor(rect.width * dpr));
+      canvas.height = Math.max(320, Math.floor(rect.height * dpr));
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    // --- Image for player ---
+    const playerImage = new Image();
+    playerImage.src = 'abc.jpg'; // 與 HTML 同資料夾的檔案名稱
+    let playerImageLoaded = false;
+    playerImage.onload = () => { playerImageLoaded = true; };
+    playerImage.onerror = () => {
+      console.warn('player image abc.jpg 無法載入，將使用圓形備援顯示。');
+      playerImageLoaded = false;
+    };
+
+    // Audio: simple WebAudio synth for events
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    const audioCtx = new AudioContext();
+    let masterGain = audioCtx.createGain();
+    masterGain.connect(audioCtx.destination);
+    masterGain.gain.value = parseFloat(volRange.value);
+
+    volRange.addEventListener('input', () => {
+      masterGain.gain.linearRampToValueAtTime(parseFloat(volRange.value), audioCtx.currentTime + 0.05);
+      volLabel.textContent = Math.round(parseFloat(volRange.value) * 100) + '%';
+    });
+
+    function playTone(type='tick', time=0, length=0.08, freq=880){
+      const o = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      o.type = type === 'sine' ? 'sine' : 'sawtooth';
+      o.frequency.value = freq;
+      g.gain.value = 0.0001;
+      o.connect(g); g.connect(masterGain);
+      o.start(audioCtx.currentTime + time);
+      g.gain.exponentialRampToValueAtTime(0.12, audioCtx.currentTime + time + 0.01);
+      g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + time + length);
+      o.stop(audioCtx.currentTime + time + length + 0.02);
+    }
+
+    function playHit(){ playTone('sawtooth', 0, 0.12, 160); playTone('sine', 0.01, 0.12, 220); }
+    function playPickup(){ playTone('sine', 0, 0.12, 1200); playTone('sine', 0.02, 0.12, 900); }
+    function playTick(){ playTone('sine', 0, 0.06, 900); }
+    function playStart(){ playTone('sine', 0, 0.08, 600); playTone('sine', 0.06, 0.12, 800); }
+
+    // Game state
+    let state = 'idle'; // idle, running, paused, over
+    const SETTINGS = {
+      roundTime: 60,
+      initialSpawnRate: 0.9,
+      spawnAcceleration: 0.96,
+      spawnAccelInterval: 8,
+      initialBulletSpeed: 90,
+      bulletSpeedInc: 1.06,
+      difficultyStepSec: 12,
+      blinkCooldown: 5,
+    };
+
+    let roundTimer = SETTINGS.roundTime;
+    let score = 0;
+    let lives = 3;
+    let startTime = 0;
+    let lastFrame = 0;
+    let pausedAt = 0;
+    let spawnTimer = 0;
+    let spawnInterval = SETTINGS.initialSpawnRate;
+    let bulletSpeed = SETTINGS.initialBulletSpeed;
+    let blinkLast = -999;
+    let highScore = 0;
+
+    // Player
+    const player = {
+      x: 0, y: 0, radius: 16, speed: 260, color:'#00ffd6', invulnerableUntil:0
+    };
+
+    // Key input
+    const keys = {};
+    window.addEventListener('keydown', (e) => {
+      if (e.repeat) return;
+      const k = e.key.toLowerCase();
+      keys[k] = true;
+      if (k === 'enter') {
+        if (state !== 'running') startGame();
+      }
+      if (k === ' '){
+        if (state === 'running') tryBlink();
+        e.preventDefault();
+      }
+      if (k === 'p') togglePause();
+    });
+    window.addEventListener('keyup', (e) => {
+      const k = e.key.toLowerCase();
+      keys[k] = false;
+    });
+
+    // Bullets pool
+    const MAX_BULLETS = 300;
+    const bullets = [];
+    for (let i=0;i<MAX_BULLETS;i++) bullets.push({alive:false,x:0,y:0,vx:0,vy:0,r:6,color:'#ff7b89',from:'',split:false});
+
+    function spawnBulletFrom(side, speed, type='linear'){
+      const b = bullets.find(x=>!x.alive);
+      if (!b) return;
+      const W = canvas.clientWidth, H = canvas.clientHeight;
+      let px = player.x, py = player.y;
+
+      let spawnX, spawnY, vx, vy;
+      const spread = (Math.random()-0.5) * 0.4;
+
+      if (side === 'left'){
+        spawnX = -10; spawnY = Math.random()*H;
+        const angle = Math.atan2(py - spawnY, px - spawnX) + spread;
+        vx = Math.cos(angle)*speed; vy = Math.sin(angle)*speed;
+      } else if (side === 'right'){
+        spawnX = W + 10; spawnY = Math.random()*H;
+        const angle = Math.atan2(py - spawnY, px - spawnX) + spread;
+        vx = Math.cos(angle)*speed; vy = Math.sin(angle)*speed;
+      } else if (side === 'top'){
+        spawnX = Math.random()*W; spawnY = -10;
+        const angle = Math.atan2(py - spawnY, px - spawnX) + spread;
+        vx = Math.cos(angle)*speed; vy = Math.sin(angle)*speed;
+      } else {
+        spawnX = Math.random()*W; spawnY = H + 10;
+        const angle = Math.atan2(py - spawnY, px - spawnX) + spread;
+        vx = Math.cos(angle)*speed; vy = Math.sin(angle)*speed;
+      }
+
+      b.alive = true;
+      b.x = spawnX; b.y = spawnY; b.vx = vx; b.vy = vy; b.r = Math.random()*5 + 6;
+      b.color = '#ff7b89';
+      b.from = side;
+      b.split = Math.random() < 0.03;
+    }
+
+    function spawnBurst(){
+      const sides = ['left','right','top','bottom'];
+      const n = Math.floor(3 + Math.random()*4);
+      for (let i=0;i<n;i++){
+        const s = sides[Math.floor(Math.random()*4)];
+        spawnBulletFrom(s, bulletSpeed * (0.9 + Math.random()*0.6));
+      }
+    }
+
+    // Movement & collision
+    function updatePlayer(dt){
+      const W = canvas.clientWidth, H = canvas.clientHeight;
+      const moveX = (keys['arrowright']||keys['d']?1:0) - (keys['arrowleft']||keys['a']?1:0);
+      const moveY = (keys['arrowdown']||keys['s']?1:0) - (keys['arrowup']||keys['w']?1:0);
+      const len = Math.hypot(moveX, moveY) || 1;
+      player.x += (moveX/len) * player.speed * dt;
+      player.y += (moveY/len) * player.speed * dt;
+      player.x = Math.max(10, Math.min(W-10, player.x));
+      player.y = Math.max(10, Math.min(H-10, player.y));
+    }
+
+    function tryBlink(){
+      const now = (performance.now()/1000);
+      if (now - blinkLast < SETTINGS.blinkCooldown) {
+        showFeedback("瞬移冷卻中");
+        return;
+      }
+      blinkLast = now;
+      const blinkDist = 110;
+      let dx=0,dy=0;
+      if (keys['arrowright']||keys['d']) dx += 1;
+      if (keys['arrowleft']||keys['a']) dx -= 1;
+      if (keys['arrowdown']||keys['s']) dy += 1;
+      if (keys['arrowup']||keys['w']) dy -= 1;
+      if (dx===0 && dy===0) { dx = (Math.random()-.5); dy=(Math.random()-.5); }
+      const l = Math.hypot(dx,dy)||1;
+      player.x += (dx/l)*blinkDist;
+      player.y += (dy/l)*blinkDist;
+      player.x = Math.max(10, Math.min(canvas.clientWidth-10, player.x));
+      player.y = Math.max(10, Math.min(canvas.clientHeight-10, player.y));
+      player.invulnerableUntil = (performance.now()/1000) + 0.6;
+      showFeedback("瞬移！短暫無敵");
+      playPickup();
+    }
+
+    function updateBullets(dt){
+      const W = canvas.clientWidth, H = canvas.clientHeight;
+      for (let b of bullets){
+        if (!b.alive) continue;
+        b.x += b.vx * dt;
+        b.y += b.vy * dt;
+        if (b.split && Math.random() < (0.01 * dt * 60)){
+          b.split = false;
+          const angle = Math.atan2(b.vy, b.vx);
+          const a1 = angle + 0.5 + (Math.random()-0.5)*0.3;
+          const a2 = angle - 0.5 + (Math.random()-0.5)*0.3;
+          const s = Math.hypot(b.vx,b.vy) * 0.9;
+          const nb1 = bullets.find(x=>!x.alive);
+          const nb2 = bullets.find(x=>!x.alive && x!==nb1);
+          if (nb1){ nb1.alive=true; nb1.x=b.x; nb1.y=b.y; nb1.vx=Math.cos(a1)*s; nb1.vy=Math.sin(a1)*s; nb1.r = b.r*0.7; nb1.color='#ffb86b'; }
+          if (nb2){ nb2.alive=true; nb2.x=b.x; nb2.y=b.y; nb2.vx=Math.cos(a2)*s; nb2.vy=Math.sin(a2)*s; nb2.r = b.r*0.7; nb2.color='#ffb86b'; }
+        }
+        if (b.x < -40 || b.x > W+40 || b.y < -40 || b.y > H+40) b.alive = false;
+      }
+    }
+
+    function detectCollisions(){
+      const now = performance.now()/1000;
+      if (player.invulnerableUntil > now) return;
+      for (let b of bullets){
+        if (!b.alive) continue;
+        const dx = b.x - player.x, dy = b.y - player.y;
+        const dist = Math.hypot(dx,dy);
+        if (dist < b.r + player.radius){
+          b.alive = false;
+          loseLife();
+          return;
+        }
+      }
+    }
+
+    function loseLife(){
+      if (lives <= 0) return;
+      lives--;
+      updateHearts();
+      player.invulnerableUntil = (performance.now()/1000) + 1.0;
+      showFeedback("被擊中！生命 -1");
+      playHit();
+      if (lives <= 0){
+        endGame(false);
+      }
+    }
+
+    function updateHearts(){
+      const heartEls = heartsWrap.querySelectorAll('.heart');
+      heartEls.forEach((el, i) => {
+        if (i < lives) { el.classList.remove('empty'); el.textContent = '❤'; }
+        else { el.classList.add('empty'); el.textContent = '♡'; }
+      });
+    }
+
+    // UI helpers
+    function showCenter(text,title=''){
+      centerUI.style.display = 'block';
+      centerTitle.textContent = title || '躲彈大作戰';
+      centerDesc.textContent = text;
+    }
+    function hideCenter(){
+      centerUI.style.display = 'none';
+    }
+    function showFeedback(txt, ms=1300){
+      feedbackMsg.textContent = txt;
+      feedbackMsg.parentElement.style.opacity = '1';
+      setTimeout(()=> {
+        if (feedbackMsg.textContent === txt) feedbackMsg.parentElement.style.opacity = '0.0001';
+      }, ms);
+    }
+
+    // Start / Pause / Reset
+    function startGame(){
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      if (state === 'running') return;
+      if (state === 'idle' || state === 'over'){
+        roundTimer = SETTINGS.roundTime;
+        score = 0;
+        lives = 3;
+        spawnInterval = SETTINGS.initialSpawnRate;
+        bulletSpeed = SETTINGS.initialBulletSpeed;
+        spawnTimer = 0;
+        startTime = performance.now()/1000;
+        lastFrame = performance.now();
+        blinkLast = -999;
+        bullets.forEach(b=>b.alive=false);
+        player.x = canvas.clientWidth/2;
+        player.y = canvas.clientHeight/2;
+        updateHearts();
+      }
+      state = 'running';
+      hideCenter();
+      playStart();
+      showFeedback('開始！躲避子彈並得分！', 1200);
+      requestAnimationFrame(loop);
+    }
+
+    function togglePause(){
+      if (state === 'running'){
+        state = 'paused';
+        pausedAt = performance.now()/1000;
+        showCenter('已暫停\n按 Enter 或點擊「開始」繼續', '暫停');
+      } else if (state === 'paused'){
+        const now = performance.now()/1000;
+        const pausedDur = now - pausedAt;
+        startTime += pausedDur;
+        state = 'running';
+        hideCenter();
+        requestAnimationFrame(loop);
+      }
+    }
+
+    function resetGame(){
+      state = 'idle';
+      bullets.forEach(b=>b.alive=false);
+      showCenter('按「開始」或 <Enter> 開始遊戲', '就緒');
+      score = 0; lives = 3; updateHearts();
+      displayScore.textContent = score;
+      hudScore.textContent = score;
+      displayTimer.textContent = SETTINGS.roundTime;
+      hudTimer.textContent = SETTINGS.roundTime;
+    }
+
+    function endGame(won){
+      state = 'over';
+      bullets.forEach(b=>b.alive=false);
+      if (score > highScore) highScore = score;
+      showCenter(`遊戲結束\n分數：${score}\n最高分：${highScore}`, won ? '挑戰成功！' : '你失敗了');
+      showFeedback(won ? '恭喜通關！' : '再接再厲！', 2200);
+    }
+
+    // Main loop
+    function loop(ts){
+      if (state !== 'running') return;
+      const now = performance.now();
+      const dt = Math.min(0.04, (now - lastFrame) / 1000);
+      lastFrame = now;
+
+      roundTimer -= dt;
+      if (roundTimer <= 0){
+        roundTimer = 0;
+        endGame(true);
+      }
+
+      const playedSec = Math.max(0, SETTINGS.roundTime - roundTimer);
+
+      spawnTimer -= dt;
+      if (spawnTimer <= 0){
+        const sides = ['left','right','top','bottom'];
+        const side = sides[Math.floor(Math.random()*4)];
+        spawnBulletFrom(side, bulletSpeed * (0.9 + Math.random()*0.7));
+        const difficultyFactor = 1 - Math.min(0.65, (playedSec/SETTINGS.roundTime)*0.6 + (score/4000));
+        spawnInterval = SETTINGS.initialSpawnRate * Math.max(0.2, difficultyFactor);
+        spawnTimer = spawnInterval * (0.9 + Math.random()*0.6);
+        bulletSpeed *= 1 + (Math.min(0.012, playedSec/10000));
+      }
+
+      if (Math.random() < Math.min(0.02 + playedSec/400, 0.12)) {
+        if (Math.random() < 0.03) spawnBurst();
+      }
+
+      updatePlayer(dt);
+      updateBullets(dt);
+
+      score += Math.floor(20 * dt);
+      hudScore.textContent = score;
+      displayScore.textContent = score;
+
+      detectCollisions();
+
+      const prog = (SETTINGS.roundTime - roundTimer) / SETTINGS.roundTime;
+      levelProgress.style.width = Math.min(100, Math.floor(prog*100)) + '%';
+
+      displayTimer.textContent = Math.ceil(roundTimer);
+      hudTimer.textContent = Math.ceil(roundTimer);
+
+      render();
+
+      requestAnimationFrame(loop);
+    }
+
+    // Render (使用圖片作為玩家)
+    function render(){
+      const W = canvas.clientWidth, H = canvas.clientHeight;
+      ctx.clearRect(0,0,W,H);
+
+      // background subtle grid
+      ctx.save();
+      ctx.globalAlpha = 0.06;
+      ctx.strokeStyle = '#ffffff';
+      for (let x=0;x<W; x+=40){
+        ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke();
+      }
+      for (let y=0;y<H; y+=40){
+        ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke();
+      }
+      ctx.restore();
+
+      // draw bullets
+      for (let b of bullets){
+        if (!b.alive) continue;
+        ctx.beginPath();
+        const grad = ctx.createRadialGradient(b.x, b.y, 0, b.x, b.y, b.r*3);
+        grad.addColorStop(0, b.color);
+        grad.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = grad;
+        ctx.arc(b.x, b.y, b.r, 0, Math.PI*2);
+        ctx.fill();
+
+        // trail
+        ctx.beginPath();
+        ctx.globalAlpha = 0.12;
+        ctx.strokeStyle = b.color;
+        ctx.moveTo(b.x - b.vx*0.02, b.y - b.vy*0.02);
+        ctx.lineTo(b.x, b.y);
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+      }
+
+      // player shadow
+      ctx.beginPath();
+      ctx.fillStyle = 'rgba(0,0,0,0.25)';
+      ctx.ellipse(player.x + 6, player.y + 10, player.radius+6, player.radius/2+4, 0, 0, Math.PI*2);
+      ctx.fill();
+
+      // Draw player either as image (若已載入) 或圓形備援
+      const now = performance.now()/1000;
+      const invul = (player.invulnerableUntil > now);
+
+      if (playerImageLoaded){
+        // drawImage 中指定寬高以適配 player.radius
+        // 若希望圖片貼圖比 radius 大一些可調整 scale
+        const diameter = player.radius * 2;
+        // 若你希望圖片不被圓形裁切，可把圖片畫成正方形並以 globalCompositeOperation 裁切（此處直接畫不裁切）
+        ctx.save();
+        // optional: 畫一白色框在圖片下（若無敵顯示閃）
+        if (invul){
+          ctx.beginPath();
+          ctx.fillStyle = 'rgba(255,255,255,0.9)';
+          ctx.arc(player.x, player.y, player.radius+3, 0, Math.PI*2);
+          ctx.fill();
+        }
+        // draw image centered on player.x, player.y
+        // 如果圖片不是方形會被拉伸；可改用等比例縮放
+        const imgW = diameter;
+        const imgH = diameter;
+        ctx.drawImage(playerImage, player.x - imgW/2, player.y - imgH/2, imgW, imgH);
+        ctx.restore();
+
+        // optional ring
+        ctx.beginPath();
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = invul ? 'rgba(255,255,255,0.85)' : 'rgba(0,0,0,0.25)';
+        ctx.arc(player.x, player.y, player.radius+4, 0, Math.PI*2);
+        ctx.stroke();
+      } else {
+        // fallback: original circle
+        ctx.beginPath();
+        ctx.fillStyle = invul ? 'rgba(255,255,255,0.9)' : player.color;
+        ctx.arc(player.x, player.y, player.radius, 0, Math.PI*2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = invul ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.2)';
+        ctx.arc(player.x, player.y, player.radius+4, 0, Math.PI*2);
+        ctx.stroke();
+      }
+
+      // HUD overlay small texts (debug)
+      ctx.fillStyle = 'rgba(255,255,255,0.04)';
+      ctx.fillRect(8, H-48, 220, 40);
+      ctx.fillStyle = 'rgba(255,255,255,0.6)';
+      ctx.font = '12px sans-serif';
+      ctx.fillText('彈幕數: ' + bullets.filter(b=>b.alive).length, 14, H-22);
+    }
+
+    // Bind controls
+    startBtn.addEventListener('click', startGame);
+    pauseBtn.addEventListener('click', togglePause);
+    restartBtn.addEventListener('click', () => { resetGame(); });
+    helpBtn.addEventListener('click', () => {
+      showCenter('操作說明：\n- 方向鍵 / WASD 移動\n- 空白 瞬移（有冷卻）\n- P 暫停\n\n目標：在時間內躲避子彈，保有生命並取得高分！', '說明');
+    });
+
+    // initial
+    resetGame();
+
+    // ticks before start
+    setInterval(()=> {
+      if (state === 'idle') playTick();
+    }, 12000);
+
+    // friendly tips
+    const tips = [
+      '靠近牆邊有時能避開大量彈幕',
+      '空白瞬移能救命，但有冷卻',
+      '嘗試短促移動來做微調，避免大幅位移',
+      '保持觀察彈道而不是子彈本身',
+    ];
+    setInterval(()=> {
+      if (state === 'running') {
+        if (Math.random() < 0.25) showFeedback(tips[Math.floor(Math.random()*tips.length)], 1400);
+      }
+    }, 8000);
+
+    // prevent default scroll for space
+    window.addEventListener('keydown', (e) => { if (e.key === ' '){ e.preventDefault(); } });
+
+    // click to focus canvas and unlock audio
+    canvas.addEventListener('click', () => {
+      canvas.focus();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+    });
+
+    // initialize player pos (on resize)
+    setTimeout(()=> {
+      player.x = canvas.clientWidth/2;
+      player.y = canvas.clientHeight/2;
+    }, 50);
+
+  })();
+</script>
