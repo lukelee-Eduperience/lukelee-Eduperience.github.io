@@ -1,0 +1,857 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>躲彈大作戰 - 反應訓練遊戲（桌機版）</title>
+  <style>
+    :root{
+      --bg:#0b1020;
+      --panel:#0f1724cc;
+      --accent:#00d4ff;
+      --danger:#ff4d6d;
+      --good:#7efc6a;
+      --muted:#98a0b3;
+      --glass: rgba(255,255,255,0.04);
+      --font: "Segoe UI", Roboto, "Noto Sans TC", system-ui, sans-serif;
+    }
+
+    html,body{
+      height:100%;
+      margin:0;
+      font-family:var(--font);
+      background: radial-gradient(1200px 600px at 10% 10%, #071026 0%, var(--bg) 25%, #05060b 100%);
+      color:#e6eef8;
+      -webkit-user-select:none;
+      user-select:none;
+    }
+
+    .container{
+      max-width:1200px;
+      margin:20px auto;
+      padding:16px;
+      display:grid;
+      grid-template-columns: 360px 1fr;
+      gap:16px;
+      align-items:start;
+    }
+
+    /* Left panel - HUD / Controls */
+    .panel{
+      background:linear-gradient(180deg,var(--panel), rgba(255,255,255,0.02));
+      border-radius:12px;
+      padding:14px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.02);
+      min-height:520px;
+    }
+
+    h1{
+      margin:0 0 8px 0;
+      font-size:20px;
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+    .sub{
+      color:var(--muted);
+      font-size:13px;
+      margin-bottom:12px;
+    }
+
+    .stat-row{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      margin-bottom:10px;
+    }
+
+    .box{
+      background:var(--glass);
+      border-radius:8px;
+      padding:8px;
+      flex:1;
+      min-width:0;
+    }
+
+    .big{
+      font-size:26px;
+      font-weight:700;
+      color:var(--accent);
+    }
+
+    .small{
+      font-size:12px;
+      color:var(--muted);
+    }
+
+    .life{
+      display:flex;
+      gap:8px;
+      align-items:center;
+      margin-bottom:8px;
+    }
+
+    .hearts{
+      display:flex;
+      gap:6px;
+    }
+
+    .heart{
+      width:26px;height:26px;border-radius:6px;background:linear-gradient(180deg,#ff7b89,#ff4d6d);box-shadow:0 3px 8px rgba(255,77,109,0.25);
+      display:flex;align-items:center;justify-content:center;font-weight:700;color:#200;
+    }
+    .heart.empty{
+      background:linear-gradient(180deg,#2b3240,#1a212c);
+      color:#556076;border:1px dashed rgba(255,255,255,0.03);
+    }
+
+    .progress{
+      height:10px;background:#051226;border-radius:6px;overflow:hidden;
+    }
+    .progress > i{
+      display:block;height:100%;background:linear-gradient(90deg,var(--accent),#7ee7ff);width:30%;
+      transition:width 200ms linear;
+    }
+
+    .controls{
+      margin-top:10px;
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+
+    button{
+      background:linear-gradient(180deg,#122033,#0f1b2c);
+      color:#dff6ff;border:1px solid rgba(255,255,255,0.03);
+      padding:8px 12px;border-radius:8px;cursor:pointer;font-weight:600;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.5);
+    }
+    button.primary{
+      background:linear-gradient(180deg,var(--accent),#00a8d6);
+      color:#021827;border:box-shadow:0 0;
+    }
+    button.ghost{
+      background:transparent;border:1px dashed rgba(255,255,255,0.06);color:var(--muted);
+    }
+
+    .note{
+      font-size:13px;color:var(--muted);margin-top:12px;
+    }
+
+    /* Right area - Game canvas & messages */
+    .game-area{
+      border-radius:12px;
+      overflow:hidden;
+      position:relative;
+      min-height:520px;
+      background:
+        linear-gradient(120deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+      display:flex;
+      flex-direction:column;
+    }
+
+    /* top HUD overlay on canvas */
+    .hud{
+      position:absolute;left:12px;top:12px;right:12px;display:flex;justify-content:space-between;gap:12px;z-index:30;
+    }
+    .hud .left,.hud .right{display:flex;gap:10px;align-items:center;}
+    .timer{
+      background:rgba(0,0,0,0.35);padding:8px 12px;border-radius:10px;font-weight:700;font-size:18px;
+      display:flex;align-items:center;gap:8px;
+    }
+    .score{
+      background:rgba(255,255,255,0.03);padding:8px 12px;border-radius:10px;font-weight:700;font-size:16px;color:var(--good);
+      display:flex;align-items:center;gap:8px;
+    }
+    .volume{
+      background:rgba(255,255,255,0.02);padding:6px 8px;border-radius:8px;font-size:13px;color:var(--muted);display:flex;align-items:center;gap:8px;
+    }
+
+    canvas#gameCanvas{
+      width:100%;
+      height:100%;
+      display:block;
+      background:
+        radial-gradient(400px 200px at 50% 20%, rgba(0,212,255,0.04), transparent 10%),
+        linear-gradient(180deg, rgba(255,255,255,0.01), rgba(0,0,0,0.08)),
+        transparent;
+      cursor:none;
+      flex:1;
+    }
+
+    /* Center messages */
+    .center-ui{
+      position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:40;text-align:center;pointer-events:none;
+    }
+    .center-ui .title{
+      font-size:36px;font-weight:800;color:var(--accent);text-shadow:0 6px 20px rgba(0,212,255,0.08);
+      margin-bottom:8px;
+    }
+    .center-ui .desc{color:var(--muted);margin-bottom:12px;}
+    .hint{
+      background:rgba(0,0,0,0.45);padding:10px 14px;border-radius:10px;color:var(--muted);font-size:13px;margin-top:8px;
+    }
+
+    /* bottom feedback strip */
+    .feedback{
+      position:absolute;left:12px;right:12px;bottom:12px;height:36px;z-index:40;display:flex;align-items:center;justify-content:center;
+      pointer-events:none;
+    }
+    .feedback .msg{
+      background:linear-gradient(90deg, rgba(0,0,0,0.5), rgba(255,255,255,0.02));padding:8px 12px;border-radius:999px;color:var(--muted);font-weight:700;
+      box-shadow:0 6px 20px rgba(0,0,0,0.6);
+    }
+
+    /* small helper */
+    .kbd{background:#0c1722;padding:4px 8px;border-radius:6px;font-weight:700;color:var(--muted);border:1px solid rgba(255,255,255,0.02);}
+
+    /* responsive */
+    @media (max-width:980px){
+      .container{grid-template-columns:1fr; padding:12px;}
+      .panel{order:2}
+      .game-area{order:1}
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <aside class="panel" aria-label="控制面板">
+      <h1>躲彈大作戰 <span style="font-size:12px;color:var(--muted);font-weight:600">（反應訓練）</span></h1>
+      <div class="sub">在限時內躲避四面八方的子彈，保有三條命，挑戰更高分數！支援鍵盤操作（方向鍵 / WASD）。</div>
+
+      <div class="stat-row">
+        <div class="box">
+          <div class="small">倒數計時</div>
+          <div id="displayTimer" class="big">60</div>
+        </div>
+        <div class="box">
+          <div class="small">即時分數</div>
+          <div id="displayScore" class="big" style="color:var(--good)">0</div>
+        </div>
+      </div>
+
+      <div class="life">
+        <div style="flex:1">
+          <div class="small">生命值</div>
+          <div class="hearts" id="heartsWrap">
+            <div class="heart" data-i="0">❤</div>
+            <div class="heart" data-i="1">❤</div>
+            <div class="heart" data-i="2">❤</div>
+          </div>
+        </div>
+
+        <div style="flex:1">
+          <div class="small">關卡進度</div>
+          <div class="progress" title="關卡進度"><i id="levelProgress" style="width:0%"></i></div>
+        </div>
+      </div>
+
+      <div class="controls">
+        <button id="btnStart" class="primary">開始</button>
+        <button id="btnPause">暫停</button>
+        <button id="btnRestart" class="ghost">重置</button>
+        <button id="btnHelp">操作說明</button>
+      </div>
+
+      <div class="note">
+        音量：<input id="volume" type="range" min="0" max="1" step="0.05" value="0.8" style="vertical-align:middle;width:140px;margin-left:8px;">
+        <div style="margin-top:10px;">
+          操作：<span class="kbd">方向鍵</span> 或 <span class="kbd">W/A/S/D</span> 移動， <span class="kbd">空白</span> 瞬移（冷卻）。
+        </div>
+      </div>
+
+      <hr style="border:none;height:1px;background:rgba(255,255,255,0.02);margin:12px 0;border-radius:2px">
+
+      <div style="font-weight:700;margin-bottom:6px;">介面建議（各年齡）</div>
+      <ul style="color:var(--muted);padding-left:18px;margin-top:0;">
+        <li><strong>兒童：</strong>大圖示、明亮色彩、簡短教學。</li>
+        <li><strong>青年/成人：</strong>數據化 HUD、鍵位自訂、排行榜。</li>
+        <li><strong>老人：</strong>高對比色、大字體、慢速/輔助模式。</li>
+      </ul>
+
+      <div style="margin-top:12px;color:var(--muted);font-size:13px;">
+        难度隨時間/分數/生命變化。設計含成就、排行榜與道具以提高重玩性。
+      </div>
+    </aside>
+
+    <section class="game-area" aria-label="遊戲區">
+      <div class="hud">
+        <div class="left">
+          <div class="timer" title="剩餘時間">Time <span id="hudTimer">60</span>s</div>
+          <div class="score">Score <span id="hudScore">0</span></div>
+        </div>
+        <div class="right">
+          <div class="volume">🔊 <span id="volLabel">80%</span></div>
+        </div>
+      </div>
+
+      <canvas id="gameCanvas" width="900" height="540" aria-label="遊戲畫布"></canvas>
+
+      <div class="center-ui" id="centerUI">
+        <div class="title" id="centerTitle">躲彈大作戰</div>
+        <div class="desc" id="centerDesc">準備好了嗎？按「開始」或按 <span class="kbd">Enter</span> 開始遊戲</div>
+        <div class="hint" id="centerHint">移動：方向鍵 / WASD。空白：瞬移（有冷卻）</div>
+      </div>
+
+      <div class="feedback" id="feedback"><div class="msg" id="feedbackMsg">歡迎！按開始展開挑戰！</div></div>
+    </section>
+  </div>
+
+  <!-- Audio elements (small, inline) -->
+  <audio id="sfxHit"><source src="" /></audio>
+  <audio id="sfxPickup"><source src="" /></audio>
+  <audio id="sfxTick"><source src="" /></audio>
+  <audio id="sfxStart"><source src="" /></audio>
+  <!-- (Sources are left empty, but code will generate tones via WebAudio for portability) -->
+
+  <script>
+    // Simple reaction dodge game (single-file)
+    // Core features implemented:
+    // - Keyboard movement (arrows + WASD), optional blink/warp with space (cooldown)
+    // - Bullets spawn from four sides, speed & density increase with time/score
+    // - Timer, score, 3 lives, progress bar, feedback messages
+    // - Sound via WebAudio (no external files) and volume control
+    // - Basic collision using circle hitboxes; object pooling for bullets
+    // Note: This is a playable prototype intended for desktop browsers.
+
+    (() => {
+      // DOM
+      const canvas = document.getElementById('gameCanvas');
+      const ctx = canvas.getContext('2d', { alpha: true });
+      const startBtn = document.getElementById('btnStart');
+      const pauseBtn = document.getElementById('btnPause');
+      const restartBtn = document.getElementById('btnRestart');
+      const helpBtn = document.getElementById('btnHelp');
+      const displayTimer = document.getElementById('displayTimer');
+      const hudTimer = document.getElementById('hudTimer');
+      const displayScore = document.getElementById('displayScore');
+      const hudScore = document.getElementById('hudScore');
+      const heartsWrap = document.getElementById('heartsWrap');
+      const levelProgress = document.getElementById('levelProgress');
+      const centerUI = document.getElementById('centerUI');
+      const centerTitle = document.getElementById('centerTitle');
+      const centerDesc = document.getElementById('centerDesc');
+      const feedbackMsg = document.getElementById('feedbackMsg');
+      const volRange = document.getElementById('volume');
+      const volLabel = document.getElementById('volLabel');
+
+      // canvas resize to device pixel ratio
+      function resizeCanvas(){
+        const rect = canvas.getBoundingClientRect();
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = Math.max(480, Math.floor(rect.width * dpr));
+        canvas.height = Math.max(320, Math.floor(rect.height * dpr));
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
+      window.addEventListener('resize', resizeCanvas);
+      resizeCanvas();
+
+      // Audio: simple WebAudio synth for events
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      const audioCtx = new AudioContext();
+      let masterGain = audioCtx.createGain();
+      masterGain.connect(audioCtx.destination);
+      masterGain.gain.value = parseFloat(volRange.value);
+
+      volRange.addEventListener('input', () => {
+        masterGain.gain.linearRampToValueAtTime(parseFloat(volRange.value), audioCtx.currentTime + 0.05);
+        volLabel.textContent = Math.round(parseFloat(volRange.value) * 100) + '%';
+      });
+
+      function playTone(type='tick', time=0, length=0.08, freq=880){
+        // small effects
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        o.type = type === 'sine' ? 'sine' : 'sawtooth';
+        o.frequency.value = freq;
+        g.gain.value = 0.0001;
+        o.connect(g); g.connect(masterGain);
+        o.start(audioCtx.currentTime + time);
+        g.gain.exponentialRampToValueAtTime(0.12, audioCtx.currentTime + time + 0.01);
+        g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + time + length);
+        o.stop(audioCtx.currentTime + time + length + 0.02);
+      }
+
+      function playHit(){
+        playTone('sawtooth', 0, 0.12, 160);
+        playTone('sine', 0.01, 0.12, 220);
+      }
+      function playPickup(){
+        playTone('sine', 0, 0.12, 1200);
+        playTone('sine', 0.02, 0.12, 900);
+      }
+      function playTick(){
+        playTone('sine', 0, 0.06, 900);
+      }
+      function playStart(){
+        playTone('sine', 0, 0.08, 600);
+        playTone('sine', 0.06, 0.12, 800);
+      }
+
+      // Game state
+      let state = 'idle'; // idle, running, paused, over
+      const SETTINGS = {
+        roundTime: 60, // seconds
+        initialSpawnRate: 0.9, // seconds between bullet spawns (lower means more)
+        spawnAcceleration: 0.96, // multiply spawnRate every X seconds
+        spawnAccelInterval: 8, // seconds
+        initialBulletSpeed: 90, // px/sec
+        bulletSpeedInc: 1.06, // multiply
+        difficultyStepSec: 12,
+        blinkCooldown: 5, // seconds
+      };
+
+      let roundTimer = SETTINGS.roundTime;
+      let score = 0;
+      let lives = 3;
+      let startTime = 0;
+      let lastFrame = 0;
+      let pausedAt = 0;
+      let spawnTimer = 0;
+      let spawnInterval = SETTINGS.initialSpawnRate;
+      let bulletSpeed = SETTINGS.initialBulletSpeed;
+      let blinkLast = -999;
+      let waveProgress = 0; // 0..1 for progress bar (example)
+      let highScore = 0;
+
+      // Player
+      const player = {
+        x: 0, y: 0, radius: 12, speed: 260, color:'#00ffd6', invulnerableUntil:0
+      };
+
+      // Key input
+      const keys = {};
+      window.addEventListener('keydown', (e) => {
+        if (e.repeat) return;
+        const k = e.key.toLowerCase();
+        keys[k] = true;
+        if (k === 'enter') {
+          if (state !== 'running') startGame();
+        }
+        if (k === ' '){
+          if (state === 'running') tryBlink();
+          e.preventDefault();
+        }
+        // pause via P
+        if (k === 'p') togglePause();
+      });
+      window.addEventListener('keyup', (e) => {
+        const k = e.key.toLowerCase();
+        keys[k] = false;
+      });
+
+      // Bullets pool
+      const MAX_BULLETS = 300;
+      const bullets = [];
+      for (let i=0;i<MAX_BULLETS;i++) bullets.push({alive:false,x:0,y:0,vx:0,vy:0,r:6,color:'#ff7b89',from:'',split:false});
+
+      function spawnBulletFrom(side, speed, type='linear'){
+        // side: 'left'|'right'|'top'|'bottom' -- spawn off-canvas and head toward player or across
+        const b = bullets.find(x=>!x.alive);
+        if (!b) return;
+        const W = canvas.clientWidth, H = canvas.clientHeight;
+        let px = player.x, py = player.y;
+
+        let spawnX, spawnY, vx, vy;
+        const spread = (Math.random()-0.5) * 0.4; // add slight angle variance
+
+        if (side === 'left'){
+          spawnX = -10; spawnY = Math.random()*H;
+          const angle = Math.atan2(py - spawnY, px - spawnX) + spread;
+          vx = Math.cos(angle)*speed; vy = Math.sin(angle)*speed;
+        } else if (side === 'right'){
+          spawnX = W + 10; spawnY = Math.random()*H;
+          const angle = Math.atan2(py - spawnY, px - spawnX) + spread;
+          vx = Math.cos(angle)*speed; vy = Math.sin(angle)*speed;
+        } else if (side === 'top'){
+          spawnX = Math.random()*W; spawnY = -10;
+          const angle = Math.atan2(py - spawnY, px - spawnX) + spread;
+          vx = Math.cos(angle)*speed; vy = Math.sin(angle)*speed;
+        } else {
+          spawnX = Math.random()*W; spawnY = H + 10;
+          const angle = Math.atan2(py - spawnY, px - spawnX) + spread;
+          vx = Math.cos(angle)*speed; vy = Math.sin(angle)*speed;
+        }
+
+        b.alive = true;
+        b.x = spawnX; b.y = spawnY; b.vx = vx; b.vy = vy; b.r = Math.random()*5 + 6;
+        b.color = '#ff7b89';
+        b.from = side;
+        b.split = Math.random() < 0.03; // small chance to split mid-air
+      }
+
+      function spawnBurst(){
+        const sides = ['left','right','top','bottom'];
+        const n = Math.floor(3 + Math.random()*4);
+        for (let i=0;i<n;i++){
+          const s = sides[Math.floor(Math.random()*4)];
+          spawnBulletFrom(s, bulletSpeed * (0.9 + Math.random()*0.6));
+        }
+      }
+
+      // Movement & collision
+      function updatePlayer(dt){
+        const W = canvas.clientWidth, H = canvas.clientHeight;
+        const moveX = (keys['arrowright']||keys['d']?1:0) - (keys['arrowleft']||keys['a']?1:0);
+        const moveY = (keys['arrowdown']||keys['s']?1:0) - (keys['arrowup']||keys['w']?1:0);
+        const len = Math.hypot(moveX, moveY) || 1;
+        player.x += (moveX/len) * player.speed * dt;
+        player.y += (moveY/len) * player.speed * dt;
+        // clamp inside canvas
+        player.x = Math.max(10, Math.min(W-10, player.x));
+        player.y = Math.max(10, Math.min(H-10, player.y));
+      }
+
+      function tryBlink(){
+        const now = (performance.now()/1000);
+        if (now - blinkLast < SETTINGS.blinkCooldown) {
+          showFeedback("瞬移冷卻中");
+          return;
+        }
+        // execute blink: move opposite direction of nearest bullets or random short dash
+        blinkLast = now;
+        const blinkDist = 110;
+        let dx=0,dy=0;
+        if (keys['arrowright']||keys['d']) dx += 1;
+        if (keys['arrowleft']||keys['a']) dx -= 1;
+        if (keys['arrowdown']||keys['s']) dy += 1;
+        if (keys['arrowup']||keys['w']) dy -= 1;
+        if (dx===0 && dy===0) { dx = (Math.random()-.5); dy=(Math.random()-.5); }
+        const l = Math.hypot(dx,dy)||1;
+        player.x += (dx/l)*blinkDist;
+        player.y += (dy/l)*blinkDist;
+        // clamp
+        player.x = Math.max(10, Math.min(canvas.clientWidth-10, player.x));
+        player.y = Math.max(10, Math.min(canvas.clientHeight-10, player.y));
+        // small invuln
+        player.invulnerableUntil = (performance.now()/1000) + 0.6;
+        showFeedback("瞬移！短暫無敵");
+        playPickup();
+      }
+
+      function updateBullets(dt){
+        const W = canvas.clientWidth, H = canvas.clientHeight;
+        for (let b of bullets){
+          if (!b.alive) continue;
+          b.x += b.vx * dt;
+          b.y += b.vy * dt;
+          // split behavior: occasional split into two smaller bullets
+          if (b.split && Math.random() < (0.01 * dt * 60)){
+            b.split = false;
+            // spawn two small bullets perpendicular
+            const angle = Math.atan2(b.vy, b.vx);
+            const a1 = angle + 0.5 + (Math.random()-0.5)*0.3;
+            const a2 = angle - 0.5 + (Math.random()-0.5)*0.3;
+            const s = Math.hypot(b.vx,b.vy) * 0.9;
+            const nb1 = bullets.find(x=>!x.alive);
+            const nb2 = bullets.find(x=>!x.alive && x!==nb1);
+            if (nb1){ nb1.alive=true; nb1.x=b.x; nb1.y=b.y; nb1.vx=Math.cos(a1)*s; nb1.vy=Math.sin(a1)*s; nb1.r = b.r*0.7; nb1.color='#ffb86b'; }
+            if (nb2){ nb2.alive=true; nb2.x=b.x; nb2.y=b.y; nb2.vx=Math.cos(a2)*s; nb2.vy=Math.sin(a2)*s; nb2.r = b.r*0.7; nb2.color='#ffb86b'; }
+          }
+          // recycle if off-screen far away
+          if (b.x < -40 || b.x > W+40 || b.y < -40 || b.y > H+40) b.alive = false;
+        }
+      }
+
+      function detectCollisions(){
+        const now = performance.now()/1000;
+        if (player.invulnerableUntil > now) return;
+        for (let b of bullets){
+          if (!b.alive) continue;
+          const dx = b.x - player.x, dy = b.y - player.y;
+          const dist = Math.hypot(dx,dy);
+          if (dist < b.r + player.radius){
+            // hit
+            b.alive = false;
+            loseLife();
+            return; // only one hit at a time
+          }
+        }
+      }
+
+      function loseLife(){
+        if (lives <= 0) return;
+        lives--;
+        updateHearts();
+        player.invulnerableUntil = (performance.now()/1000) + 1.0;
+        showFeedback("被擊中！生命 -1");
+        playHit();
+        if (lives <= 0){
+          endGame(false);
+        }
+      }
+
+      function updateHearts(){
+        const heartEls = heartsWrap.querySelectorAll('.heart');
+        heartEls.forEach((el, i) => {
+          if (i < lives) { el.classList.remove('empty'); el.textContent = '❤'; }
+          else { el.classList.add('empty'); el.textContent = '♡'; }
+        });
+      }
+
+      // UI helpers
+      function showCenter(text,title=''){
+        centerUI.style.display = 'block';
+        centerTitle.textContent = title || '躲彈大作戰';
+        centerDesc.textContent = text;
+      }
+      function hideCenter(){
+        centerUI.style.display = 'none';
+      }
+      function showFeedback(txt, ms=1300){
+        feedbackMsg.textContent = txt;
+        feedbackMsg.parentElement.style.opacity = '1';
+        setTimeout(()=> {
+          if (feedbackMsg.textContent === txt) feedbackMsg.parentElement.style.opacity = '0.0001';
+        }, ms);
+      }
+
+      // Start / Pause / Reset
+      function startGame(){
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        if (state === 'running') return;
+        // reset or resume
+        if (state === 'idle' || state === 'over'){
+          // reset all
+          roundTimer = SETTINGS.roundTime;
+          score = 0;
+          lives = 3;
+          spawnInterval = SETTINGS.initialSpawnRate;
+          bulletSpeed = SETTINGS.initialBulletSpeed;
+          spawnTimer = 0;
+          startTime = performance.now()/1000;
+          lastFrame = performance.now();
+          blinkLast = -999;
+          bullets.forEach(b=>b.alive=false);
+          // place player center
+          player.x = canvas.clientWidth/2;
+          player.y = canvas.clientHeight/2;
+          updateHearts();
+        } else if (state === 'paused') {
+          // resume timer adjustments done in togglePause
+        }
+        state = 'running';
+        hideCenter();
+        playStart();
+        showFeedback('開始！躲避子彈並得分！', 1200);
+        requestAnimationFrame(loop);
+      }
+
+      function togglePause(){
+        if (state === 'running'){
+          state = 'paused';
+          pausedAt = performance.now()/1000;
+          showCenter('已暫停\n按 Enter 或點擊「開始」繼續', '暫停');
+        } else if (state === 'paused'){
+          // resume
+          const now = performance.now()/1000;
+          const pausedDur = now - pausedAt;
+          startTime += pausedDur;
+          state = 'running';
+          hideCenter();
+          requestAnimationFrame(loop);
+        }
+      }
+
+      function resetGame(){
+        state = 'idle';
+        bullets.forEach(b=>b.alive=false);
+        showCenter('按「開始」或 <Enter> 開始遊戲', '就緒');
+        score = 0; lives = 3; updateHearts();
+        displayScore.textContent = score;
+        hudScore.textContent = score;
+        displayTimer.textContent = SETTINGS.roundTime;
+        hudTimer.textContent = SETTINGS.roundTime;
+      }
+
+      function endGame(won){
+        state = 'over';
+        bullets.forEach(b=>b.alive=false);
+        if (score > highScore) highScore = score;
+        showCenter(`遊戲結束\n分數：${score}\n最高分：${highScore}`, won ? '挑戰成功！' : '你失敗了');
+        showFeedback(won ? '恭喜通關！' : '再接再厲！', 2200);
+      }
+
+      // Main loop
+      function loop(ts){
+        if (state !== 'running') return;
+        const now = performance.now();
+        const dt = Math.min(0.04, (now - lastFrame) / 1000);
+        lastFrame = now;
+
+        // update timers
+        roundTimer -= dt;
+        if (roundTimer <= 0){
+          roundTimer = 0;
+          endGame(true);
+        }
+
+        // difficulty progression by time & score
+        const playedSec = Math.max(0, SETTINGS.roundTime - roundTimer);
+        if (playedSec > 0 && Math.floor(playedSec) % SETTINGS.spawnAccelInterval === 0) {
+          // gradually reduce spawnInterval but clamp
+        }
+        // accelerate spawn a bit each difficultyStepSec
+        if (Math.floor(playedSec) % SETTINGS.difficultyStepSec === 0 && Math.floor(playedSec) > 0) {
+          // small chance to spawn burst
+          if (Math.random() < 0.02) spawnBurst();
+        }
+
+        // spawn logic
+        spawnTimer -= dt;
+        if (spawnTimer <= 0){
+          // spawn one bullet from random side; spawnInterval reduces slowly with score/time
+          const sides = ['left','right','top','bottom'];
+          const side = sides[Math.floor(Math.random()*4)];
+          spawnBulletFrom(side, bulletSpeed * (0.9 + Math.random()*0.7));
+          // reset spawnTimer
+          const difficultyFactor = 1 - Math.min(0.65, (playedSec/SETTINGS.roundTime)*0.6 + (score/4000));
+          spawnInterval = SETTINGS.initialSpawnRate * Math.max(0.2, difficultyFactor);
+          spawnTimer = spawnInterval * (0.9 + Math.random()*0.6);
+          // gradually increase bullet speed
+          bulletSpeed *= 1 + (Math.min(0.012, playedSec/10000));
+        }
+
+        // occasional special bursts with increasing chance
+        if (Math.random() < Math.min(0.02 + playedSec/400, 0.12)) {
+          if (Math.random() < 0.03) spawnBurst();
+        }
+
+        updatePlayer(dt);
+        updateBullets(dt);
+
+        // scoring: 1 point per 0.2 sec alive; bonus for near-miss (not implemented deep)
+        score += Math.floor(20 * dt); // rough steady increase
+        hudScore.textContent = score;
+        displayScore.textContent = score;
+
+        detectCollisions();
+
+        // visual progress (example: progress through round)
+        const prog = (SETTINGS.roundTime - roundTimer) / SETTINGS.roundTime;
+        levelProgress.style.width = Math.min(100, Math.floor(prog*100)) + '%';
+
+        displayTimer.textContent = Math.ceil(roundTimer);
+        hudTimer.textContent = Math.ceil(roundTimer);
+
+        render();
+
+        requestAnimationFrame(loop);
+      }
+
+      // Render
+      function render(){
+        const W = canvas.clientWidth, H = canvas.clientHeight;
+        ctx.clearRect(0,0,W,H);
+
+        // background subtle grid
+        ctx.save();
+        ctx.globalAlpha = 0.06;
+        ctx.strokeStyle = '#ffffff';
+        for (let x=0;x<W; x+=40){
+          ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke();
+        }
+        for (let y=0;y<H; y+=40){
+          ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke();
+        }
+        ctx.restore();
+
+        // draw bullets
+        for (let b of bullets){
+          if (!b.alive) continue;
+          ctx.beginPath();
+          const grad = ctx.createRadialGradient(b.x, b.y, 0, b.x, b.y, b.r*3);
+          grad.addColorStop(0, b.color);
+          grad.addColorStop(1, 'rgba(0,0,0,0)');
+          ctx.fillStyle = grad;
+          ctx.arc(b.x, b.y, b.r, 0, Math.PI*2);
+          ctx.fill();
+
+          // trail
+          ctx.beginPath();
+          ctx.globalAlpha = 0.12;
+          ctx.strokeStyle = b.color;
+          ctx.moveTo(b.x - b.vx*0.02, b.y - b.vy*0.02);
+          ctx.lineTo(b.x, b.y);
+          ctx.stroke();
+          ctx.globalAlpha = 1;
+        }
+
+        // player shadow
+        ctx.beginPath();
+        ctx.fillStyle = 'rgba(0,0,0,0.25)';
+        ctx.ellipse(player.x + 6, player.y + 10, player.radius+6, player.radius/2+4, 0, 0, Math.PI*2);
+        ctx.fill();
+
+        // player
+        ctx.beginPath();
+        const now = performance.now()/1000;
+        const invul = (player.invulnerableUntil > now);
+        ctx.fillStyle = invul ? 'rgba(255,255,255,0.9)' : player.color;
+        ctx.arc(player.x, player.y, player.radius, 0, Math.PI*2);
+        ctx.fill();
+        // ring
+        ctx.beginPath();
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = invul ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.2)';
+        ctx.arc(player.x, player.y, player.radius+4, 0, Math.PI*2);
+        ctx.stroke();
+
+        // HUD overlay small texts (debug)
+        ctx.fillStyle = 'rgba(255,255,255,0.04)';
+        ctx.fillRect(8, H-48, 220, 40);
+        ctx.fillStyle = 'rgba(255,255,255,0.6)';
+        ctx.font = '12px sans-serif';
+        ctx.fillText('彈幕數: ' + bullets.filter(b=>b.alive).length, 14, H-22);
+
+      }
+
+      // Bind controls
+      startBtn.addEventListener('click', startGame);
+      pauseBtn.addEventListener('click', togglePause);
+      restartBtn.addEventListener('click', () => { resetGame(); });
+      helpBtn.addEventListener('click', () => {
+        showCenter('操作說明：\n- 方向鍵 / WASD 移動\n- 空白 瞬移（有冷卻）\n- P 暫停\n\n目標：在時間內躲避子彈，保有生命並取得高分！', '說明');
+      });
+
+      // initial
+      resetGame();
+
+      // small visibility: show ticks before start
+      setInterval(()=> {
+        if (state === 'idle') playTick();
+      }, 12000);
+
+      // friendly tip messages
+      const tips = [
+        '靠近牆邊有時能避開大量彈幕',
+        '空白瞬移能救命，但有冷卻',
+        '嘗試短促移動來做微調，避免大幅位移',
+        '保持觀察彈道而不是子彈本身',
+      ];
+      setInterval(()=> {
+        if (state === 'running') {
+          if (Math.random() < 0.25) showFeedback(tips[Math.floor(Math.random()*tips.length)], 1400);
+        }
+      }, 8000);
+
+      // prevent default scroll for space
+      window.addEventListener('keydown', (e) => { if (e.key === ' '){ e.preventDefault(); } });
+
+      // click to focus canvas and unlock audio
+      canvas.addEventListener('click', () => {
+        canvas.focus();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+      });
+
+      // initialize player pos (on resize)
+      setTimeout(()=> {
+        player.x = canvas.clientWidth/2;
+        player.y = canvas.clientHeight/2;
+      }, 50);
+
+    })();
+  </script>
+</body>
+</html>
