@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>聖誕快樂派禮王</title>
+  <title>聖誕快樂派禮王（含怪獸）</title>
   <style>
     :root{
       --bg:#f6fbff;
@@ -79,6 +79,23 @@
     .child img{width:72px;height:72px;object-fit:cover;border-radius:10px}
     .child .face{width:48px;height:48px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:20px;box-shadow:inset 0 -6px 10px rgba(0,0,0,0.08)}
     .child .label{font-size:12px;color:#333}
+
+    /* monster */
+    .monster{
+      position:absolute;
+      width:96px;
+      height:110px;
+      border-radius:12px;
+      background:linear-gradient(180deg,#fff7f7,#fff1f3);
+      box-shadow:0 8px 20px rgba(100,10,10,0.06);
+      display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:8px;cursor:pointer;user-select:none;z-index:32;overflow:hidden;
+      transform-origin:center center;
+      border:3px solid rgba(220,40,60,0.18);
+      transform: scale(0.7);
+    }
+    .monster img{width:80px;height:80px;object-fit:contain;border-radius:8px}
+    .monster .label{font-size:12px;color:#a11;font-weight:800}
+
     .gift{position:absolute;width:56px;height:56px;border-radius:10px;background:linear-gradient(180deg,var(--gold),#ffdb6b);display:flex;align-items:center;justify-content:center;box-shadow:0 12px 26px rgba(0,0,0,0.18);transform-origin:center;z-index:35}
     .gift img{width:100%;height:100%;object-fit:contain;border-radius:8px}
     .sidebar{width:300px;display:flex;flex-direction:column;gap:12px}
@@ -112,18 +129,17 @@
   </style>
 </head>
 <body>
-  <div class="wrap" role="application" aria-label="可操控聖誕老人派禮遊戲">
+  <div class="wrap" role="application" aria-label="可操控聖誕老人派禮遊戲 - 含怪獸">
     <div class="game-area" id="gameArea">
       <div class="hud">
         <div class="title-badge">
           <div class="logo" id="logoIcon" aria-hidden="true">
-            <!-- icon.png will be inserted by JS; fallback emoji kept in markup for no-JS or missing file -->
             <img id="logoImg" alt="icon" src="icon.png" onerror="this.style.display='none'">
             <div id="logoFallback" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:28px;">🎅</div>
           </div>
           <div>
-            <div class="title">聖誕快樂派禮王</div>
-            <div class="subtitle">派禮物給小朋友身邊吧！</div>
+            <div class="title">聖誕快樂派禮王（含怪獸）</div>
+            <div class="subtitle">注意：不要把禮物派給怪獸！</div>
           </div>
         </div>
 
@@ -159,7 +175,7 @@
       </div>
 
       <div style="margin-top:12px;display:flex;gap:10px;align-items:center;justify-content:space-between;">
-        <div class="tips">操作：方向鍵 / WASD 移動；滑鼠拖動聖誕老人；靠近小朋友後按空白鍵或點擊小朋友派禮物。</div>
+        <div class="tips">操作：方向鍵 / WASD 移動；滑鼠拖動聖誕老人；靠近小朋友後按空白鍵或點擊小朋友派禮物。誤派給怪獸會扣 5 分。</div>
         <div>
           <button class="btn btn-primary" id="startBtn">開始遊戲</button>
           <button class="btn btn-ghost" id="resetBtn">重新開始</button>
@@ -205,7 +221,7 @@
         <div style="font-weight:800;margin-bottom:8px;">遊戲說明</div>
         <ol style="padding-left:18px;margin:0;">
           <li>每回合 60 秒，用鍵盤或滑鼠控制聖誕老人移動，按空白鍵或點擊小朋友嘗試派禮物。</li>
-          <li>收到禮物的小朋友會開心離開，派中一次得 +10 分。</li>
+          <li>收到禮物的小朋友會開心離開，派中一次得 +10 分；誤派給怪獸會 -5 分，怪獸不會消失。</li>
         </ol>
       </div>
 
@@ -282,12 +298,13 @@
     let dragOffset = {x:0,y:0};
 
     // proximity threshold (distance in px to be considered "beside")
-    const PROXIMITY_DIST = 100; // 已更新為 200px
+    const PROXIMITY_DIST = 200; // 已更新為 200px
 
     // assets filenames (assumed in same folder as HTML)
     const santaImageFile = 'Santa.png';
     const kidImages = ['Boy1.png','Boy2.png','Girl1.png','Girl2.png'];
     const giftImages = ['Gift1.png','Gift2.png','Gift3.png','Gift4.png','Gift5.png'];
+    const monsterImages = ['monster1.png','monster2.png','monster3.png','monster4.png'];
     const ICON_FILE = 'icon.png';
     const BACKGROUND_FILE = 'background3.png';
 
@@ -300,8 +317,15 @@
     // collision scale used for children (we use same as visual here, but it's separated so可以微調)
     const CHILD_COLLISION_SCALE = 0.6;
 
+    // monster visual & collision scale
+    const MONSTER_VISUAL_SCALE = 0.7;
+    const MONSTER_COLLISION_SCALE = 0.7;
+
     // how long a child will wait before leaving if not gifted (ms)
     const CHILD_WAIT_BEFORE_LEAVE_MS = 5000;
+
+    // penalty for gifting a monster
+    const MONSTER_PENALTY = 5;
 
     // utility random
     function rand(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
@@ -341,7 +365,7 @@
         santa.innerHTML = '';
         img.alt = 'Santa';
         santa.appendChild(img);
-        const label = document.createElement('div'); label.className='label'; label.textContent='聖誕老人';
+        const label = document.createElement('div'); label.className='label'; label.textContent='聖誕老公公';
         santa.appendChild(label);
       };
       img.onerror = ()=> {
@@ -360,40 +384,29 @@
     // Helper: compute collision box center and radius for an element
     // We'll represent collision area as a circle (center x,y relative to playfield, radius)
     function getCollisionCircleForElement(el, options = {}){
-      // options.scale: scale to apply to element's bounding box for collision (e.g. 0.6)
       const rect = el.getBoundingClientRect();
       const pfRect = playfield.getBoundingClientRect();
       const scale = options.scale ?? 1.0;
       const cx = rect.left - pfRect.left + rect.width/2;
       const cy = rect.top - pfRect.top + rect.height/2;
-      // use average of width/height and apply scale, divide by 2 to approximate radius
       const radius = ( (rect.width + rect.height) / 4 ) * scale;
       return { x: cx, y: cy, r: radius };
     }
 
     // helper to schedule auto-leave for a child element
     function scheduleChildAutoLeave(childEl){
-      // clear existing if any
       cancelChildAutoLeave(childEl);
-
       const timeoutId = setTimeout(()=>{
-        // if already leaving or removed, skip
         if(!childEl.isConnected) return;
         if(childEl.dataset.leaving === '1') return;
         childEl.dataset.leaving = '1';
-        // show a small feedback
-        if(running) feedbackText.textContent = '快快給小朋友派禮物吧';
-
-        // fade out animation then remove and spawn replacement
+        if(running) feedbackText.textContent = '給小朋友派禮物吧！';
         childEl.animate([{opacity:1},{opacity:0}],{duration:700,easing:'ease-in'});
         setTimeout(()=>{
           try{ childEl.remove(); }catch(e){}
-          // spawn a replacement after short delay to keep population
           setTimeout(()=>{ if(running) spawnNewChild(); }, 600);
         }, 720);
       }, CHILD_WAIT_BEFORE_LEAVE_MS);
-
-      // store timer id on element for possible cancellation
       childEl._autoLeaveTimeout = timeoutId;
     }
 
@@ -404,13 +417,15 @@
       }
     }
 
-    // Spawn N children randomly, static (no movement), and avoid overlap with santa and other children
+    // Spawn N children randomly
     function spawnChildren(count = 8){
-      // remove existing children
       Array.from(playfield.querySelectorAll('.child')).forEach(n=>{
         cancelChildAutoLeave(n);
         n.remove();
       });
+      // also remove existing monsters and respawn fresh ones separately
+      Array.from(playfield.querySelectorAll('.monster')).forEach(m=> m.remove());
+
       const w = playfield.clientWidth;
       const h = playfield.clientHeight;
       const padding = 20;
@@ -418,7 +433,6 @@
       const santaCircle = getCollisionCircleForElement(santa, { scale: 1.0 });
 
       for(let i=0;i<count;i++){
-        // generate non-overlapping-ish positions (consider child's collision radius at collision scale)
         let x,y,attempt=0;
         let childWidth = 84, childHeight = 100;
         const childRadius = ((childWidth + childHeight) / 4) * CHILD_COLLISION_SCALE;
@@ -426,22 +440,18 @@
           x = padding + Math.random()*(w - padding*2 - childWidth);
           y = padding + Math.random()*(h - padding*2 - childHeight);
           attempt++;
-          // compute center for candidate
           const cx = x + childWidth/2;
           const cy = y + childHeight/2;
-          // check against existing positions
           let ok = true;
           for(const p of positions){
             const dx = p.cx - cx;
             const dy = p.cy - cy;
-            const minDist = (p.r + childRadius) + 10; // small margin
+            const minDist = (p.r + childRadius) + 10;
             if(Math.hypot(dx,dy) < minDist){ ok = false; break; }
           }
-          // check against santa collision circle so they don't spawn overlapping santa
           const dxs = santaCircle.x - cx;
           const dys = santaCircle.y - cy;
           if(Math.hypot(dxs,dys) < (santaCircle.r + childRadius + 20)) ok = false;
-
           if(ok) break;
         }while(attempt < 80);
         positions.push({ x, y, cx: x + childWidth/2, cy: y + childHeight/2, r: ((childWidth + childHeight) / 4) * CHILD_COLLISION_SCALE });
@@ -453,13 +463,11 @@
         el.setAttribute('role','button');
         el.setAttribute('tabindex','0');
 
-        // try to pick an image from kidImages
         const img = new Image();
         const pick = kidImages[rand(0,kidImages.length-1)];
         img.src = pick;
         img.alt = '小朋友';
         img.onload = ()=>{
-          // if image loaded, use it
           while(el.firstChild) el.removeChild(el.firstChild);
           img.style.width = '72px';
           img.style.height = '72px';
@@ -468,25 +476,18 @@
           el.appendChild(label);
         };
         img.onerror = ()=>{
-          // fallback to face emoji + label
           while(el.firstChild) el.removeChild(el.firstChild);
           const face = document.createElement('div'); face.className='face'; face.textContent = ['🙂','😊','😄','😋'][rand(0,3)];
           const label = document.createElement('div'); label.className='label'; label.textContent='小朋友';
           el.appendChild(face); el.appendChild(label);
         };
 
-        // place (note: because .child has transform: scale(0.6), the visual position will be scaled visually.
-        // to keep intuitive placements we set the left/top as if unscaled)
         el.style.left = pos.x + 'px';
         el.style.top = pos.y + 'px';
-        // set data-scale as reference
         el.dataset.collisionScale = String(CHILD_COLLISION_SCALE);
-        el.style.transform = `scale(${CHILD_VISUAL_SCALE})`; // visual shrink
-
-        // mark as not leaving
+        el.style.transform = `scale(${CHILD_VISUAL_SCALE})`;
         el.dataset.leaving = '0';
 
-        // click to attempt gifting
         el.addEventListener('click', (ev)=>{
           if(!running) return;
           attemptGiftTo(el);
@@ -495,56 +496,134 @@
         playfield.appendChild(el);
         if(running) scheduleChildAutoLeave(el);
       });
+
+      // spawn some monsters as well
+      spawnMonsters(4);
     }
 
-    // Attempt to give gift to child: must be within proximity (using collision circles + PROXIMITY_DIST)
-    function attemptGiftTo(kidEl){
-      if(!kidEl || !running) return;
-      // compute distance between centers (playfield coordinates)
+    function spawnMonsters(count = 4){
+      // remove existing monsters
+      Array.from(playfield.querySelectorAll('.monster')).forEach(m=> m.remove());
+      const w = playfield.clientWidth;
+      const h = playfield.clientHeight;
+      const padding = 20;
+      const positions = [];
+      const santaCircle = getCollisionCircleForElement(santa, { scale: 1.0 });
+
+      for(let i=0;i<count;i++){
+        let x,y,attempt=0;
+        const monW = 96, monH = 110;
+        const monR = ((monW + monH) / 4) * MONSTER_COLLISION_SCALE;
+        do{
+          x = padding + Math.random()*(w - padding*2 - monW);
+          y = padding + Math.random()*(h - padding*2 - monH);
+          attempt++;
+          const cx = x + monW/2;
+          const cy = y + monH/2;
+          let ok = true;
+          for(const p of positions){
+            const dx = p.cx - cx;
+            const dy = p.cy - cy;
+            const minDist = (p.r + monR) + 14;
+            if(Math.hypot(dx,dy) < minDist){ ok = false; break; }
+          }
+          const dxs = santaCircle.x - cx;
+          const dys = santaCircle.y - cy;
+          if(Math.hypot(dxs,dys) < (santaCircle.r + monR + 30)) ok = false;
+          if(ok) break;
+        }while(attempt < 120);
+        positions.push({ x, y, cx: x + monW/2, cy: y + monH/2, r: monR });
+      }
+
+      positions.forEach(pos=>{
+        const el = document.createElement('div');
+        el.className = 'monster';
+        el.setAttribute('role','button');
+        el.setAttribute('tabindex','0');
+
+        const img = new Image();
+        const pick = monsterImages[rand(0,monsterImages.length-1)];
+        img.src = pick;
+        img.alt = '怪獸';
+        img.onload = ()=>{
+          while(el.firstChild) el.removeChild(el.firstChild);
+          img.style.width = '80px';
+          img.style.height = '80px';
+          el.appendChild(img);
+          const label = document.createElement('div'); label.className='label'; label.textContent='怪獸';
+          el.appendChild(label);
+        };
+        img.onerror = ()=>{
+          while(el.firstChild) el.removeChild(el.firstChild);
+          const face = document.createElement('div'); face.className='face'; face.textContent = ['👾','😈','👹','👺'][rand(0,3)];
+          face.style.background = 'linear-gradient(90deg,#ff6b6b,#ffb86b)';
+          const label = document.createElement('div'); label.className='label'; label.textContent='怪獸';
+          el.appendChild(face); el.appendChild(label);
+        };
+
+        el.style.left = pos.x + 'px';
+        el.style.top = pos.y + 'px';
+        el.dataset.collisionScale = String(MONSTER_COLLISION_SCALE);
+        el.style.transform = `scale(${MONSTER_VISUAL_SCALE})`;
+
+        // clicking monster triggers penalty
+        el.addEventListener('click', (ev)=>{
+          if(!running) return;
+          attemptGiftTo(el);
+        });
+
+        playfield.appendChild(el);
+      });
+    }
+
+    // Attempt to give gift to target (child or monster)
+    function attemptGiftTo(targetEl){
+      if(!targetEl || !running) return;
+
+      // compute centers and edge distance
       const sRect = santa.getBoundingClientRect();
-      const kRect = kidEl.getBoundingClientRect();
+      const tRect = targetEl.getBoundingClientRect();
       const pfRect = playfield.getBoundingClientRect();
       const sx = sRect.left - pfRect.left + sRect.width/2;
       const sy = sRect.top - pfRect.top + sRect.height/2;
-      const kx = kRect.left - pfRect.left + kRect.width/2;
-      const ky = kRect.top - pfRect.top + kRect.height/2;
-      const centerDist = Math.hypot(sx - kx, sy - ky);
-
-      // compute effective collision radii
+      const tx = tRect.left - pfRect.left + tRect.width/2;
+      const ty = tRect.top - pfRect.top + tRect.height/2;
+      const centerDist = Math.hypot(sx - tx, sy - ty);
       const santaCircle = getCollisionCircleForElement(santa, { scale: 1.0 });
-      const kidCircle = getCollisionCircleForElement(kidEl, { scale: CHILD_COLLISION_SCALE });
 
-      // effective distance threshold = centerDist - santaRadius - kidRadius
-      const edgeDistance = Math.max(0, centerDist - santaCircle.r - kidCircle.r);
+      // decide scale based on class (child or monster)
+      let targetScale = CHILD_COLLISION_SCALE;
+      if(targetEl.classList.contains('monster')) targetScale = MONSTER_COLLISION_SCALE;
+      const targetCircle = getCollisionCircleForElement(targetEl, { scale: targetScale });
 
-      // check: consider allowed proximity threshold (PROXIMITY_DIST)
+      const edgeDistance = Math.max(0, centerDist - santaCircle.r - targetCircle.r);
+
       if(edgeDistance <= PROXIMITY_DIST){
-        deliverGift(kidEl);
+        // close enough: if monster => penalty, else deliver gift
+        if(targetEl.classList.contains('monster')){
+          penalizeForMonster(targetEl);
+        } else {
+          deliverGift(targetEl);
+        }
       } else {
         showProximityHint('再靠近一點才能派禮物喔！');
       }
     }
 
-    // Deliver gift: show happy reaction, remove child and spawn a new one later
+    // Deliver gift to child (same as before)
     function deliverGift(kidEl){
-      // safety: ignore if already leaving
       if(kidEl.dataset.leaving === '1') return;
-      // cancel auto-leave timer if any
       cancelChildAutoLeave(kidEl);
       kidEl.dataset.leaving = '1';
-      // play gift sound
       try{ sfxGift.currentTime = 0; sfxGift.play(); }catch(e){}
-      // show gift image flying to kid (visual)
       const kidRect = kidEl.getBoundingClientRect();
       const santaRect = santa.getBoundingClientRect();
       const pfRect = playfield.getBoundingClientRect();
 
-      // create a flying gift element based on current nextGiftIndex
       const flying = document.createElement('div');
       flying.className = 'gift';
       flying.style.left = (santaRect.left - pfRect.left + santaRect.width/2 - 28) + 'px';
       flying.style.top = (santaRect.top - pfRect.top + santaRect.height/2 - 28) + 'px';
-      // try to use image
       const giftImg = new Image();
       giftImg.src = giftImages[nextGiftIndex];
       giftImg.alt = 'gift';
@@ -552,7 +631,6 @@
       giftImg.onerror = ()=> { flying.textContent = '🎁'; flying.style.fontSize='28px'; flying.style.display='flex'; flying.style.alignItems='center'; flying.style.justifyContent='center'; };
       playfield.appendChild(flying);
 
-      // animate flying to kid center (taking into account kid visual scale)
       const toX = kidRect.left - pfRect.left + kidRect.width/2 - 28;
       const toY = kidRect.top - pfRect.top + kidRect.height/2 - 28;
       flying.animate([
@@ -563,7 +641,6 @@
 
       setTimeout(()=>{ try{ flying.remove(); }catch(e){} }, 800);
 
-      // child happy pop (emoji or small heart)
       const heart = document.createElement('div');
       heart.style.position='absolute';
       heart.style.left = (kidRect.left - pfRect.left + kidRect.width/2 - 18) + 'px';
@@ -576,30 +653,59 @@
       heart.animate([{transform:'translateY(0px) scale(0.8)', opacity:0},{transform:'translateY(-18px) scale(1.1)', opacity:1},{transform:'translateY(-40px) scale(1.0)', opacity:0}],{duration:900,easing:'ease-out'});
       setTimeout(()=>heart.remove(),900);
 
-      // child fade out
       kidEl.animate([{opacity:1},{opacity:0}],{duration:700,easing:'ease-in'});
-
-      // play happy sound
       try{ sfxHappy.currentTime = 0; sfxHappy.play(); }catch(e){}
-
-      // add score +10 and feedback
       score += 10;
       updateScoreUI();
       feedbackText.textContent = '派成功！小朋友好開心！ +10 分';
 
-      // after fade, remove child and spawn a new one after short delay
       setTimeout(()=>{
         try{ kidEl.remove(); }catch(e){}
-        // spawn a new kid at random position after short delay
         setTimeout(()=>spawnNewChild(), 600);
       }, 720);
 
-      // after delivering, pick a new next gift
       pickNextGift();
     }
 
+    // Penalize when giving gift to monster
+    function penalizeForMonster(monEl){
+      // play sound
+      try{ sfxGift.currentTime = 0; sfxGift.play(); }catch(e){}
+      // visual feedback: monster shakes / flashes red
+      monEl.animate([
+        { transform: `scale(${MONSTER_VISUAL_SCALE}) translateX(0)`, boxShadow: '0 8px 20px rgba(100,10,10,0.06)' },
+        { transform: `scale(${MONSTER_VISUAL_SCALE}) translateX(-8px)`, boxShadow: '0 12px 26px rgba(150,10,10,0.12)' },
+        { transform: `scale(${MONSTER_VISUAL_SCALE}) translateX(8px)`, boxShadow: '0 12px 26px rgba(150,10,10,0.12)' },
+        { transform: `scale(${MONSTER_VISUAL_SCALE}) translateX(0)`, boxShadow: '0 8px 20px rgba(100,10,10,0.06)' }
+      ], { duration: 500, easing: 'ease-in-out' });
+
+      // flash red overlay
+      const flash = document.createElement('div');
+      flash.style.position='absolute';
+      const r = monEl.getBoundingClientRect();
+      const pfRect = playfield.getBoundingClientRect();
+      flash.style.left = (r.left - pfRect.left) + 'px';
+      flash.style.top = (r.top - pfRect.top) + 'px';
+      flash.style.width = r.width + 'px';
+      flash.style.height = r.height + 'px';
+      flash.style.borderRadius = getComputedStyle(monEl).borderRadius || '12px';
+      flash.style.background = 'rgba(255,80,80,0.3)';
+      flash.style.zIndex = 60;
+      flash.style.pointerEvents = 'none';
+      playfield.appendChild(flash);
+      flash.animate([{opacity:0.9},{opacity:0}],{duration:600,easing:'ease-out'});
+      setTimeout(()=>flash.remove(),620);
+
+      // apply penalty
+      score -= MONSTER_PENALTY;
+      updateScoreUI();
+      feedbackText.textContent = `誤派給怪獸！-${MONSTER_PENALTY} 分`;
+
+      // monsters do not disappear; however you could optionally remove them:
+      // monEl.remove();
+    }
+
     function spawnNewChild(){
-      // spawn single child in random position (avoid too close to santa)
       const w = playfield.clientWidth;
       const h = playfield.clientHeight;
       const padding = 20;
@@ -615,7 +721,6 @@
         const cx = x + childWidth/2;
         const cy = y + childHeight/2;
         if(Math.hypot(cx - santaCircle.x, cy - santaCircle.y) < (santaCircle.r + childRadius + 30)) continue;
-        // also ensure not overlapping other children
         let overlap = false;
         Array.from(playfield.querySelectorAll('.child')).forEach(c=>{
           const rect = c.getBoundingClientRect();
@@ -632,7 +737,6 @@
       el.setAttribute('role','button');
       el.setAttribute('tabindex','0');
 
-      // try to load image
       const img = new Image();
       const pick = kidImages[rand(0,kidImages.length-1)];
       img.src = pick;
@@ -656,17 +760,12 @@
       el.style.top = y + 'px';
       el.dataset.collisionScale = String(CHILD_COLLISION_SCALE);
       el.style.transform = `scale(${CHILD_VISUAL_SCALE})`;
-
       el.dataset.leaving = '0';
-
       el.addEventListener('click', (ev)=>{
         if(!running) return;
         attemptGiftTo(el);
       });
-
       playfield.appendChild(el);
-
-      // schedule auto-leave when created (only if a game is running)
       if(running) scheduleChildAutoLeave(el);
     }
 
@@ -686,7 +785,6 @@
     let hintTimer = null;
     function showProximityHint(text){
       proximityHint.textContent = text;
-      // position above santa
       const sRect = santa.getBoundingClientRect();
       const pfRect = playfield.getBoundingClientRect();
       const left = sRect.left - pfRect.left + sRect.width/2 - 80;
@@ -702,7 +800,7 @@
     // Update score UI
     function updateScoreUI(){
       scoreDisplay.textContent = score;
-      const pct = Math.min(100, Math.round((score/target)*100));
+      const pct = Math.min(100, Math.max(0, Math.round((score/target)*100)));
       progressBar.style.width = pct + '%';
       if(score > best){ best = score; bestDisplay.textContent = best; }
     }
@@ -710,7 +808,6 @@
     // pick next gift randomly and update preview UI
     function pickNextGift(){
       nextGiftIndex = rand(0, giftImages.length - 1);
-      // attempt to load image
       nextGiftPreview.innerHTML = '';
       nextGiftFallback.style.display = 'none';
       const img = new Image();
@@ -731,14 +828,13 @@
     // Timer and game flow
     function startGame(){
       if(running) return;
-      // reset
       score = 0; updateScoreUI();
       timeLeft = 60; timerDisplay.textContent = timeLeft;
       running = true;
-      spawnChildren(8);
+      spawnChildren(8); // includes monsters spawn
       resetSantaPosition();
       pickNextGift();
-      feedbackText.textContent = '回合開始！靠近小朋友並派禮物吧！';
+      feedbackText.textContent = '回合開始！靠近小朋友並派禮物吧！小心怪獸！';
       lastFrame = performance.now();
       requestAnimationFrame(frameLoop);
       timer = setInterval(()=>{
@@ -752,7 +848,6 @@
       if(!running) return;
       running = false;
       clearInterval(timer);
-      // cancel auto-leave timers for remaining children
       Array.from(playfield.querySelectorAll('.child')).forEach(c=> cancelChildAutoLeave(c));
       feedbackText.textContent = `時間到！本回合分數：${score} 分`;
       finalScoreEl.textContent = score;
@@ -764,7 +859,6 @@
     function resetGame(){
       clearInterval(timer);
       running = false;
-      // cancel auto-leave timers
       Array.from(playfield.querySelectorAll('.child')).forEach(c=> cancelChildAutoLeave(c));
       timeLeft = 60; timerDisplay.textContent = timeLeft;
       score = 0; updateScoreUI();
@@ -775,14 +869,13 @@
       finalOverlay.style.display = 'none';
     }
 
-    // Frame loop: movement (no child drifting)
+    // Frame loop: movement
     function frameLoop(now){
       if(!lastFrame) lastFrame = now;
       const dtMs = now - lastFrame;
       const dt = dtMs / 1000;
       lastFrame = now;
 
-      // keyboard velocity
       let mvX = 0, mvY = 0;
       if(keys.left) mvX -= 1;
       if(keys.right) mvX += 1;
@@ -793,13 +886,11 @@
         mvX = mvX / mag;
         mvY = mvY / mag;
       }
-      // apply movement
       if(running || Object.values(keys).some(v=>v)){
         const curLeft = parseFloat(getComputedStyle(santa).left);
         const curTop = parseFloat(getComputedStyle(santa).top);
         const nx = curLeft + mvX * speed * dt;
         const ny = curTop + mvY * speed * dt;
-        // clamp inside playfield
         const pfW = playfield.clientWidth;
         const pfH = playfield.clientHeight;
         const sW = santa.clientWidth;
@@ -816,12 +907,12 @@
       if(e.code === 'ArrowLeft' || e.key === 'a' || e.key === 'A') keys.left = true;
       if(e.code === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys.right = true;
       if(e.code === 'ArrowUp' || e.key === 'w' || e.key === 'W') keys.up = true;
-      if(e.code === 'ArrowDown' || e.key === 's' || e.key === 'S') keys.down = false; // intentional fallback
+      if(e.code === 'ArrowDown' || e.key === 's' || e.key === 'S') keys.down = false;
       if(e.code === 'ArrowDown' || e.key === 's' || e.key === 'S') keys.down = true;
       if(e.code === 'Space'){
         e.preventDefault();
         if(!running) return;
-        const nearest = chooseNearestChildForSanta();
+        const nearest = chooseNearestEntityForSanta();
         if(nearest) attemptGiftTo(nearest);
       }
     });
@@ -832,16 +923,16 @@
       if(e.code === 'ArrowDown' || e.key === 's' || e.key === 'S') keys.down = false;
     });
 
-    // Choose nearest child to santa (for space key)
-    function chooseNearestChildForSanta(){
-      const kids = Array.from(playfield.querySelectorAll('.child'));
-      if(kids.length === 0) return null;
+    // Choose nearest entity (child or monster) to santa
+    function chooseNearestEntityForSanta(){
+      const entities = Array.from(playfield.querySelectorAll('.child, .monster'));
+      if(entities.length === 0) return null;
       const sRect = santa.getBoundingClientRect();
       const pfRect = playfield.getBoundingClientRect();
       const sx = sRect.left - pfRect.left + sRect.width/2;
       const sy = sRect.top - pfRect.top + sRect.height/2;
       let minD = Infinity; let pick = null;
-      kids.forEach(k=>{
+      entities.forEach(k=>{
         const r = k.getBoundingClientRect();
         const x = r.left - pfRect.left + r.width/2;
         const y = r.top - pfRect.top + r.height/2;
@@ -866,7 +957,6 @@
       const pfRect = playfield.getBoundingClientRect();
       let x = e.clientX - pfRect.left - dragOffset.x;
       let y = e.clientY - pfRect.top - dragOffset.y;
-      // clamp
       x = Math.max(0, Math.min(playfield.clientWidth - santa.clientWidth, x));
       y = Math.max(0, Math.min(playfield.clientHeight - santa.clientHeight, y));
       santa.style.left = x + 'px';
