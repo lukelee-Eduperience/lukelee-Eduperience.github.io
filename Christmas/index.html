@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Santa Claus is coming to town</title>
+  <title>聖誕快樂派禮王 — 調整碰撞框與背景素材</title>
   <style>
     :root{
       --bg:#f6fbff;
@@ -21,7 +21,8 @@
     .game-area{flex:1;min-height:640px;background:linear-gradient(180deg,#ffffff 0%, #fffdf6 100%);border-radius:18px;box-shadow:var(--shadow);padding:14px;position:relative;overflow:hidden}
     .hud{display:flex;gap:12px;align-items:center;justify-content:space-between;margin-bottom:8px}
     .title-badge{display:flex;align-items:center;gap:12px}
-    .logo{width:72px;height:72px;border-radius:14px;background:linear-gradient(180deg,var(--primary),#ff9bbf);display:flex;align-items:center;justify-content:center;box-shadow:0 6px 14px rgba(255,92,138,0.18);color:white;font-weight:800;font-size:18px}
+    .logo{width:72px;height:72px;border-radius:14px;background:linear-gradient(180deg,var(--primary),#ff9bbf);display:flex;align-items:center;justify-content:center;box-shadow:0 6px 14px rgba(255,92,138,0.18);color:white;font-weight:800;font-size:18px;overflow:hidden;position:relative}
+    .logo img{width:100%;height:100%;object-fit:cover;display:block;filter:drop-shadow(0 6px 10px rgba(0,0,0,0.12));}
     .title{font-size:20px;line-height:1}
     .subtitle{font-size:12px;color:rgba(0,0,0,0.55)}
     .controls{display:flex;gap:10px;align-items:center}
@@ -29,6 +30,21 @@
     .big{font-size:20px;font-weight:700;color:var(--primary)}
     .small{font-size:12px;color:rgba(0,0,0,0.6)}
     .stage{margin-top:8px;height:520px;border-radius:14px;background: linear-gradient(180deg,#e7f9ff 0%, #f8fff4 100%);border: 4px dashed rgba(0,0,0,0.03);position:relative;overflow:hidden;display:flex;align-items:flex-start;justify-content:flex-start}
+    /* background image layer inside stage */
+    .stage-bg{
+      position:absolute;
+      inset:0;
+      z-index:2;
+      background-position:center;
+      background-size:cover;
+      background-repeat:no-repeat;
+      pointer-events:none;
+      filter: blur(4px);
+      opacity:0.5; /* 50% transparency requested */
+      transform: scale(1.02); /* slight upscale to avoid edges after blur */
+    }
+    /* content over the background */
+    .playfield{position:absolute;inset:10px 10px 10px 10px;pointer-events:auto;z-index:4}
     /* Santa (controllable) */
     .santa{
       position:absolute;
@@ -47,7 +63,6 @@
     .santa:active{cursor:grabbing}
     .santa img { width:100%; height:100%; object-fit:cover; display:block; }
     .santa .label{position:absolute;bottom:6px;left:6px;font-weight:900;color:white;text-shadow:0 2px 6px rgba(0,0,0,0.12);font-size:12px;background:rgba(0,0,0,0.18);padding:4px 8px;border-radius:8px;}
-    .playfield{position:absolute;inset:10px 10px 10px 10px;pointer-events:auto}
     /* children: 視覺上縮小 40%（即 60% 尺寸），但碰撞框以縮小後的尺寸判定 */
     .child{
       position:absolute;
@@ -87,7 +102,6 @@
       font-size:13px;
       display:none;
     }
-    /* next gift display */
     .next-gift{
       display:flex;align-items:center;gap:10px;padding:10px;border-radius:12px;background:linear-gradient(180deg,#fff,#fffaf0);box-shadow:var(--shadow);
     }
@@ -102,10 +116,14 @@
     <div class="game-area" id="gameArea">
       <div class="hud">
         <div class="title-badge">
-          <div class="logo" aria-hidden="true">🎅</div>
+          <div class="logo" id="logoIcon" aria-hidden="true">
+            <!-- icon.png will be inserted by JS; fallback emoji kept in markup for no-JS or missing file -->
+            <img id="logoImg" alt="icon" src="icon.png" onerror="this.style.display='none'">
+            <div id="logoFallback" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:28px;">🎅</div>
+          </div>
           <div>
-            <div class="title">Santa Claus is coming to town</div>
-            <div class="subtitle">派禮物給小朋友吧=！</div>
+            <div class="title">聖誕快樂派禮王</div>
+            <div class="subtitle">走到小朋友身邊才能派禮物！</div>
           </div>
         </div>
 
@@ -126,11 +144,13 @@
       </div>
 
       <div class="stage" id="stage" aria-live="polite">
+        <!-- background image layer (uses background.png with 50% opacity and blur) -->
+        <div class="stage-bg" id="stageBg" aria-hidden="true"></div>
+
         <div class="playfield" id="playfield" tabindex="0" aria-label="遊戲區域">
           <!-- Santa (controllable) -->
           <div class="santa" id="santa" role="application" aria-label="聖誕老人">
-            <!-- image will be inserted by JS if available, otherwise fallback label -->
-            <div class="label">聖誕老人</div>
+            <div class="label">聖誕老公公</div>
           </div>
 
           <!-- proximity hint -->
@@ -151,7 +171,7 @@
         <div class="modal" id="finalModal">
           <div style="font-weight:900;font-size:20px">回合結束</div>
           <div class="final-score" id="finalScore">0</div>
-          <div id="finalMsg">再接再厲！</div>
+          <div id="finalMsg">努力了！再接再厲！</div>
           <div style="margin-top:14px;">
             <button class="btn btn-primary" id="playAgain">再玩一次</button>
             <button class="btn btn-ghost" id="closeOverlay">關閉</button>
@@ -184,8 +204,10 @@
       <div class="card">
         <div style="font-weight:800;margin-bottom:8px;">遊戲說明</div>
         <ol style="padding-left:18px;margin:0;">
-          <li>每回合 60 秒，用鍵盤或滑鼠控制聖誕老人移動，按空白鍵或點擊小朋友嘗試派禮物。</li>
-          <li>收到禮物的小朋友會開心離開，每次 +10 分。</li>
+          <li>每回合 60 秒，盡量靠近小朋友並派出禮物。</li>
+          <li>派中一次得 +10 分。必須距離小朋友中心小於 200px 才算成功（碰撞框已縮小）。</li>
+          <li>收到禮物的小朋友會開心離開（淡出），並重新在畫面隨機生成新小朋友（但不會移動）。</li>
+          <li>用鍵盤或滑鼠控制聖誕老人移動，按空白鍵或點擊小朋友嘗試派禮物。</li>
         </ol>
       </div>
 
@@ -203,7 +225,6 @@
               <div style="font-size:12px;color:rgba(0,0,0,0.55)">靠近小朋友並派送時會使用</div>
             </div>
             <div class="preview" id="nextGiftPreview" aria-hidden="false" title="下一份禮物">
-              <!-- image inserted by JS or fallback -->
               <div id="nextGiftFallback" style="font-size:28px">🎁</div>
             </div>
           </div>
@@ -238,6 +259,9 @@
     const proximityHint = document.getElementById('proximityHint');
     const nextGiftPreview = document.getElementById('nextGiftPreview');
     const nextGiftFallback = document.getElementById('nextGiftFallback');
+    const stageBg = document.getElementById('stageBg');
+    const logoImg = document.getElementById('logoImg');
+    const logoFallback = document.getElementById('logoFallback');
 
     const sfxGift = document.getElementById('sfxGift');
     const sfxHappy = document.getElementById('sfxHappy');
@@ -266,6 +290,8 @@
     const santaImageFile = 'Santa.png';
     const kidImages = ['Boy1.png','Boy2.png','Girl1.png','Girl2.png'];
     const giftImages = ['Gift1.png','Gift2.png','Gift3.png','Gift4.png','Gift5.png'];
+    const ICON_FILE = 'icon.png';
+    const BACKGROUND_FILE = 'background.png';
 
     // currently selected next gift (index into giftImages)
     let nextGiftIndex = 0;
@@ -279,11 +305,38 @@
     // utility random
     function rand(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
 
+    // load logo icon: if icon.png exists, show it; otherwise keep fallback emoji
+    function tryLoadLogo(){
+      const img = new Image();
+      img.onload = ()=>{
+        logoImg.style.display = 'block';
+        logoFallback.style.display = 'none';
+      };
+      img.onerror = ()=>{
+        logoImg.style.display = 'none';
+        logoFallback.style.display = 'flex';
+      };
+      img.src = ICON_FILE;
+    }
+
+    // set stage background image with 50% opacity and blur via CSS (stage-bg element)
+    function tryLoadStageBackground(){
+      const img = new Image();
+      img.onload = ()=>{
+        stageBg.style.backgroundImage = `url('${BACKGROUND_FILE}')`;
+        stageBg.style.display = 'block';
+      };
+      img.onerror = ()=>{
+        stageBg.style.backgroundImage = 'none';
+        stageBg.style.display = 'none';
+      };
+      img.src = BACKGROUND_FILE;
+    }
+
     // try to insert santa image if available
     function tryLoadSantaImage(){
       const img = new Image();
       img.onload = ()=> {
-        // insert image inside santa container
         santa.innerHTML = '';
         img.alt = 'Santa';
         santa.appendChild(img);
@@ -788,6 +841,8 @@
 
     // initial spawn & position
     window.addEventListener('load', ()=>{
+      tryLoadLogo();
+      tryLoadStageBackground();
       tryLoadSantaImage();
       spawnChildren(8);
       resetSantaPosition();
