@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>聖誕快樂派禮王 — 調整碰撞框與背景素材</title>
+  <title>聖誕快樂派禮王</title>
   <style>
     :root{
       --bg:#f6fbff;
@@ -123,7 +123,7 @@
           </div>
           <div>
             <div class="title">聖誕快樂派禮王</div>
-            <div class="subtitle">走到小朋友身邊才能派禮物！</div>
+            <div class="subtitle">派禮物給小朋友身邊吧！</div>
           </div>
         </div>
 
@@ -150,11 +150,11 @@
         <div class="playfield" id="playfield" tabindex="0" aria-label="遊戲區域">
           <!-- Santa (controllable) -->
           <div class="santa" id="santa" role="application" aria-label="聖誕老人">
-            <div class="label">聖誕老公公</div>
+            <div class="label">聖誕老人</div>
           </div>
 
           <!-- proximity hint -->
-          <div id="proximityHint" class="proximityHint">靠近小朋友才可派禮物</div>
+          <div id="proximityHint" class="proximityHint">向小朋友派禮物</div>
         </div>
       </div>
 
@@ -171,7 +171,7 @@
         <div class="modal" id="finalModal">
           <div style="font-weight:900;font-size:20px">回合結束</div>
           <div class="final-score" id="finalScore">0</div>
-          <div id="finalMsg">努力了！再接再厲！</div>
+          <div id="finalMsg">辛苦了！再接再厲！</div>
           <div style="margin-top:14px;">
             <button class="btn btn-primary" id="playAgain">再玩一次</button>
             <button class="btn btn-ghost" id="closeOverlay">關閉</button>
@@ -204,10 +204,8 @@
       <div class="card">
         <div style="font-weight:800;margin-bottom:8px;">遊戲說明</div>
         <ol style="padding-left:18px;margin:0;">
-          <li>每回合 60 秒，盡量靠近小朋友並派出禮物。</li>
-          <li>派中一次得 +10 分。必須距離小朋友中心小於 200px 才算成功（碰撞框已縮小）。</li>
-          <li>收到禮物的小朋友會開心離開（淡出），並重新在畫面隨機生成新小朋友（但不會移動）。</li>
-          <li>用鍵盤或滑鼠控制聖誕老人移動，按空白鍵或點擊小朋友嘗試派禮物。</li>
+          <li>每回合 60 秒，用鍵盤或滑鼠控制聖誕老人移動，按空白鍵或點擊小朋友嘗試派禮物。</li>
+          <li>收到禮物的小朋友會開心離開，派中一次得 +10 分。</li>
         </ol>
       </div>
 
@@ -222,7 +220,7 @@
           <div class="next-gift" aria-live="polite">
             <div>
               <div class="label">下一份禮物</div>
-              <div style="font-size:12px;color:rgba(0,0,0,0.55)">靠近小朋友並派送時會使用</div>
+              <div style="font-size:12px;color:rgba(0,0,0,0.55)">靠近小朋友並派送</div>
             </div>
             <div class="preview" id="nextGiftPreview" aria-hidden="false" title="下一份禮物">
               <div id="nextGiftFallback" style="font-size:28px">🎁</div>
