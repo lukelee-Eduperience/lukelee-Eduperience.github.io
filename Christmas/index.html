@@ -282,7 +282,7 @@
     let dragOffset = {x:0,y:0};
 
     // proximity threshold (distance in px to be considered "beside")
-    const PROXIMITY_DIST = 200; // 已更新為 200px
+    const PROXIMITY_DIST = 100; // 已更新為 200px
 
     // assets filenames (assumed in same folder as HTML)
     const santaImageFile = 'Santa.png';
@@ -299,6 +299,9 @@
 
     // collision scale used for children (we use same as visual here, but it's separated so可以微調)
     const CHILD_COLLISION_SCALE = 0.6;
+
+    // how long a child will wait before leaving if not gifted (ms)
+    const CHILD_WAIT_BEFORE_LEAVE_MS = 5000;
 
     // utility random
     function rand(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
@@ -368,10 +371,46 @@
       return { x: cx, y: cy, r: radius };
     }
 
+    // helper to schedule auto-leave for a child element
+    function scheduleChildAutoLeave(childEl){
+      // clear existing if any
+      cancelChildAutoLeave(childEl);
+
+      const timeoutId = setTimeout(()=>{
+        // if already leaving or removed, skip
+        if(!childEl.isConnected) return;
+        if(childEl.dataset.leaving === '1') return;
+        childEl.dataset.leaving = '1';
+        // show a small feedback
+        if(running) feedbackText.textContent = '小朋友等太久了，離開了…';
+
+        // fade out animation then remove and spawn replacement
+        childEl.animate([{opacity:1},{opacity:0}],{duration:700,easing:'ease-in'});
+        setTimeout(()=>{
+          try{ childEl.remove(); }catch(e){}
+          // spawn a replacement after short delay to keep population
+          setTimeout(()=>{ if(running) spawnNewChild(); }, 600);
+        }, 720);
+      }, CHILD_WAIT_BEFORE_LEAVE_MS);
+
+      // store timer id on element for possible cancellation
+      childEl._autoLeaveTimeout = timeoutId;
+    }
+
+    function cancelChildAutoLeave(childEl){
+      if(childEl && childEl._autoLeaveTimeout){
+        clearTimeout(childEl._autoLeaveTimeout);
+        childEl._autoLeaveTimeout = null;
+      }
+    }
+
     // Spawn N children randomly, static (no movement), and avoid overlap with santa and other children
     function spawnChildren(count = 8){
       // remove existing children
-      Array.from(playfield.querySelectorAll('.child')).forEach(n=>n.remove());
+      Array.from(playfield.querySelectorAll('.child')).forEach(n=>{
+        cancelChildAutoLeave(n);
+        n.remove();
+      });
       const w = playfield.clientWidth;
       const h = playfield.clientHeight;
       const padding = 20;
@@ -444,6 +483,9 @@
         el.dataset.collisionScale = String(CHILD_COLLISION_SCALE);
         el.style.transform = `scale(${CHILD_VISUAL_SCALE})`; // visual shrink
 
+        // mark as not leaving
+        el.dataset.leaving = '0';
+
         // click to attempt gifting
         el.addEventListener('click', (ev)=>{
           if(!running) return;
@@ -451,6 +493,7 @@
         });
 
         playfield.appendChild(el);
+        if(running) scheduleChildAutoLeave(el);
       });
     }
 
@@ -486,6 +529,8 @@
     function deliverGift(kidEl){
       // safety: ignore if already leaving
       if(kidEl.dataset.leaving === '1') return;
+      // cancel auto-leave timer if any
+      cancelChildAutoLeave(kidEl);
       kidEl.dataset.leaving = '1';
       // play gift sound
       try{ sfxGift.currentTime = 0; sfxGift.play(); }catch(e){}
@@ -612,12 +657,17 @@
       el.dataset.collisionScale = String(CHILD_COLLISION_SCALE);
       el.style.transform = `scale(${CHILD_VISUAL_SCALE})`;
 
+      el.dataset.leaving = '0';
+
       el.addEventListener('click', (ev)=>{
         if(!running) return;
         attemptGiftTo(el);
       });
 
       playfield.appendChild(el);
+
+      // schedule auto-leave when created (only if a game is running)
+      if(running) scheduleChildAutoLeave(el);
     }
 
     // compute center distance between two elements
@@ -702,6 +752,8 @@
       if(!running) return;
       running = false;
       clearInterval(timer);
+      // cancel auto-leave timers for remaining children
+      Array.from(playfield.querySelectorAll('.child')).forEach(c=> cancelChildAutoLeave(c));
       feedbackText.textContent = `時間到！本回合分數：${score} 分`;
       finalScoreEl.textContent = score;
       finalMsg.textContent = score >= target ? '太棒了！達成目標！' : '加油，下次一定可以更高分！';
@@ -712,6 +764,8 @@
     function resetGame(){
       clearInterval(timer);
       running = false;
+      // cancel auto-leave timers
+      Array.from(playfield.querySelectorAll('.child')).forEach(c=> cancelChildAutoLeave(c));
       timeLeft = 60; timerDisplay.textContent = timeLeft;
       score = 0; updateScoreUI();
       spawnChildren(8);
