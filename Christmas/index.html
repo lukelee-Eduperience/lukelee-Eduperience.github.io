@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>聖誕快樂派禮王（含怪獸）</title>
+  <title>聖誕快樂派禮王</title>
   <style>
     :root{
       --bg:#f6fbff;
@@ -138,7 +138,7 @@
             <div id="logoFallback" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:28px;">🎅</div>
           </div>
           <div>
-            <div class="title">聖誕快樂派禮王（含怪獸）</div>
+            <div class="title">聖誕快樂派禮王</div>
             <div class="subtitle">注意：不要把禮物派給怪獸！</div>
           </div>
         </div>
@@ -175,7 +175,7 @@
       </div>
 
       <div style="margin-top:12px;display:flex;gap:10px;align-items:center;justify-content:space-between;">
-        <div class="tips">操作：方向鍵 / WASD 移動；滑鼠拖動聖誕老人；靠近小朋友後按空白鍵或點擊小朋友派禮物。誤派給怪獸會扣 5 分。</div>
+        <div class="tips">操作：方向鍵 / WASD 移動；滑鼠拖動聖誕老人；靠近小朋友後按空白鍵或點擊小朋友派禮物。派給怪獸會扣 5 分。</div>
         <div>
           <button class="btn btn-primary" id="startBtn">開始遊戲</button>
           <button class="btn btn-ghost" id="resetBtn">重新開始</button>
@@ -202,7 +202,7 @@
         <div style="display:flex;justify-content:space-between;align-items:center;">
           <div>
             <div style="font-size:13px;color:rgba(0,0,0,0.6)">目標分數</div>
-            <div style="font-size:22px;font-weight:900;color:var(--green)" id="targetDisplay">1000</div>
+            <div style="font-size:22px;font-weight:900;color:var(--green)" id="targetDisplay">200</div>
           </div>
           <div style="text-align:right;">
             <div style="font-size:13px;color:rgba(0,0,0,0.6)">最高分</div>
@@ -221,7 +221,7 @@
         <div style="font-weight:800;margin-bottom:8px;">遊戲說明</div>
         <ol style="padding-left:18px;margin:0;">
           <li>每回合 60 秒，用鍵盤或滑鼠控制聖誕老人移動，按空白鍵或點擊小朋友嘗試派禮物。</li>
-          <li>收到禮物的小朋友會開心離開，派中一次得 +10 分；誤派給怪獸會 -5 分，怪獸不會消失。</li>
+          <li>收到禮物的小朋友會開心離開，派中一次得 +10 分；誤派給怪獸會 -5 分，怪獸會消失。</li>
         </ol>
       </div>
 
@@ -286,7 +286,7 @@
     let timer = null;
     let score = 0;
     let running = false;
-    let target = 1000;
+    let target = 200; // 目標分數改為 200
     let best = 0;
 
     // Santa movement state
@@ -323,6 +323,9 @@
 
     // how long a child will wait before leaving if not gifted (ms)
     const CHILD_WAIT_BEFORE_LEAVE_MS = 5000;
+
+    // how long a monster will auto-disappear (ms)
+    const MONSTER_AUTO_DISAPPEAR_MS = 10000; // 10 秒
 
     // penalty for gifting a monster
     const MONSTER_PENALTY = 5;
@@ -383,7 +386,7 @@
 
     // Helper: compute collision box center and radius for an element
     // We'll represent collision area as a circle (center x,y relative to playfield, radius)
-    function getCollisionCircleForElement(el, options = {}){
+    function getCollisionCircleForElement(el, options = {}) {
       const rect = el.getBoundingClientRect();
       const pfRect = playfield.getBoundingClientRect();
       const scale = options.scale ?? 1.0;
@@ -400,7 +403,7 @@
         if(!childEl.isConnected) return;
         if(childEl.dataset.leaving === '1') return;
         childEl.dataset.leaving = '1';
-        if(running) feedbackText.textContent = '給小朋友派禮物吧！';
+        if(running) feedbackText.textContent = '派禮物給小朋友吧！';
         childEl.animate([{opacity:1},{opacity:0}],{duration:700,easing:'ease-in'});
         setTimeout(()=>{
           try{ childEl.remove(); }catch(e){}
@@ -417,20 +420,50 @@
       }
     }
 
-    // Spawn N children randomly
+    // schedule monster auto-disappear
+    function scheduleMonsterAutoDisappear(monEl){
+      cancelMonsterAutoDisappear(monEl);
+      const to = setTimeout(()=>{
+        if(!monEl.isConnected) return;
+        monEl.dataset.disappearing = '1';
+        monEl.animate([{opacity:1},{opacity:0}],{duration:600,easing:'ease-in'});
+        setTimeout(()=>{ try{ monEl.remove(); }catch(e){}; if(running) spawnNewMonster(); }, 620);
+      }, MONSTER_AUTO_DISAPPEAR_MS);
+      monEl._autoDisappear = to;
+    }
+
+    function cancelMonsterAutoDisappear(monEl){
+      if(monEl && monEl._autoDisappear){
+        clearTimeout(monEl._autoDisappear);
+        monEl._autoDisappear = null;
+      }
+    }
+
+    // Spawn N children randomly (ensuring non-overlap with monsters)
     function spawnChildren(count = 8){
+      // remove children only (monsters handled separately)
       Array.from(playfield.querySelectorAll('.child')).forEach(n=>{
         cancelChildAutoLeave(n);
         n.remove();
       });
-      // also remove existing monsters and respawn fresh ones separately
-      Array.from(playfield.querySelectorAll('.monster')).forEach(m=> m.remove());
 
       const w = playfield.clientWidth;
       const h = playfield.clientHeight;
       const padding = 20;
       const positions = [];
-      const santaCircle = getCollisionCircleForElement(santa, { scale: 1.0 });
+      const existing = []; // hold existing circles (monsters + children) to avoid overlap
+      // include santa as occupied
+      try{ existing.push(getCollisionCircleForElement(santa, { scale: 1.0 })); }catch(e){}
+
+      // also include existing monsters in avoidance list
+      Array.from(playfield.querySelectorAll('.monster')).forEach(m=>{
+        const rect = m.getBoundingClientRect();
+        const pfRect = playfield.getBoundingClientRect();
+        const cx = rect.left - pfRect.left + rect.width/2;
+        const cy = rect.top - pfRect.top + rect.height/2;
+        const r = ((rect.width + rect.height)/4) * MONSTER_COLLISION_SCALE;
+        existing.push({ x: cx, y: cy, r });
+      });
 
       for(let i=0;i<count;i++){
         let x,y,attempt=0;
@@ -443,21 +476,61 @@
           const cx = x + childWidth/2;
           const cy = y + childHeight/2;
           let ok = true;
-          for(const p of positions){
-            const dx = p.cx - cx;
-            const dy = p.cy - cy;
-            const minDist = (p.r + childRadius) + 10;
+          for(const p of existing){
+            const dx = p.x - cx;
+            const dy = p.y - cy;
+            const minDist = (p.r + childRadius) + 12;
             if(Math.hypot(dx,dy) < minDist){ ok = false; break; }
           }
-          const dxs = santaCircle.x - cx;
-          const dys = santaCircle.y - cy;
-          if(Math.hypot(dxs,dys) < (santaCircle.r + childRadius + 20)) ok = false;
-          if(ok) break;
-        }while(attempt < 80);
-        positions.push({ x, y, cx: x + childWidth/2, cy: y + childHeight/2, r: ((childWidth + childHeight) / 4) * CHILD_COLLISION_SCALE });
+          if(ok){
+            existing.push({ x: cx, y: cy, r: childRadius });
+            break;
+          }
+        }while(attempt < 120);
+        if(attempt >= 120) {
+          // fallback: place anyway
+          x = padding + i*6;
+          y = padding + i*6;
+          existing.push({ x: x + childWidth/2, y: y + childHeight/2, r: childRadius});
+        }
       }
 
-      positions.forEach(pos=>{
+      // Now create children from the computed existing list but skip the initial entries that are not children
+      // We extract last `count` entries from existing that correspond to children.
+      // Simpler: re-generate children by trying to place them again using similar logic but now guaranteed separation.
+      for(let i=0;i<count;i++){
+        let x,y,attempt=0;
+        let childWidth = 84, childHeight = 100;
+        const childRadius = ((childWidth + childHeight) / 4) * CHILD_COLLISION_SCALE;
+        do{
+          x = padding + Math.random()*(w - padding*2 - childWidth);
+          y = padding + Math.random()*(h - padding*2 - childHeight);
+          attempt++;
+          const cx = x + childWidth/2;
+          const cy = y + childHeight/2;
+          let ok = true;
+          // check against santa
+          const santaCircle = getCollisionCircleForElement(santa, { scale: 1.0 });
+          if(Math.hypot(santaCircle.x - cx, santaCircle.y - cy) < (santaCircle.r + childRadius + 20)) ok = false;
+          // check against existing monsters and already placed children
+          Array.from(playfield.querySelectorAll('.monster')).forEach(m=>{
+            const rect = m.getBoundingClientRect();
+            const pfRect = playfield.getBoundingClientRect();
+            const mcx = rect.left - pfRect.left + rect.width/2;
+            const mcy = rect.top - pfRect.top + rect.height/2;
+            const mr = ((rect.width + rect.height)/4) * MONSTER_COLLISION_SCALE;
+            if(Math.hypot(mcx - cx, mcy - cy) < (mr + childRadius + 12)) ok = false;
+          });
+          Array.from(playfield.querySelectorAll('.child')).forEach(c=>{
+            const rect = c.getBoundingClientRect();
+            const pfRect = playfield.getBoundingClientRect();
+            const ocx = rect.left - pfRect.left + rect.width/2;
+            const ocy = rect.top - pfRect.top + rect.height/2;
+            const or = ((rect.width + rect.height)/4) * CHILD_COLLISION_SCALE;
+            if(Math.hypot(ocx - cx, ocy - cy) < (or + childRadius + 12)) ok = false;
+          });
+          if(ok) break;
+        }while(attempt < 160);
         const el = document.createElement('div');
         el.className = 'child';
         el.setAttribute('role','button');
@@ -482,8 +555,8 @@
           el.appendChild(face); el.appendChild(label);
         };
 
-        el.style.left = pos.x + 'px';
-        el.style.top = pos.y + 'px';
+        el.style.left = x + 'px';
+        el.style.top = y + 'px';
         el.dataset.collisionScale = String(CHILD_COLLISION_SCALE);
         el.style.transform = `scale(${CHILD_VISUAL_SCALE})`;
         el.dataset.leaving = '0';
@@ -495,20 +568,22 @@
 
         playfield.appendChild(el);
         if(running) scheduleChildAutoLeave(el);
-      });
+      }
 
-      // spawn some monsters as well
-      spawnMonsters(4);
+      // Ensure there are some monsters present as well
+      // If none exist, spawn default 4 monsters
+      const existingMonsters = playfield.querySelectorAll('.monster').length;
+      if(existingMonsters === 0){
+        spawnMonsters(4);
+      }
     }
 
     function spawnMonsters(count = 4){
-      // remove existing monsters
-      Array.from(playfield.querySelectorAll('.monster')).forEach(m=> m.remove());
+      // We will place monsters ensuring they do not overlap with existing children or santa
       const w = playfield.clientWidth;
       const h = playfield.clientHeight;
       const padding = 20;
-      const positions = [];
-      const santaCircle = getCollisionCircleForElement(santa, { scale: 1.0 });
+      const placed = [];
 
       for(let i=0;i<count;i++){
         let x,y,attempt=0;
@@ -521,21 +596,34 @@
           const cx = x + monW/2;
           const cy = y + monH/2;
           let ok = true;
-          for(const p of positions){
-            const dx = p.cx - cx;
-            const dy = p.cy - cy;
-            const minDist = (p.r + monR) + 14;
-            if(Math.hypot(dx,dy) < minDist){ ok = false; break; }
+          // avoid santa
+          const santaCircle = getCollisionCircleForElement(santa, { scale: 1.0 });
+          if(Math.hypot(santaCircle.x - cx, santaCircle.y - cy) < (santaCircle.r + monR + 30)) ok = false;
+          // avoid existing placed monsters
+          for(const p of placed){
+            if(Math.hypot(p.cx - cx, p.cy - cy) < (p.r + monR + 14)){ ok = false; break; }
           }
-          const dxs = santaCircle.x - cx;
-          const dys = santaCircle.y - cy;
-          if(Math.hypot(dxs,dys) < (santaCircle.r + monR + 30)) ok = false;
+          // avoid existing children on playfield
+          Array.from(playfield.querySelectorAll('.child')).forEach(c=>{
+            const rect = c.getBoundingClientRect();
+            const pfRect = playfield.getBoundingClientRect();
+            const ccx = rect.left - pfRect.left + rect.width/2;
+            const ccy = rect.top - pfRect.top + rect.height/2;
+            const cr = ((rect.width + rect.height)/4) * CHILD_COLLISION_SCALE;
+            if(Math.hypot(ccx - cx, ccy - cy) < (cr + monR + 14)) ok = false;
+          });
           if(ok) break;
         }while(attempt < 120);
-        positions.push({ x, y, cx: x + monW/2, cy: y + monH/2, r: monR });
+        if(attempt >= 120){
+          // if couldn't find perfect spot, try again with looser constraints
+          x = padding + Math.random()*(w - padding*2 - monW);
+          y = padding + Math.random()*(h - padding*2 - monH);
+        }
+        const pos = { x, y, cx: x + monW/2, cy: y + monH/2, r: monR };
+        placed.push(pos);
       }
 
-      positions.forEach(pos=>{
+      placed.forEach(pos=>{
         const el = document.createElement('div');
         el.className = 'monster';
         el.setAttribute('role','button');
@@ -565,15 +653,23 @@
         el.style.top = pos.y + 'px';
         el.dataset.collisionScale = String(MONSTER_COLLISION_SCALE);
         el.style.transform = `scale(${MONSTER_VISUAL_SCALE})`;
+        el.dataset.disappearing = '0';
 
-        // clicking monster triggers penalty
+        // clicking monster triggers penalty (and now monster will disappear)
         el.addEventListener('click', (ev)=>{
           if(!running) return;
           attemptGiftTo(el);
         });
 
         playfield.appendChild(el);
+        // schedule auto disappear
+        scheduleMonsterAutoDisappear(el);
       });
+    }
+
+    // spawn a single monster (used when replacing auto-removed ones)
+    function spawnNewMonster(){
+      spawnMonsters(1);
     }
 
     // Attempt to give gift to target (child or monster)
@@ -599,9 +695,9 @@
       const edgeDistance = Math.max(0, centerDist - santaCircle.r - targetCircle.r);
 
       if(edgeDistance <= PROXIMITY_DIST){
-        // close enough: if monster => penalty, else deliver gift
+        // close enough: if monster => penalty and monster disappears, else deliver gift
         if(targetEl.classList.contains('monster')){
-          penalizeForMonster(targetEl);
+          penalizeForMonster(targetEl, true); // pass true to remove monster
         } else {
           deliverGift(targetEl);
         }
@@ -667,8 +763,8 @@
       pickNextGift();
     }
 
-    // Penalize when giving gift to monster
-    function penalizeForMonster(monEl){
+    // Penalize when giving gift to monster; if removeMonster true, monster will disappear
+    function penalizeForMonster(monEl, removeMonster = false){
       // play sound
       try{ sfxGift.currentTime = 0; sfxGift.play(); }catch(e){}
       // visual feedback: monster shakes / flashes red
@@ -701,8 +797,13 @@
       updateScoreUI();
       feedbackText.textContent = `誤派給怪獸！-${MONSTER_PENALTY} 分`;
 
-      // monsters do not disappear; however you could optionally remove them:
-      // monEl.remove();
+      // monsters now disappear when gifted to
+      if(removeMonster){
+        cancelMonsterAutoDisappear(monEl);
+        monEl.dataset.disappearing = '1';
+        monEl.animate([{opacity:1},{opacity:0}],{duration:500,easing:'ease-in'});
+        setTimeout(()=>{ try{ monEl.remove(); }catch(e){}; if(running) spawnNewMonster(); }, 520);
+      }
     }
 
     function spawnNewChild(){
@@ -728,6 +829,13 @@
           const otherCy = rect.top - playfield.getBoundingClientRect().top + rect.height/2;
           const otherR = ((rect.width + rect.height)/4) * CHILD_COLLISION_SCALE;
           if(Math.hypot(cx - otherCx, cy - otherCy) < (otherR + childRadius + 10)) overlap = true;
+        });
+        Array.from(playfield.querySelectorAll('.monster')).forEach(m=>{
+          const rect = m.getBoundingClientRect();
+          const otherCx = rect.left - playfield.getBoundingClientRect().left + rect.width/2;
+          const otherCy = rect.top - playfield.getBoundingClientRect().top + rect.height/2;
+          const otherR = ((rect.width + rect.height)/4) * MONSTER_COLLISION_SCALE;
+          if(Math.hypot(cx - otherCx, cy - otherCy) < (otherR + childRadius + 12)) overlap = true;
         });
         if(overlap) continue;
         break;
@@ -831,7 +939,7 @@
       score = 0; updateScoreUI();
       timeLeft = 60; timerDisplay.textContent = timeLeft;
       running = true;
-      spawnChildren(8); // includes monsters spawn
+      spawnChildren(8); // includes monsters spawn if none present
       resetSantaPosition();
       pickNextGift();
       feedbackText.textContent = '回合開始！靠近小朋友並派禮物吧！小心怪獸！';
@@ -849,6 +957,7 @@
       running = false;
       clearInterval(timer);
       Array.from(playfield.querySelectorAll('.child')).forEach(c=> cancelChildAutoLeave(c));
+      Array.from(playfield.querySelectorAll('.monster')).forEach(m=> cancelMonsterAutoDisappear(m));
       feedbackText.textContent = `時間到！本回合分數：${score} 分`;
       finalScoreEl.textContent = score;
       finalMsg.textContent = score >= target ? '太棒了！達成目標！' : '加油，下次一定可以更高分！';
@@ -860,8 +969,11 @@
       clearInterval(timer);
       running = false;
       Array.from(playfield.querySelectorAll('.child')).forEach(c=> cancelChildAutoLeave(c));
+      Array.from(playfield.querySelectorAll('.monster')).forEach(m=> cancelMonsterAutoDisappear(m));
       timeLeft = 60; timerDisplay.textContent = timeLeft;
       score = 0; updateScoreUI();
+      // clear playfield children and monsters then respawn initial set
+      Array.from(playfield.querySelectorAll('.child, .monster')).forEach(n=> n.remove());
       spawnChildren(8);
       resetSantaPosition();
       pickNextGift();
@@ -986,6 +1098,8 @@
       tryLoadLogo();
       tryLoadStageBackground();
       tryLoadSantaImage();
+      // clear existing then spawn
+      Array.from(playfield.querySelectorAll('.child, .monster')).forEach(n=> n.remove());
       spawnChildren(8);
       resetSantaPosition();
       pickNextGift();
