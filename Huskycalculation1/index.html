@@ -44,8 +44,6 @@
         .animate-spin-slow { animation: spin-slow 4s linear infinite; }
         .animate-pop-in { animation: pop-in 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
         
-        /* Pixelated for Pokemon, but maybe not for Husky if it's vector. 
-           I'll apply it generally but you can remove it from specific imgs if needed. */
         .pixelated { image-rendering: pixelated; }
 
         /* Screen visibility toggles */
@@ -94,7 +92,7 @@
         
         <div class="bg-white/95 backdrop-blur-md border-4 border-slate-800 rounded-3xl p-8 max-w-md w-full text-center shadow-2xl relative z-10 max-h-[90vh] overflow-y-auto">
             <div class="flex justify-center mb-2 mt-4">
-                 <!-- Start Screen Husky -->
+                 <!-- Start Screen Husky (Husky4.png) -->
                  <img src="Husky4.png" class="w-40 h-40 object-contain animate-bounce drop-shadow-2xl">
             </div>
             
@@ -155,7 +153,7 @@
                 <!-- Enemy - Upper Right -->
                 <div id="enemy-container" class="absolute top-8 right-8 z-10 transition-all duration-500">
                      <div class="relative">
-                        <!-- Sprite (Pokemon) -->
+                        <!-- Sprite (Custom Monster) -->
                         <img id="enemy-sprite" src="" class="w-32 h-32 md:w-48 md:h-48 object-contain pixelated animate-float">
                         
                         <!-- Enemy Stats - Left of Enemy -->
@@ -242,7 +240,11 @@
                 <h2 id="victory-title" class="text-xl font-black text-white uppercase tracking-widest">Time's Up!</h2>
             </div>
             
-            <div class="mt-8 flex justify-center mb-6">
+            <!-- Victory Content -->
+            <div class="mt-8 flex flex-col items-center justify-center mb-6">
+                <!-- Celebrating Husky -->
+                <img src="Husky5.png" class="w-40 h-40 object-contain animate-bounce mb-4 drop-shadow-xl">
+                
                 <div class="relative">
                     <i data-lucide="star" class="text-yellow-400 w-32 h-32 fill-current animate-spin-slow"></i>
                     <div id="final-score" class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-white font-black text-4xl drop-shadow-lg stroke-black">0</div>
@@ -499,11 +501,11 @@
             monsterMaxHP = baseDamage * (Math.floor(Math.random() * 2) + 2); 
             monsterHP = monsterMaxHP;
             
-            let enemyId = Math.floor(Math.random() * 151) + 1; 
-            if (enemyId === 25) enemyId = 133; 
+            // Random Monster 1-10
+            let enemyId = Math.floor(Math.random() * 10) + 1; 
             
             const enemyImg = document.getElementById('enemy-sprite');
-            enemyImg.src = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${enemyId}.png`;
+            enemyImg.src = `monster${enemyId}.png`;
             enemyImg.classList.remove('opacity-0', 'grayscale', 'scale-90', 'blur-sm');
             
             document.getElementById('game-msg').innerText = i18n[currentLang].gameMsg;
@@ -634,7 +636,7 @@
                 // ATTACK ANIMATION START
                 // 1. Stop idle animation
                 stopIdleAnimation();
-                // 2. Switch to Attack Sprite
+                // 2. Switch to Attack Sprite (Husky3.png)
                 document.getElementById('player-sprite').src = 'Husky3.png';
                 
                 playerContainer.classList.add('translate-x-8', '-translate-y-4');
