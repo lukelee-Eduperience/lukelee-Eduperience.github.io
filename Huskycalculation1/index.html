@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pikachu Calculation Battle</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        /* Custom Animations */
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        @keyframes bounce-slow {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+        @keyframes spin-slow {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        @keyframes pop-in {
+            0% { transform: scale(0) rotate(-10deg); opacity: 0; }
+            50% { transform: scale(1.2) rotate(5deg); opacity: 1; }
+            100% { transform: scale(1) rotate(0deg); opacity: 1; }
+        }
+        
+        .animate-float { animation: float 3s ease-in-out infinite; }
+        .animate-shake { animation: shake 0.3s ease-in-out 3; }
+        .animate-bounce-slow { animation: bounce-slow 2s infinite; }
+        .animate-spin-slow { animation: spin-slow 4s linear infinite; }
+        .animate-pop-in { animation: pop-in 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        
+        .pixelated { image-rendering: pixelated; }
+
+        /* Screen visibility toggles */
+        .screen { display: none; }
+        .screen.active { display: flex; }
+        
+        /* Timer Bar Animation */
+        .timer-bar { transition: width 0.1s linear; }
+
+        /* Level Up Overlay */
+        .levelup-text {
+            text-shadow: 4px 4px 0px #000, -2px -2px 0px #000;
+        }
+    </style>
+</head>
+<body class="font-sans overflow-hidden bg-slate-900 text-slate-800">
+
+    <!-- Sound Audio Context (Hidden) -->
+    
+    <!-- Language Toggle (Fixed Top Right) -->
+    <button onclick="toggleLanguage()" class="fixed top-4 right-4 z-50 bg-white/20 backdrop-blur-md border border-white/40 text-white font-bold py-2 px-4 rounded-full hover:bg-white/30 transition-all flex items-center gap-2 shadow-lg">
+        <i data-lucide="globe" class="w-4 h-4"></i>
+        <span id="lang-btn-text">中文</span>
+    </button>
+
+    <!-- Global Game Timer Display (Fixed Top Center during game) -->
+    <div id="global-timer-container" class="fixed top-4 left-1/2 transform -translate-x-1/2 z-40 hidden">
+        <div class="bg-slate-800/90 text-white border-2 border-yellow-400 px-6 py-2 rounded-full font-mono text-2xl font-bold shadow-xl flex items-center gap-2">
+            <i data-lucide="clock" class="w-5 h-5 text-yellow-400"></i>
+            <span id="global-time-display">60</span>s
+        </div>
+    </div>
+
+    <!-- LEVEL UP OVERLAY -->
+    <div id="levelup-overlay" class="fixed inset-0 z-50 pointer-events-none hidden flex items-center justify-center">
+        <div class="relative">
+            <div class="absolute inset-0 bg-yellow-400 blur-xl opacity-50 animate-pulse rounded-full"></div>
+            <h1 class="text-8xl font-black text-yellow-300 levelup-text transform rotate-[-5deg] animate-pop-in">
+                LEVEL UP!
+            </h1>
+        </div>
+    </div>
+
+    <!-- SCREEN 1: START MENU -->
+    <div id="start-screen" class="screen active min-h-screen bg-red-600 items-center justify-center p-4 relative overflow-hidden">
+        <div class="absolute inset-0 bg-gradient-to-br from-red-500 to-red-700"></div>
+        <!-- Pokeball Background Pattern -->
+        <div class="absolute top-0 right-0 w-64 h-64 bg-white opacity-10 rounded-full transform translate-x-1/2 -translate-y-1/2"></div>
+        
+        <div class="bg-white/95 backdrop-blur-md border-4 border-slate-800 rounded-3xl p-8 max-w-md w-full text-center shadow-2xl relative z-10 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-center -mt-20 mb-4">
+                 <!-- Pikachu Front Sprite -->
+                 <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png" class="w-40 h-40 object-contain pixelated animate-bounce drop-shadow-2xl">
+            </div>
+            
+            <h1 id="title-text" class="text-3xl font-extrabold mb-2 text-slate-800 tracking-tight">Pikachu Calculation Battle</h1>
+            
+            <!-- Instructions Box -->
+            <div class="bg-yellow-50 border-2 border-yellow-200 rounded-xl p-4 mb-6 text-left shadow-sm">
+                <h3 id="instr-title" class="font-bold text-yellow-800 mb-2 flex items-center gap-2">
+                    <i data-lucide="info" class="w-4 h-4"></i> How to Play
+                </h3>
+                <ul id="instr-list" class="text-sm text-yellow-900 space-y-1 list-disc list-inside font-medium">
+                    <li>Type the answer and press <strong>SPACE</strong> or <strong>ENTER</strong>.</li>
+                    <li>Game Time: <strong>60 seconds</strong>.</li>
+                    <li>Correct answers level up Pikachu (Lv 5-10).</li>
+                    <li>Higher levels = Faster bonus timer & More points!</li>
+                </ul>
+            </div>
+            
+            <div class="bg-slate-100 rounded-xl p-4 mb-8 flex justify-between items-center border-2 border-slate-200">
+                <div class="flex flex-col items-center">
+                    <span id="highscore-label" class="text-xs font-bold text-slate-400 uppercase tracking-wider">Top Score</span>
+                    <span id="start-highscore" class="text-2xl font-black text-slate-800">0</span>
+                </div>
+                <i data-lucide="trophy" class="text-yellow-500 w-8 h-8 fill-current"></i>
+            </div>
+
+            <button onclick="startGame()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 px-8 rounded-xl text-xl transition-all transform hover:scale-105 shadow-lg border-b-4 border-blue-800 flex items-center justify-center gap-3 active:translate-y-1 active:shadow-none">
+                <i data-lucide="play" class="w-6 h-6 fill-current"></i> <span id="start-btn-text">Start Adventure</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- SCREEN 2: GAMEPLAY -->
+    <div id="game-screen" class="screen min-h-screen bg-slate-800 flex-col items-center relative overflow-hidden">
+        
+        <!-- Battle Scene (Top Half) -->
+        <div class="w-full h-[45vh] relative bg-gradient-to-b from-blue-300 to-green-300 flex justify-center overflow-hidden border-b-8 border-slate-900">
+             <!-- Decor -->
+             <div class="absolute bottom-0 w-full h-12 bg-green-600 skew-y-1 transform origin-bottom-right opacity-80"></div>
+             <div class="absolute bottom-4 w-full h-12 bg-green-500 -skew-y-2 transform origin-bottom-left"></div>
+             
+             <div class="w-full max-w-2xl relative h-full">
+                <!-- Player (Pikachu) -->
+                <div id="player-container" class="absolute bottom-4 left-4 md:left-12 z-20 transition-all duration-300">
+                    <div class="relative group">
+                        <!-- Attack Effect (Thunderbolt) -->
+                        <div id="attack-effect" class="hidden absolute top-0 -right-10 z-30 animate-ping">
+                           <i data-lucide="zap" class="text-yellow-400 fill-yellow-400 w-16 h-16 drop-shadow-lg"></i>
+                        </div>
+                        
+                        <!-- Pikachu Back Sprite -->
+                        <img id="player-sprite" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/back/25.png" class="w-32 md:w-48 h-auto object-contain pixelated animate-bounce-slow drop-shadow-xl">
+                        
+                        <!-- Player Stats (XP) -->
+                        <div class="absolute -right-24 top-8 bg-white/90 text-slate-800 p-2 rounded-lg border-2 border-slate-600 shadow-lg text-xs font-bold min-w-[100px]">
+                            <div class="flex justify-between mb-1"><span>XP</span><span id="xp-text">0/2</span></div>
+                            <div class="w-full h-2 bg-slate-200 rounded-full border border-slate-300 overflow-hidden">
+                                <div id="player-xp-bar" class="h-full bg-blue-500 w-0 transition-all duration-300"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Enemy -->
+                <div id="enemy-container" class="absolute top-12 right-4 md:right-16 z-10 transition-all duration-500">
+                     <div class="relative">
+                        <img id="enemy-sprite" src="" class="w-32 h-32 md:w-48 md:h-48 object-contain pixelated animate-float">
+                        
+                        <!-- Enemy Stats -->
+                        <div class="absolute -left-24 top-0 bg-white/90 p-2 rounded-lg border-2 border-slate-700 shadow-lg text-xs font-bold min-w-[100px]">
+                            <div class="flex justify-between mb-1"><span id="enemy-name">Monster</span><span></span></div>
+                            <div class="w-full h-2 bg-slate-200 rounded-full border border-slate-300 overflow-hidden">
+                                <div id="enemy-hp-bar" class="h-full bg-green-500 w-full transition-all duration-500"></div>
+                            </div>
+                        </div>
+                     </div>
+                </div>
+             </div>
+        </div>
+
+        <!-- Controls (Bottom Half) -->
+        <div class="flex-1 w-full bg-slate-800 p-4 flex flex-col items-center justify-start -mt-4 z-20 rounded-t-3xl shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.5)] border-t border-slate-700">
+            <div class="w-full max-w-lg">
+                
+               <!-- Top Stats HUD (Prominent Score & Level) -->
+               <div class="flex justify-between items-center mb-4 bg-slate-700/50 p-2 rounded-xl border border-slate-600">
+                    <div class="flex items-center gap-3 px-2">
+                        <div class="bg-blue-600 p-1.5 rounded-lg"><i data-lucide="star" class="w-4 h-4 text-white"></i></div>
+                        <div>
+                            <div id="score-label" class="text-[10px] font-bold text-slate-400 uppercase leading-none">Score</div>
+                            <div id="score-display" class="text-xl font-black text-white leading-none">0</div>
+                        </div>
+                    </div>
+                    <div class="h-8 w-px bg-slate-600"></div>
+                    <div class="flex items-center gap-3 px-2">
+                        <div class="bg-green-600 p-1.5 rounded-lg"><i data-lucide="trending-up" class="w-4 h-4 text-white"></i></div>
+                        <div>
+                            <div id="level-label" class="text-[10px] font-bold text-slate-400 uppercase leading-none">Level</div>
+                            <div id="level-text" class="text-xl font-black text-white leading-none">5</div>
+                        </div>
+                    </div>
+                    <div class="h-8 w-px bg-slate-600"></div>
+                    <div class="flex items-center gap-3 px-2">
+                         <div class="bg-orange-500 p-1.5 rounded-lg"><i data-lucide="flame" class="w-4 h-4 text-white"></i></div>
+                         <div>
+                            <div id="streak-label" class="text-[10px] font-bold text-slate-400 uppercase leading-none">Streak</div>
+                            <div id="streak-display" class="text-xl font-black text-white leading-none">0</div>
+                         </div>
+                    </div>
+               </div>
+                
+               <!-- Question Timer Bar -->
+               <div class="w-full h-4 bg-slate-700 rounded-full mb-4 overflow-hidden border border-slate-600 relative">
+                   <div id="timer-bar" class="h-full bg-yellow-400 w-full timer-bar"></div>
+                   <div class="absolute top-0 left-0 w-full h-full flex items-center justify-center text-[10px] font-bold text-slate-900 opacity-50 uppercase tracking-widest">Speed Bonus</div>
+               </div>
+
+               <!-- Message Box -->
+               <div id="message-box" class="bg-slate-900 border-4 border-slate-600 rounded-xl p-3 mb-4 min-h-[60px] flex items-center justify-center text-center shadow-inner relative overflow-hidden">
+                   <span id="game-msg" class="text-slate-300 font-medium text-lg">Wild monster appeared!</span>
+               </div>
+
+               <!-- Math Problem -->
+               <div class="bg-white rounded-2xl p-4 mb-4 flex items-center justify-center gap-3 text-5xl font-black text-slate-800 shadow-lg relative border-b-4 border-slate-300">
+                  <span id="num1" class="w-20 text-center">0</span>
+                  <span class="text-blue-500">+</span>
+                  <span id="num2" class="w-20 text-center">0</span>
+                  <span class="text-slate-300">=</span>
+                  <span class="text-blue-600">?</span>
+               </div>
+
+               <!-- Input Area -->
+               <div class="flex gap-2">
+                   <input type="number" id="answer-input" class="flex-1 bg-slate-700 text-white border-2 border-slate-600 rounded-xl px-4 py-3 text-2xl font-bold focus:outline-none focus:border-yellow-400 placeholder-slate-500 text-center shadow-inner" placeholder="Answer..." autofocus>
+                   <button id="confirm-btn" onclick="submitAnswer()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold px-6 py-3 rounded-xl border-b-4 border-blue-800 active:border-blue-600 active:translate-y-1 transition-all flex flex-col items-center justify-center leading-none min-w-[100px] shadow-lg">
+                       <span id="confirm-text" class="text-lg">Confirm</span>
+                       <span class="text-[10px] opacity-75">SPACE</span>
+                   </button>
+               </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCREEN 3: SUMMARY -->
+    <div id="summary-screen" class="screen min-h-screen bg-slate-900 items-center justify-center p-4">
+        <div class="bg-white border-4 border-yellow-400 rounded-3xl p-8 max-w-md w-full text-center shadow-2xl relative">
+            <div class="absolute -top-6 left-1/2 transform -translate-x-1/2 bg-blue-600 px-8 py-2 rounded-full border-4 border-white shadow-lg">
+                <h2 id="victory-title" class="text-xl font-black text-white uppercase tracking-widest">Time's Up!</h2>
+            </div>
+            
+            <div class="mt-8 flex justify-center mb-6">
+                <div class="relative">
+                    <i data-lucide="star" class="text-yellow-400 w-32 h-32 fill-current animate-spin-slow"></i>
+                    <div id="final-score" class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-white font-black text-4xl drop-shadow-lg stroke-black">0</div>
+                </div>
+            </div>
+
+            <p id="victory-msg" class="text-xl mb-8 font-bold text-slate-700">Great training session!</p>
+            
+            <button onclick="startGame()" class="w-full bg-green-500 hover:bg-green-400 text-white font-bold py-3 px-6 rounded-xl transition-all shadow-lg border-b-4 border-green-700 flex items-center justify-center gap-2 active:translate-y-1 active:shadow-none">
+                <i data-lucide="refresh-cw" class="w-5 h-5"></i> <span id="replay-btn-text">Battle Again</span>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // --- TRANSLATIONS ---
+        const i18n = {
+            en: {
+                title: "Pikachu Calculation Battle",
+                subtitle: "Help Pikachu defeat wild monsters!",
+                instrTitle: "How to Play",
+                instrList: [
+                    "Type the answer and press <strong>SPACE</strong> or <strong>ENTER</strong>.",
+                    "Game Time: <strong>60 seconds</strong>.",
+                    "Correct answers level up Pikachu (Lv 5-10).",
+                    "Higher levels = Faster bonus timer & More points!"
+                ],
+                highscore: "Top Score",
+                startBtn: "Start Adventure",
+                monsterName: "Wild Monster",
+                gameMsg: "Wild monster appeared!",
+                confirm: "Confirm",
+                placeholder: "Answer...",
+                score: "Score",
+                streak: "Streak",
+                level: "Level",
+                victoryTitle: "Time's Up!",
+                victoryMsg: "Great training session!",
+                replayBtn: "Try Again",
+                correct: "Pikachu Attack! Correct!",
+                wrong: "Missed! Try again.",
+                langBtn: "中文",
+                levelup: "Level Up!"
+            },
+            zh: {
+                title: "皮卡丘數算大戰",
+                subtitle: "幫助皮卡丘打敗野生怪物！",
+                instrTitle: "遊戲說明",
+                instrList: [
+                    "輸入答案並按下 <strong>SPACE</strong> 或 <strong>ENTER</strong>。",
+                    "遊戲時間：<strong>60 秒</strong>。",
+                    "答對問題可讓皮卡丘升級 (Lv 5-10)。",
+                    "等級越高 = 時間獎勵越快 & 分數越高！"
+                ],
+                highscore: "最高分數",
+                startBtn: "開始冒險",
+                monsterName: "野生怪物",
+                gameMsg: "野生怪物出現了！",
+                confirm: "確認",
+                placeholder: "輸入答案...",
+                score: "分數",
+                streak: "連勝",
+                level: "等級",
+                victoryTitle: "時間到！",
+                victoryMsg: "很棒的訓練！",
+                replayBtn: "再次挑戰",
+                correct: "皮卡丘攻擊！答對了！",
+                wrong: "錯過了！再試一次。",
+                langBtn: "English",
+                levelup: "升級！"
+            }
+        };
+
+        // --- GAME STATE ---
+        let currentLang = 'en';
+        let score = 0;
+        let streak = 0;
+        let level = 5;
+        let exp = 0;
+        const EXP_NEEDED = 2; // Fixed requirement: every 2 correct answers
+        const MAX_LEVEL = 10;
+        const GAME_DURATION = 60; // seconds
+        
+        let highScore = localStorage.getItem('pikaMathHighScore') || 0;
+        let currentProblem = {};
+        let isProcessing = false;
+        let isGameActive = false;
+        
+        // Timer Variables
+        let globalTimerInterval;
+        let globalTimeLeft = GAME_DURATION;
+        
+        let questionTimerInterval;
+        let questionTimeLeft = 100; // Percentage
+
+        // Sound Context
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const audioCtx = new AudioContext();
+
+        // Initialize Icons
+        lucide.createIcons();
+        document.getElementById('start-highscore').innerText = highScore;
+
+        // --- SOUND FUNCTIONS ---
+        function playTone(freq, type, duration) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            
+            gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+            
+            osc.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            
+            osc.start();
+            osc.stop(audioCtx.currentTime + duration);
+        }
+
+        function playCorrectSound() {
+            playTone(600, 'sine', 0.1);
+            setTimeout(() => playTone(800, 'sine', 0.2), 100);
+        }
+
+        function playWrongSound() {
+            playTone(150, 'sawtooth', 0.3);
+        }
+
+        function playLevelUpSound() {
+            playTone(400, 'square', 0.1);
+            setTimeout(() => playTone(500, 'square', 0.1), 100);
+            setTimeout(() => playTone(600, 'square', 0.1), 200);
+            setTimeout(() => playTone(800, 'square', 0.4), 300);
+        }
+
+        function playGameOverSound() {
+            playTone(300, 'triangle', 0.3);
+            setTimeout(() => playTone(200, 'triangle', 0.3), 200);
+            setTimeout(() => playTone(100, 'triangle', 0.6), 400);
+        }
+
+        // --- LANGUAGE FUNCTIONS ---
+        function toggleLanguage() {
+            currentLang = currentLang === 'en' ? 'zh' : 'en';
+            updateLanguage();
+        }
+
+        function updateLanguage() {
+            const t = i18n[currentLang];
+            document.getElementById('lang-btn-text').innerText = t.langBtn;
+            document.getElementById('title-text').innerText = t.title;
+            // Instructions
+            document.getElementById('instr-title').innerHTML = `<i data-lucide="info" class="w-4 h-4"></i> ${t.instrTitle}`;
+            const listEl = document.getElementById('instr-list');
+            listEl.innerHTML = '';
+            t.instrList.forEach(item => {
+                const li = document.createElement('li');
+                li.innerHTML = item;
+                listEl.appendChild(li);
+            });
+            lucide.createIcons();
+
+            document.getElementById('highscore-label').innerText = t.highscore;
+            document.getElementById('start-btn-text').innerText = t.startBtn;
+            
+            document.getElementById('enemy-name').innerText = t.monsterName;
+            if(!isProcessing && isGameActive) document.getElementById('game-msg').innerText = t.gameMsg;
+            
+            document.getElementById('confirm-text').innerText = t.confirm;
+            document.getElementById('answer-input').placeholder = t.placeholder;
+            
+            document.getElementById('score-label').innerText = t.score;
+            document.getElementById('streak-label').innerText = t.streak;
+            document.getElementById('level-label').innerText = t.level;
+            
+            document.getElementById('victory-title').innerText = t.victoryTitle;
+            document.getElementById('victory-msg').innerText = t.victoryMsg;
+            document.getElementById('replay-btn-text').innerText = t.replayBtn;
+        }
+
+        // --- CORE FUNCTIONS ---
+
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        function startGame() {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            score = 0;
+            streak = 0;
+            level = 5;
+            exp = 0;
+            globalTimeLeft = GAME_DURATION;
+            isGameActive = true;
+            
+            document.getElementById('global-timer-container').classList.remove('hidden');
+            updateHUD();
+            showScreen('game-screen');
+            updateLanguage();
+            startGlobalTimer();
+            generateProblem();
+        }
+
+        function updateHUD() {
+            // Updated HUD elements
+            document.getElementById('score-display').innerText = score;
+            document.getElementById('streak-display').innerText = streak;
+            document.getElementById('level-text').innerText = level;
+            
+            document.getElementById('xp-text').innerText = `${exp}/${EXP_NEEDED}`;
+            document.getElementById('player-xp-bar').style.width = `${(exp / EXP_NEEDED) * 100}%`;
+        }
+
+        function startGlobalTimer() {
+            clearInterval(globalTimerInterval);
+            document.getElementById('global-time-display').innerText = globalTimeLeft;
+            
+            globalTimerInterval = setInterval(() => {
+                globalTimeLeft--;
+                document.getElementById('global-time-display').innerText = globalTimeLeft;
+                
+                if (globalTimeLeft <= 10) {
+                    document.getElementById('global-time-display').classList.add('text-red-500', 'animate-pulse');
+                    playTone(800, 'sine', 0.05); // Ticking sound
+                } else {
+                    document.getElementById('global-time-display').classList.remove('text-red-500', 'animate-pulse');
+                }
+
+                if (globalTimeLeft <= 0) {
+                    endGame();
+                }
+            }, 1000);
+        }
+
+        function generateProblem() {
+            if (!isGameActive) return;
+            isProcessing = false;
+            
+            // Math Logic
+            const num1 = Math.floor(Math.random() * 11);
+            const num2 = Math.floor(Math.random() * (20 - num1 + 1));
+            const ans = num1 + num2;
+
+            currentProblem = { num1, num2, ans };
+
+            // UI Updates
+            document.getElementById('num1').innerText = num1;
+            document.getElementById('num2').innerText = num2;
+            document.getElementById('answer-input').value = '';
+            document.getElementById('answer-input').focus();
+            
+            // Random Enemy Visuals
+            let enemyId = Math.floor(Math.random() * 151) + 1; 
+            if (enemyId === 25) enemyId = 133; 
+            
+            const enemyImg = document.getElementById('enemy-sprite');
+            enemyImg.src = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${enemyId}.png`;
+            enemyImg.classList.remove('opacity-0', 'grayscale', 'scale-90', 'blur-sm');
+            document.getElementById('enemy-hp-bar').style.width = '100%';
+            document.getElementById('enemy-hp-bar').classList.remove('bg-red-500');
+            document.getElementById('enemy-hp-bar').classList.add('bg-green-500');
+            
+            document.getElementById('game-msg').innerText = i18n[currentLang].gameMsg;
+            document.getElementById('game-msg').className = "text-slate-300 font-medium text-lg";
+
+            startQuestionTimer();
+        }
+
+        function startQuestionTimer() {
+            clearInterval(questionTimerInterval);
+            questionTimeLeft = 100;
+            const bar = document.getElementById('timer-bar');
+            bar.style.width = '100%';
+            bar.className = 'h-full bg-yellow-400 w-full timer-bar';
+            
+            // Timer speed increases with level
+            const speedMs = Math.max(20, 100 - ((level - 5) * 15)); 
+            
+            questionTimerInterval = setInterval(() => {
+                questionTimeLeft -= 1;
+                bar.style.width = `${questionTimeLeft}%`;
+                
+                if(questionTimeLeft < 30) bar.classList.replace('bg-yellow-400', 'bg-red-500');
+                
+                if (questionTimeLeft <= 0) {
+                    clearInterval(questionTimerInterval);
+                }
+            }, speedMs);
+        }
+
+        function showLevelUpAnimation() {
+            const overlay = document.getElementById('levelup-overlay');
+            overlay.classList.remove('hidden');
+            playLevelUpSound();
+            
+            setTimeout(() => {
+                overlay.classList.add('hidden');
+            }, 1500);
+        }
+
+        function submitAnswer() {
+            if(isProcessing || !isGameActive) return;
+            
+            const inputVal = parseInt(document.getElementById('answer-input').value);
+            if(isNaN(inputVal)) return;
+
+            isProcessing = true;
+            clearInterval(questionTimerInterval);
+
+            const isCorrect = inputVal === currentProblem.ans;
+            const t = i18n[currentLang];
+
+            if(isCorrect) {
+                // VISUALS
+                playCorrectSound();
+                document.getElementById('game-msg').innerHTML = `<span class="text-green-400 font-bold text-xl animate-pulse">${t.correct}</span>`;
+                
+                const playerContainer = document.getElementById('player-container');
+                const attackEffect = document.getElementById('attack-effect');
+                const enemySprite = document.getElementById('enemy-sprite');
+                
+                playerContainer.classList.add('translate-x-8', '-translate-y-4');
+                attackEffect.classList.remove('hidden');
+                
+                setTimeout(() => {
+                    enemySprite.classList.add('opacity-0', 'grayscale', 'scale-90', 'blur-sm');
+                    document.getElementById('enemy-hp-bar').style.width = '0%';
+                    document.getElementById('enemy-hp-bar').classList.replace('bg-green-500', 'bg-red-500');
+                }, 300);
+
+                // LOGIC: Level & XP
+                exp++;
+                if (exp >= EXP_NEEDED && level < MAX_LEVEL) {
+                    level++;
+                    exp = 0;
+                    showLevelUpAnimation();
+                }
+
+                // LOGIC: Score
+                const levelBase = 10 + ((level - 5) * 5); 
+                const timeBonus = Math.max(0, Math.floor(questionTimeLeft / 5)); 
+                score += levelBase + timeBonus + (streak * 2);
+                streak++;
+                updateHUD();
+
+                setTimeout(() => {
+                    playerContainer.classList.remove('translate-x-8', '-translate-y-4');
+                    attackEffect.classList.add('hidden');
+
+                    if (isGameActive) {
+                        generateProblem();
+                    }
+                }, 1000);
+
+            } else {
+                // WRONG ANSWER
+                playWrongSound();
+                document.getElementById('game-msg').innerHTML = `<span class="text-red-400 font-bold text-xl">${t.wrong}</span>`;
+                streak = 0;
+                updateHUD();
+                
+                const inputEl = document.getElementById('answer-input');
+                inputEl.classList.add('animate-shake', 'border-red-500', 'text-red-500');
+                
+                setTimeout(() => {
+                    isProcessing = false;
+                    inputEl.classList.remove('animate-shake', 'border-red-500', 'text-red-500');
+                    inputEl.value = '';
+                    inputEl.focus();
+                    startQuestionTimer(); 
+                    document.getElementById('game-msg').innerText = t.gameMsg;
+                    document.getElementById('game-msg').className = "text-slate-300 font-medium text-lg";
+                }, 1200);
+            }
+        }
+
+        function endGame() {
+            playGameOverSound();
+            isGameActive = false;
+            clearInterval(globalTimerInterval);
+            clearInterval(questionTimerInterval);
+            document.getElementById('global-timer-container').classList.add('hidden');
+            
+            if(score > highScore) {
+                highScore = score;
+                localStorage.setItem('pikaMathHighScore', highScore);
+                document.getElementById('start-highscore').innerText = highScore;
+            }
+            document.getElementById('final-score').innerText = score;
+            showScreen('summary-screen');
+        }
+
+        // --- GLOBAL EVENTS ---
+        document.addEventListener('keydown', (e) => {
+            if (document.getElementById('game-screen').classList.contains('active')) {
+                if (e.code === 'Space' || e.key === 'Enter') {
+                    if(e.code === 'Space') e.preventDefault(); 
+                    submitAnswer();
+                }
+            }
+        });
+        
+        // Initial setup
+        updateLanguage();
+
+    </script>
+</body>
+</html>
