@@ -41,6 +41,10 @@
             50% { transform: scale(1.2) rotate(5deg); opacity: 1; }
             100% { transform: scale(1) rotate(0deg); opacity: 1; }
         }
+        @keyframes rays {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
         
         .animate-float { animation: float 3s ease-in-out infinite; }
         .animate-shake { animation: shake 0.4s ease-in-out; }
@@ -49,6 +53,7 @@
         .animate-bounce-slow { animation: bounce-slow 2s infinite; }
         .animate-spin-slow { animation: spin-slow 4s linear infinite; }
         .animate-pop-in { animation: pop-in 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        .animate-rays { animation: rays 10s linear infinite; }
         
         .pixelated { image-rendering: pixelated; }
 
@@ -75,13 +80,21 @@
         </div>
     </div>
 
-    <!-- LEVEL UP OVERLAY -->
-    <div id="levelup-overlay" class="fixed inset-0 z-50 pointer-events-none hidden flex items-center justify-center">
-        <div class="relative">
-            <div class="absolute inset-0 bg-yellow-400 blur-xl opacity-50 animate-pulse rounded-full"></div>
-            <h1 class="text-8xl font-black text-yellow-300 levelup-text transform rotate-[-5deg] animate-pop-in">
+    <!-- LEVEL UP OVERLAY SCENE -->
+    <div id="levelup-overlay" class="fixed inset-0 z-[60] bg-black/80 hidden flex flex-col items-center justify-center backdrop-blur-sm">
+        <!-- Rotating Sunburst Background -->
+        <div class="absolute inset-0 flex items-center justify-center overflow-hidden z-0">
+            <div class="w-[200vmax] h-[200vmax] bg-[conic-gradient(from_0deg,transparent_0_20deg,#fbbf24_20deg_40deg,transparent_40deg_60deg,#fbbf24_60deg_80deg,transparent_80deg_100deg,#fbbf24_100deg_120deg,transparent_120deg_140deg,#fbbf24_140deg_160deg,transparent_160deg_180deg,#fbbf24_180deg_200deg,transparent_200deg_220deg,#fbbf24_220deg_240deg,transparent_240deg_260deg,#fbbf24_260deg_280deg,transparent_280deg_300deg,#fbbf24_300deg_320deg,transparent_320deg_340deg,#fbbf24_340deg_360deg)] opacity-20 animate-rays"></div>
+        </div>
+        
+        <div class="relative z-10 flex flex-col items-center animate-pop-in">
+            <h1 class="text-8xl font-black text-yellow-400 levelup-text mb-8 transform -rotate-6 tracking-wider">
                 LEVEL UP!
             </h1>
+            <img src="Husky6.png" class="w-64 h-64 object-contain drop-shadow-[0_0_30px_rgba(250,204,21,0.8)] animate-bounce">
+            <div class="mt-8 text-white text-2xl font-bold bg-slate-800/80 px-6 py-2 rounded-full border-2 border-yellow-400">
+                Speed Up!
+            </div>
         </div>
     </div>
 
@@ -111,7 +124,7 @@
                 <ul id="instr-list" class="text-sm text-yellow-900 space-y-1 list-disc list-inside font-medium">
                     <li>Type answer & press <strong>SPACE</strong> or <strong>ENTER</strong>.</li>
                     <li>Game Time: <strong>60s</strong>. Max Level: <strong>5</strong>.</li>
-                    <li>Correct answer = Husky Attacks.</li>
+                    <li>Correct answers deal damage & level up Husky.</li>
                     <li><strong>Warning:</strong> Monster attacks back! Watch your HP!</li>
                     <li>Defeating monster heals you.</li>
                 </ul>
@@ -353,20 +366,18 @@
         let level = 1;
         let exp = 0;
         const EXP_NEEDED = 2; 
-        const MAX_LEVEL = 5; // Changed to 5
+        const MAX_LEVEL = 5; 
         const GAME_DURATION = 60; 
         
-        // Player State
         let playerHP = 100;
         let playerMaxHP = 100;
-
-        // Monster State
         let monsterHP = 0;
         let monsterMaxHP = 0;
         
         let currentProblem = {};
         let isProcessing = false;
         let isGameActive = false;
+        let isPaused = false; // New Paused state for Level Up Scene
         
         let globalTimerInterval;
         let globalTimeLeft = GAME_DURATION;
@@ -375,11 +386,47 @@
         
         let idleInterval = null;
         let isIdleFrame1 = true;
+        let idleSpeed = 500; //ms
 
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         const audioCtx = new AudioContext();
+        
+        // Music State
+        let bgmOscillators = [];
+        let bgmInterval = null;
+        let bgmNoteIndex = 0;
 
         lucide.createIcons();
+
+        // --- BGM SYSTEM ---
+        const BGM_NOTES = [261.63, 329.63, 392.00, 523.25]; // C4, E4, G4, C5 (C Major Arpeggio)
+        
+        function startBGM() {
+            stopBGM();
+            bgmNoteIndex = 0;
+            
+            // Tempo based on Level: 1=500ms, 5=150ms (Very Fast)
+            const tempo = Math.max(150, 500 - ((level - 1) * 80));
+            
+            bgmInterval = setInterval(() => {
+                if(isPaused) return; // Don't play notes if paused
+                
+                const freq = BGM_NOTES[bgmNoteIndex % BGM_NOTES.length];
+                playTone(freq, 'triangle', 0.1);
+                
+                // Add a bass beat every 4 notes
+                if(bgmNoteIndex % 4 === 0) {
+                    playTone(130.81, 'square', 0.2); // C3
+                }
+                
+                bgmNoteIndex++;
+            }, tempo);
+        }
+        
+        function stopBGM() {
+            if (bgmInterval) clearInterval(bgmInterval);
+            bgmInterval = null;
+        }
 
         // --- IDLE ANIMATION ---
         function startIdleAnimation() {
@@ -389,10 +436,14 @@
             isIdleFrame1 = true;
             playerSprite.src = 'Husky1.png';
             
+            // Speed increases with level
+            idleSpeed = Math.max(150, 500 - ((level - 1) * 80));
+            
             idleInterval = setInterval(() => {
+                if(isPaused) return;
                 isIdleFrame1 = !isIdleFrame1;
                 playerSprite.src = isIdleFrame1 ? 'Husky1.png' : 'Husky2.png';
-            }, 500);
+            }, idleSpeed);
         }
 
         function stopIdleAnimation() {
@@ -409,8 +460,8 @@
             const gainNode = audioCtx.createGain();
             osc.type = type;
             osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-            gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+            gainNode.gain.setValueAtTime(0.05, audioCtx.currentTime); // Lower volume for BGM mix
+            gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
             osc.connect(gainNode);
             gainNode.connect(audioCtx.destination);
             osc.start();
@@ -427,10 +478,11 @@
         }
 
         function playLevelUpSound() {
-            playTone(400, 'square', 0.1);
-            setTimeout(() => playTone(500, 'square', 0.1), 100);
-            setTimeout(() => playTone(600, 'square', 0.1), 200);
-            setTimeout(() => playTone(800, 'square', 0.4), 300);
+            // Fanfare
+            playTone(523.25, 'square', 0.1); // C5
+            setTimeout(() => playTone(659.25, 'square', 0.1), 100); // E5
+            setTimeout(() => playTone(783.99, 'square', 0.1), 200); // G5
+            setTimeout(() => playTone(1046.50, 'square', 0.4), 300); // C6
         }
 
         function playGameOverSound() {
@@ -491,18 +543,19 @@
 
         function goToStartScreen() {
             stopIdleAnimation();
+            stopBGM();
             showScreen('start-screen');
         }
 
         function startGame() {
             if (audioCtx.state === 'suspended') audioCtx.resume();
             score = 0;
-            level = 1; // Changed to 1
+            level = 1; 
             exp = 0;
             globalTimeLeft = GAME_DURATION;
             isGameActive = true;
+            isPaused = false;
             
-            // Reset Stats
             playerMaxHP = 100;
             playerHP = playerMaxHP;
             monsterHP = 0; 
@@ -512,12 +565,14 @@
             showScreen('game-screen');
             updateLanguage();
             startGlobalTimer();
-            startIdleAnimation();
+            
+            startIdleAnimation(); // Level 1 Speed
+            startBGM(); // Level 1 Music
+            
             generateProblem();
         }
 
         function spawnMonster() {
-            // HP scales with level
             const baseHP = 20 + (level * 10);
             monsterMaxHP = baseHP * (Math.floor(Math.random() * 1.5) + 1); 
             monsterHP = monsterMaxHP;
@@ -578,6 +633,8 @@
             document.getElementById('global-time-display').innerText = globalTimeLeft;
             
             globalTimerInterval = setInterval(() => {
+                if(isPaused) return; // PAUSE CHECK
+                
                 globalTimeLeft--;
                 document.getElementById('global-time-display').innerText = globalTimeLeft;
                 if (globalTimeLeft <= 10) {
@@ -585,7 +642,7 @@
                     playTone(800, 'sine', 0.05);
                 }
                 if (globalTimeLeft <= 0) {
-                    endGame(true); // Time Up
+                    endGame(true); 
                 }
             }, 1000);
         }
@@ -621,6 +678,8 @@
             const speedMs = Math.max(20, 100 - (level * 15)); 
             
             questionTimerInterval = setInterval(() => {
+                if(isPaused) return; // PAUSE CHECK
+                
                 questionTimeLeft -= 1;
                 bar.style.width = `${questionTimeLeft}%`;
                 if(questionTimeLeft < 30) bar.classList.replace('bg-yellow-400', 'bg-red-500');
@@ -628,15 +687,26 @@
             }, speedMs);
         }
 
-        function showLevelUpAnimation() {
+        function showLevelUpScene() {
+            isPaused = true; // Pause Logic
+            
             const overlay = document.getElementById('levelup-overlay');
             overlay.classList.remove('hidden');
             playLevelUpSound();
-            setTimeout(() => overlay.classList.add('hidden'), 1500);
+            
+            // 1. Increase Intensity (Music & Animation) immediately
+            startIdleAnimation(); // Will pick up new speed based on level
+            startBGM(); // Will pick up new tempo based on level
+            
+            // 2. Resume after 2 seconds
+            setTimeout(() => {
+                overlay.classList.add('hidden');
+                isPaused = false;
+            }, 2000);
         }
 
         function submitAnswer() {
-            if(isProcessing || !isGameActive) return;
+            if(isProcessing || !isGameActive || isPaused) return;
             
             const inputVal = parseInt(document.getElementById('answer-input').value);
             if(isNaN(inputVal)) return;
@@ -648,7 +718,6 @@
             const t = i18n[currentLang];
 
             if(isCorrect) {
-                // --- PLAYER ATTACK ---
                 playCorrectSound();
                 document.getElementById('game-msg').innerHTML = `<span class="text-green-400 font-bold text-xl animate-pulse">${t.correct}</span>`;
                 
@@ -662,7 +731,6 @@
                 playerContainer.classList.add('translate-x-8', '-translate-y-4');
                 attackEffect.classList.remove('hidden');
 
-                // Damage Calculation
                 const levelBase = 10 + (level * 5); 
                 const timeBonus = Math.max(0, Math.floor(questionTimeLeft / 5)); 
                 const damage = levelBase + timeBonus;
@@ -672,46 +740,44 @@
                 if (monsterHP < 0) monsterHP = 0;
                 updateMonsterHUD();
 
-                // XP
                 exp++;
                 if (exp >= EXP_NEEDED && level < MAX_LEVEL) {
                     level++;
                     exp = 0;
-                    showLevelUpAnimation();
+                    // Trigger Level Up Scene instead of just toast
+                    showLevelUpScene();
                 }
                 updateHUD();
 
-                // Animation Delay for Impact
-                setTimeout(() => {
-                    if (monsterHP <= 0) {
-                        // --- MONSTER DEFEATED ---
+                if (monsterHP <= 0) {
+                    setTimeout(() => {
                         enemySprite.classList.add('opacity-0', 'grayscale', 'scale-90', 'blur-sm');
                         document.getElementById('game-msg').innerHTML = `<span class="text-yellow-400 font-bold text-xl">${t.monsterDefeated}</span>`;
                         
-                        // Regen Player HP
                         const regen = Math.floor(playerMaxHP * 0.3);
                         playerHP = Math.min(playerMaxHP, playerHP + regen);
                         updatePlayerHP();
                         
-                        // Next Round (New Monster)
                         setTimeout(() => {
                             cleanupAttackAnim();
                             generateProblem();
                         }, 1500);
-                    } else {
-                        // --- MONSTER SURVIVED -> COUNTER ATTACK ---
+                    }, 300);
+                } else {
+                     setTimeout(() => {
                         enemySprite.classList.add('animate-damage');
-                        setTimeout(() => enemySprite.classList.remove('animate-damage'), 500);
-                        
-                        setTimeout(() => {
-                            cleanupAttackAnim();
-                            triggerMonsterAttack();
-                        }, 1000);
-                    }
-                }, 300);
+                     }, 100);
+                     setTimeout(() => {
+                        enemySprite.classList.remove('animate-damage');
+                     }, 500);
+                     
+                     setTimeout(() => {
+                        cleanupAttackAnim();
+                        triggerMonsterAttack();
+                     }, 1000);
+                }
 
             } else {
-                // --- WRONG ANSWER -> INSTANT MONSTER ATTACK ---
                 playWrongSound();
                 document.getElementById('game-msg').innerHTML = `<span class="text-red-400 font-bold text-xl">${t.wrong}</span>`;
                 
@@ -742,7 +808,6 @@
             const monsterAttackEffect = document.getElementById('monster-attack-effect');
             const playerSprite = document.getElementById('player-sprite');
             
-            // Attack Animation
             enemyContainer.classList.add('-translate-x-8', 'translate-y-4');
             monsterAttackEffect.classList.remove('hidden');
             
@@ -750,19 +815,17 @@
                 playHitSound();
                 playerSprite.classList.add('animate-hit');
                 
-                // Calculate Damage to Player
                 const monsterDamage = 15 + (level * 5);
                 playerHP -= monsterDamage;
                 updatePlayerHP();
                 
-                // Cleanup Animation
                 setTimeout(() => {
                     enemyContainer.classList.remove('-translate-x-8', 'translate-y-4');
                     monsterAttackEffect.classList.add('hidden');
                     playerSprite.classList.remove('animate-hit');
                     
                     if (playerHP <= 0) {
-                        endGame(false); // Defeat
+                        endGame(false); 
                     } else {
                         generateProblem();
                     }
@@ -772,14 +835,14 @@
 
         function endGame(isTimeUp = false) {
             playGameOverSound();
+            stopBGM(); // Stop music on end
             isGameActive = false;
             stopIdleAnimation();
             clearInterval(globalTimerInterval);
             clearInterval(questionTimerInterval);
             
             const t = i18n[currentLang];
-            // Always show victory/completion message
-            document.getElementById('victory-title').innerText = t.victoryTitle;
+            document.getElementById('victory-title').innerText = t.victoryTitle; // Always victory message
             document.getElementById('victory-msg').innerText = t.victoryMsg;
             document.getElementById('final-score').innerText = score;
             
