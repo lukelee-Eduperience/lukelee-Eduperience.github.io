@@ -22,7 +22,7 @@
         }
         @keyframes damage-flash {
             0%, 100% { opacity: 1; filter: none; }
-            50% { opacity: 0.5; filter: sepia(1) hue-rotate(-50deg) saturate(5); }
+            50% { opacity: 0.5; filter: brightness(2) sepia(1) hue-rotate(-50deg) saturate(5); }
         }
         @keyframes hit-flash-red {
             0%, 100% { filter: none; }
@@ -98,6 +98,7 @@
         
         <div class="bg-white/95 backdrop-blur-md border-4 border-slate-800 rounded-3xl p-8 max-w-md w-full text-center shadow-2xl relative z-10 max-h-[90vh] overflow-y-auto">
             <div class="flex justify-center mb-2 mt-4">
+                 <!-- Start Screen Husky (Husky4.png) -->
                  <img src="Husky4.png" class="w-40 h-40 object-contain animate-bounce drop-shadow-2xl">
             </div>
             
@@ -777,8 +778,9 @@
             clearInterval(questionTimerInterval);
             
             const t = i18n[currentLang];
-            document.getElementById('victory-title').innerText = isTimeUp ? t.victoryTitle : t.defeatTitle;
-            document.getElementById('victory-msg').innerText = isTimeUp ? t.victoryMsg : t.defeatMsg;
+            // Always show victory/completion message
+            document.getElementById('victory-title').innerText = t.victoryTitle;
+            document.getElementById('victory-msg').innerText = t.victoryMsg;
             document.getElementById('final-score').innerText = score;
             
             showScreen('summary-screen');
