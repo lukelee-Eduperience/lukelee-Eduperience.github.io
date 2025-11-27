@@ -124,9 +124,9 @@
                 <ul id="instr-list" class="text-sm text-yellow-900 space-y-1 list-disc list-inside font-medium">
                     <li>Type answer & press <strong>SPACE</strong> or <strong>ENTER</strong>.</li>
                     <li>Game Time: <strong>60s</strong>. Max Level: <strong>5</strong>.</li>
-                    <li>Correct answers deal damage & level up Husky.</li>
+                    <li>Correct answers deal damage.</li>
+                    <li>Defeat a monster to <strong>Level Up</strong> & heal!</li>
                     <li><strong>Warning:</strong> Monster attacks back! Watch your HP!</li>
-                    <li>Defeating monster heals you.</li>
                 </ul>
             </div>
             
@@ -167,15 +167,6 @@
                             </div>
                             <div class="w-full h-2 bg-slate-200 rounded-full border border-slate-300 overflow-hidden mb-1">
                                 <div id="player-hp-bar" class="h-full bg-green-500 w-full transition-all duration-300"></div>
-                            </div>
-
-                            <!-- XP Bar -->
-                            <div class="flex justify-between items-center mb-0.5">
-                                <span class="text-[10px] text-slate-500 mr-1">XP</span>
-                                <span id="xp-text" class="text-[10px]">0/2</span>
-                            </div>
-                            <div class="w-full h-1.5 bg-slate-200 rounded-full border border-slate-300 overflow-hidden">
-                                <div id="player-xp-bar" class="h-full bg-blue-500 w-0 transition-all duration-300"></div>
                             </div>
                         </div>
                     </div>
@@ -364,8 +355,6 @@
         let currentLang = 'en';
         let score = 0;
         let level = 1;
-        let exp = 0;
-        const EXP_NEEDED = 2; 
         const MAX_LEVEL = 5; 
         const GAME_DURATION = 60; 
         
@@ -551,7 +540,6 @@
             if (audioCtx.state === 'suspended') audioCtx.resume();
             score = 0;
             level = 1; 
-            exp = 0;
             globalTimeLeft = GAME_DURATION;
             isGameActive = true;
             isPaused = false;
@@ -624,8 +612,6 @@
         function updateHUD() {
             document.getElementById('score-display').innerText = score;
             document.getElementById('level-text').innerText = level;
-            document.getElementById('xp-text').innerText = `${exp}/${EXP_NEEDED}`;
-            document.getElementById('player-xp-bar').style.width = `${(exp / EXP_NEEDED) * 100}%`;
         }
 
         function startGlobalTimer() {
@@ -740,16 +726,16 @@
                 if (monsterHP < 0) monsterHP = 0;
                 updateMonsterHUD();
 
-                exp++;
-                if (exp >= EXP_NEEDED && level < MAX_LEVEL) {
-                    level++;
-                    exp = 0;
-                    // Trigger Level Up Scene instead of just toast
-                    showLevelUpScene();
-                }
                 updateHUD();
 
                 if (monsterHP <= 0) {
+                    // NEW LEVEL UP LOGIC: Level up on kill
+                    if (level < MAX_LEVEL) {
+                        level++;
+                        showLevelUpScene();
+                    }
+                    updateHUD(); // Reflect new level immediately
+
                     setTimeout(() => {
                         enemySprite.classList.add('opacity-0', 'grayscale', 'scale-90', 'blur-sm');
                         document.getElementById('game-msg').innerHTML = `<span class="text-yellow-400 font-bold text-xl">${t.monsterDefeated}</span>`;
