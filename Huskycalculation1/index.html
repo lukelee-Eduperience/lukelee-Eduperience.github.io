@@ -565,11 +565,16 @@
 
         function spawnMonster() {
             const isBoss = level === MAX_LEVEL;
-            let baseHP = 20 + (level * 10);
+            // FIXED HP SCALE:
+            // Level 1: 60 HP
+            // Level 2: 80 HP
+            // Level 3: 100 HP
+            // Level 4: 120 HP
+            let fixedNormalHP = 40 + (level * 20); 
             
             if (isBoss) {
                 // BOSS
-                monsterMaxHP = baseHP * 5; 
+                monsterMaxHP = 240; // Reduced from ~420 to 240
                 document.getElementById('boss-badge').classList.remove('hidden');
                 document.getElementById('enemy-sprite').classList.add('boss-sprite');
                 document.getElementById('enemy-name').innerText = i18n[currentLang].bossName;
@@ -578,7 +583,7 @@
                 document.getElementById('game-msg').innerHTML = `<span class="text-red-500 font-bold animate-pulse">BOSS BATTLE!</span>`;
             } else {
                 // NORMAL
-                monsterMaxHP = baseHP * (Math.floor(Math.random() * 1.5) + 1); 
+                monsterMaxHP = fixedNormalHP;
                 document.getElementById('boss-badge').classList.add('hidden');
                 document.getElementById('enemy-sprite').classList.remove('boss-sprite');
                 document.getElementById('enemy-name').innerText = i18n[currentLang].monsterName;
