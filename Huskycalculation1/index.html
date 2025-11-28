@@ -50,6 +50,10 @@
             0%, 100% { box-shadow: inset 0 0 0px rgba(220, 38, 38, 0); }
             50% { box-shadow: inset 0 0 30px rgba(220, 38, 38, 0.6); }
         }
+        @keyframes time-up-doom {
+            0% { filter: grayscale(0); transform: scale(1); }
+            100% { filter: grayscale(1) brightness(0.7); transform: scale(0.95); }
+        }
         
         .animate-float { animation: float 3s ease-in-out infinite; }
         .animate-shake { animation: shake 0.4s ease-in-out; }
@@ -63,6 +67,11 @@
         .low-health {
             animation: pulse-red 1.5s infinite;
             border: 2px solid rgba(220, 38, 38, 0.5);
+        }
+        
+        .time-up-effect {
+            animation: time-up-doom 1.5s forwards;
+            pointer-events: none;
         }
 
         .boss-sprite {
@@ -139,7 +148,7 @@
                 </h3>
                 <ul id="instr-list" class="text-xs md:text-sm text-yellow-900 space-y-1 list-disc list-inside font-medium">
                     <li>Type answer using keypad.</li>
-                    <li>Game Time: <strong>60s</strong>. Max Level: <strong>5</strong>.</li>
+                    <li>Max Level: <strong>5 (Boss)</strong>.</li>
                     <li>Correct answers deal damage.</li>
                     <li>Defeat a monster to <strong>Level Up</strong> & heal!</li>
                     <li><strong>Warning:</strong> Monster attacks back!</li>
@@ -156,7 +165,7 @@
     <div id="game-screen" class="screen h-[100dvh] w-full bg-slate-800 flex-col items-center relative overflow-hidden">
         
         <!-- Battle Scene -->
-        <div class="w-full h-[30vh] md:h-[45vh] relative bg-gradient-to-b from-blue-300 to-green-300 flex justify-center overflow-hidden border-b-4 border-slate-900 shrink-0">
+        <div id="battle-scene" class="w-full h-[30vh] md:h-[45vh] relative bg-gradient-to-b from-blue-300 to-green-300 flex justify-center overflow-hidden border-b-4 border-slate-900 shrink-0 transition-all">
              <div class="absolute bottom-0 w-full h-12 bg-green-600 skew-y-1 transform origin-bottom-right opacity-80"></div>
              <div class="absolute bottom-4 w-full h-12 bg-green-500 -skew-y-2 transform origin-bottom-left"></div>
              
@@ -214,7 +223,7 @@
                
                <!-- HUD -->
                <div class="flex items-center justify-between gap-2 mb-2 bg-slate-700/50 p-1.5 rounded-xl border border-slate-600 shrink-0">
-                    <button onclick="endGame()" class="bg-red-500/20 hover:bg-red-500/40 border border-red-500/50 text-red-300 p-2 rounded-lg transition-all" title="Restart">
+                    <button onclick="endGame('defeat')" class="bg-red-500/20 hover:bg-red-500/40 border border-red-500/50 text-red-300 p-2 rounded-lg transition-all" title="Restart">
                         <i data-lucide="refresh-ccw" class="w-4 h-4"></i>
                     </button>
 
@@ -282,12 +291,16 @@
             </div>
             
             <div class="mt-8 flex flex-col items-center justify-center mb-6">
-                <img src="Husky5.png" class="w-40 h-40 object-contain animate-bounce mb-4 drop-shadow-xl">
+                <!-- Dynamic Ending Image -->
+                <img id="ending-img" src="Husky5.png" class="w-40 h-40 object-contain animate-bounce mb-4 drop-shadow-xl">
                 
                 <div class="relative">
                     <i data-lucide="star" class="text-yellow-400 w-32 h-32 fill-current animate-spin-slow"></i>
                     <div id="final-score" class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-white font-black text-4xl drop-shadow-lg stroke-black">0</div>
                 </div>
+                
+                <!-- Extra Stats -->
+                <div id="time-bonus-display" class="mt-2 text-green-500 font-bold text-sm hidden">Time Bonus: +<span id="time-bonus-val">0</span></div>
             </div>
 
             <p id="victory-msg" class="text-xl mb-8 font-bold text-slate-700">Great training session!</p>
@@ -313,7 +326,7 @@
         let monsterMaxHP = 0;
         
         let currentProblem = {};
-        let currentInput = ""; // Holds the typed answer string
+        let currentInput = ""; 
         let isProcessing = false;
         let isGameActive = false;
         let isPaused = false;
@@ -332,7 +345,7 @@
         let bgmInterval = null;
         let bgmNoteIndex = 0;
 
-        // --- TRANSLATIONS (Shortened for mobile) ---
+        // --- TRANSLATIONS ---
         const i18n = {
             en: {
                 title: "Husky Calculation Battle",
@@ -340,9 +353,9 @@
                 instrTitle: "How to Play",
                 instrList: [
                     "Type answer using keypad.",
-                    "Game Time: <strong>60s</strong>. Max Level: <strong>5</strong>.",
-                    "Correct answers deal damage.",
-                    "Defeat a monster to <strong>Level Up</strong> & heal!",
+                    "Max Level: <strong>5 (Boss)</strong>.",
+                    "Kill the Boss to win!",
+                    "If Husky dies, Game Over.",
                     "<strong>Warning:</strong> Monster attacks back!"
                 ],
                 startBtn: "Start Adventure",
@@ -352,8 +365,12 @@
                 monsterDefeated: "Defeated!",
                 score: "Score",
                 level: "Level",
-                victoryTitle: "Time's Up!",
-                victoryMsg: "Great Job!",
+                victoryTitle: "Victory!",
+                defeatTitle: "Husky Fainted!",
+                timeUpTitle: "Time's Up!",
+                victoryMsg: "Boss Defeated! Amazing!",
+                defeatMsg: "Don't give up! Try again!",
+                timeUpMsg: "Time ran out!",
                 replayBtn: "Play Again",
                 correct: "Correct!",
                 wrong: "Missed!",
@@ -368,9 +385,9 @@
                 instrTitle: "遊戲說明",
                 instrList: [
                     "使用鍵盤輸入答案。",
-                    "遊戲時間：<strong>60秒</strong>。最高等級：<strong>5</strong>。",
-                    "答對問題造成傷害。",
-                    "打敗怪物可<strong>升級</strong>並回血！",
+                    "最高等級：<strong>5 (首領)</strong>。",
+                    "打敗首領即可獲勝！",
+                    "哈士奇陣亡則遊戲結束。",
                     "<strong>注意：</strong> 怪物會反擊！"
                 ],
                 startBtn: "開始冒險",
@@ -380,8 +397,12 @@
                 monsterDefeated: "勝利！",
                 score: "分數",
                 level: "等級",
-                victoryTitle: "時間到！",
-                victoryMsg: "很棒的訓練！",
+                victoryTitle: "勝利！",
+                defeatTitle: "哈士奇倒下了！",
+                timeUpTitle: "時間到！",
+                victoryMsg: "首領被打敗了！太棒了！",
+                defeatMsg: "別放棄！再試一次！",
+                timeUpMsg: "時間用完了！",
                 replayBtn: "回到首頁",
                 correct: "答對了！",
                 wrong: "錯過了！",
@@ -482,16 +503,13 @@
 
             document.getElementById('start-btn-text').innerText = t.startBtn;
             
-            // Fix: enemy-name element might be missing if on start screen
             const enemyNameEl = document.getElementById('enemy-name');
-            if(enemyNameEl) enemyNameEl.innerText = t.monsterName;
+            if(enemyNameEl) enemyNameEl.innerText = level === MAX_LEVEL ? t.bossName : t.monsterName;
             
             if(!isProcessing && isGameActive) {
                 document.getElementById('game-msg').innerText = t.gameMsg;
             }
             
-            // Removed confirm-text update as element is gone. 
-            // Update Numpad GO button directly
             const goBtn = document.getElementById('numpad-go');
             if(goBtn) goBtn.innerText = t.confirm;
 
@@ -504,7 +522,6 @@
             const levelLabel = document.getElementById('level-label');
             if(levelLabel) levelLabel.innerText = t.level;
             
-            document.getElementById('victory-msg').innerText = t.victoryMsg;
             document.getElementById('replay-btn-text').innerText = t.replayBtn;
         }
 
@@ -520,6 +537,8 @@
             stopIdleAnimation();
             stopBGM();
             showScreen('start-screen');
+            // Remove any leftover effects
+            document.getElementById('game-screen').classList.remove('time-up-effect');
         }
 
         function startGame() {
@@ -535,6 +554,9 @@
             playerMaxHP = 100;
             playerHP = playerMaxHP;
             monsterHP = 0; 
+            
+            // Remove Time Up effect if present
+            document.getElementById('game-screen').classList.remove('time-up-effect');
 
             updateHUD();
             updatePlayerHP();
@@ -565,35 +587,33 @@
 
         function spawnMonster() {
             const isBoss = level === MAX_LEVEL;
-            // FIXED HP SCALE:
-            // Level 1: 60 HP
-            // Level 2: 80 HP
-            // Level 3: 100 HP
-            // Level 4: 120 HP
-            let fixedNormalHP = 40 + (level * 20); 
+            let hp = 0;
+            switch(level) {
+                case 1: hp = 40; break;
+                case 2: hp = 60; break;
+                case 3: hp = 80; break;
+                case 4: hp = 100; break;
+                case 5: hp = 200; break;
+                default: hp = 40;
+            }
+            
+            monsterMaxHP = hp;
+            monsterHP = hp;
             
             if (isBoss) {
-                // BOSS
-                monsterMaxHP = 240; // Reduced from ~420 to 240
                 document.getElementById('boss-badge').classList.remove('hidden');
                 document.getElementById('enemy-sprite').classList.add('boss-sprite');
                 document.getElementById('enemy-name').innerText = i18n[currentLang].bossName;
                 document.getElementById('enemy-name').classList.add('text-red-500');
-                
                 document.getElementById('game-msg').innerHTML = `<span class="text-red-500 font-bold animate-pulse">BOSS BATTLE!</span>`;
             } else {
-                // NORMAL
-                monsterMaxHP = fixedNormalHP;
                 document.getElementById('boss-badge').classList.add('hidden');
                 document.getElementById('enemy-sprite').classList.remove('boss-sprite');
                 document.getElementById('enemy-name').innerText = i18n[currentLang].monsterName;
                 document.getElementById('enemy-name').classList.remove('text-red-500');
-                
                 document.getElementById('game-msg').innerText = i18n[currentLang].gameMsg;
                 document.getElementById('game-msg').className = "text-slate-300 font-medium text-sm md:text-lg";
             }
-            
-            monsterHP = monsterMaxHP;
             
             let enemyId = Math.floor(Math.random() * 10) + 1; 
             const enemyImg = document.getElementById('enemy-sprite');
@@ -640,6 +660,24 @@
             document.getElementById('level-text').innerText = level;
         }
 
+        function handleTimeUp() {
+            isGameActive = false; // Stop input
+            clearInterval(globalTimerInterval);
+            clearInterval(questionTimerInterval);
+            stopBGM();
+            
+            // Visual Effect
+            const battleScene = document.getElementById('game-screen');
+            battleScene.classList.add('time-up-effect');
+            battleScene.classList.add('animate-shake');
+            playWrongSound(); // Fail sound
+            
+            setTimeout(() => {
+                battleScene.classList.remove('animate-shake');
+                endGame('timeup');
+            }, 1500);
+        }
+
         function startGlobalTimer() {
             clearInterval(globalTimerInterval);
             document.getElementById('global-time-display').innerText = globalTimeLeft;
@@ -651,7 +689,9 @@
                     document.getElementById('global-time-display').classList.add('text-red-500', 'animate-pulse');
                     playTone(800, 'sine', 0.05);
                 }
-                if (globalTimeLeft <= 0) endGame(true);
+                if (globalTimeLeft <= 0) {
+                    handleTimeUp();
+                }
             }, 1000);
         }
 
@@ -752,10 +792,18 @@
                         enemySprite.classList.add('opacity-0', 'grayscale', 'scale-90', 'blur-sm');
                         document.getElementById('game-msg').innerHTML = `<span class="text-yellow-400 font-bold">${t.monsterDefeated}</span>`;
                         
-                        const regen = Math.floor(playerMaxHP * 0.3);
-                        playerHP = Math.min(playerMaxHP, playerHP + regen);
+                        // NEW Healing Logic: Fixed 20 HP
+                        playerHP = Math.min(playerMaxHP, playerHP + 20);
                         updatePlayerHP();
                         
+                        // Victory Check
+                        if (level === MAX_LEVEL && monsterHP <= 0) {
+                             const bossTimeBonus = globalTimeLeft * 100;
+                             score += bossTimeBonus;
+                             endGame('victory');
+                             return;
+                        }
+
                         setTimeout(() => {
                             cleanupAttackAnim();
                             generateProblem();
@@ -812,8 +860,18 @@
                 playHitSound();
                 playerSprite.classList.add('animate-hit');
                 
-                const monsterDamage = 15 + (level * 5);
+                // Uniform Damage Scaling
+                let monsterDamage = 10;
+                switch(level) {
+                    case 1: monsterDamage = 10; break;
+                    case 2: monsterDamage = 12; break;
+                    case 3: monsterDamage = 15; break;
+                    case 4: monsterDamage = 18; break;
+                    case 5: monsterDamage = 25; break;
+                }
+                
                 playerHP -= monsterDamage;
+                if(playerHP < 0) playerHP = 0;
                 updatePlayerHP();
                 
                 setTimeout(() => {
@@ -822,7 +880,7 @@
                     playerSprite.classList.remove('animate-hit');
                     
                     if (playerHP <= 0) {
-                        endGame(false); 
+                        endGame('defeat'); 
                     } else {
                         generateProblem();
                     }
@@ -830,7 +888,7 @@
             }, 300);
         }
 
-        function endGame(isTimeUp = false) {
+        function endGame(reason) {
             playGameOverSound();
             stopBGM();
             isGameActive = false;
@@ -839,10 +897,37 @@
             clearInterval(questionTimerInterval);
             
             const t = i18n[currentLang];
-            document.getElementById('victory-title').innerText = t.victoryTitle;
-            document.getElementById('victory-msg').innerText = t.victoryMsg;
-            document.getElementById('final-score').innerText = score;
+            const titleEl = document.getElementById('victory-title');
+            const msgEl = document.getElementById('victory-msg');
+            const imgEl = document.getElementById('ending-img');
+            const bonusEl = document.getElementById('time-bonus-display');
+            const bonusVal = document.getElementById('time-bonus-val');
             
+            if (reason === 'victory') {
+                titleEl.innerText = t.victoryTitle;
+                msgEl.innerText = t.victoryMsg;
+                imgEl.src = "Husky5.png";
+                bonusEl.classList.remove('hidden');
+                bonusVal.innerText = globalTimeLeft * 100;
+            } else if (reason === 'defeat') {
+                titleEl.innerText = t.defeatTitle;
+                msgEl.innerText = t.defeatMsg;
+                imgEl.src = "Husky7.png";
+                bonusEl.classList.add('hidden');
+            } else if (reason === 'timeup') {
+                titleEl.innerText = t.timeUpTitle;
+                msgEl.innerText = t.timeUpMsg;
+                imgEl.src = "Husky7.png";
+                bonusEl.classList.add('hidden');
+            } else {
+                // Restart manual
+                titleEl.innerText = t.defeatTitle; // Default restart screen
+                msgEl.innerText = t.defeatMsg;
+                imgEl.src = "Husky7.png";
+                bonusEl.classList.add('hidden');
+            }
+            
+            document.getElementById('final-score').innerText = score;
             showScreen('summary-screen');
         }
 
