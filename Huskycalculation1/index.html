@@ -309,7 +309,7 @@
                     const scores = [];
                     snapshot.forEach(doc => scores.push(doc.data()));
                     scores.sort((a, b) => b.score - a.score);
-                    renderLeaderboard(scores.slice(0, 5));
+                    renderLeaderboard(scores.slice(0, 10));
                 }, (error) => {
                     console.error("DB Error", error);
                     document.getElementById('leaderboard-list').innerHTML = '<div class="text-red-400 text-sm">Connection Failed</div>';
@@ -495,7 +495,14 @@
         
         // UPDATED: Trigger attack if time bar runs out
         function handleBonusTimeUp() {
+             // Immediately set processing to true to lock input
+             isProcessing = true;
              clearInterval(questionTimerInterval);
+             
+             // Visual Feedback
+             playWrongSound(); 
+             
+             // Trigger attack directly
              triggerMonsterAttack();
         }
 
@@ -512,14 +519,14 @@
         function startQuestionTimer() {
             clearInterval(questionTimerInterval); questionTimeLeft = 100; const bar = document.getElementById('timer-bar'); bar.style.width = '100%';
             
-            // Adjusted Speeds: Slower to give kids more time
+            // Adjusted Speeds
             let speedMs = 100;
             switch(level) {
-                case 1: speedMs = 100; break; // 10s
-                case 2: speedMs = 82; break;  // ~8.2s
-                case 3: speedMs = 65; break;  // 6.5s
-                case 4: speedMs = 48; break;  // ~4.8s
-                case 5: speedMs = 30; break;  // 3s (Boss)
+                case 1: speedMs = 120; break; // 12s
+                case 2: speedMs = 100; break; // 10s
+                case 3: speedMs = 80; break;  // 8s
+                case 4: speedMs = 60; break;  // 6s
+                case 5: speedMs = 40; break;  // 4s (Boss)
             }
             
             questionTimerInterval = setInterval(() => { 
@@ -527,7 +534,6 @@
                 questionTimeLeft -= 1; 
                 bar.style.width = `${questionTimeLeft}%`; 
                 if(questionTimeLeft < 30) bar.classList.replace('bg-yellow-400', 'bg-red-500'); 
-                // NEW LOGIC: Trigger attack when time runs out
                 if (questionTimeLeft <= 0) handleBonusTimeUp(); 
             }, speedMs);
         }
@@ -538,15 +544,10 @@
             isPaused = true;
             const overlay = document.getElementById('victory-overlay');
             overlay.classList.remove('hidden');
-            
             playLevelUpSound(); 
             setTimeout(() => playCorrectSound(), 500);
             setTimeout(() => playCorrectSound(), 1000);
-            
-            setTimeout(() => {
-                overlay.classList.add('hidden');
-                endGame('victory'); 
-            }, 4000); 
+            setTimeout(() => { overlay.classList.add('hidden'); endGame('victory'); }, 4000); 
         }
 
         function submitAnswer() {
@@ -566,16 +567,10 @@
                 if (monsterHP <= 0) {
                     const isBossKill = (level === MAX_LEVEL);
                     if (level < MAX_LEVEL) { level++; showLevelUpScene(); } updateHUD();
-
                     setTimeout(() => {
                         enemySprite.classList.add('opacity-0', 'grayscale', 'scale-90', 'blur-sm'); document.getElementById('game-msg').innerHTML = `<span class="text-yellow-400 font-bold">${t.monsterDefeated}</span>`;
                         const regen = 20; playerHP = Math.min(playerMaxHP, playerHP + regen); updatePlayerHP();
-                        if (isBossKill) { 
-                             const bossTimeBonus = globalTimeLeft * 10;
-                             score += bossTimeBonus;
-                             showVictoryScene(); 
-                             return;
-                        }
+                        if (isBossKill) { const bossTimeBonus = globalTimeLeft * 10; score += bossTimeBonus; showVictoryScene(); return; }
                         setTimeout(() => { cleanupAttackAnim(); generateProblem(); }, 1500);
                     }, 300);
                 } else {
