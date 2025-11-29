@@ -176,7 +176,7 @@
              <div class="absolute bottom-4 w-full h-12 bg-green-500 -skew-y-2 transform origin-bottom-left"></div>
              
              <div class="w-full max-w-4xl relative h-full">
-                <!-- Player (Husky) - Bottom Left -->
+                <!-- Player (Husky) -->
                 <div id="player-container" class="absolute bottom-0 left-2 z-20 transition-all duration-300">
                     <div class="relative group">
                         <div id="attack-effect" class="hidden absolute top-0 -right-10 z-30 animate-ping">
@@ -197,7 +197,7 @@
                     </div>
                 </div>
 
-                <!-- Enemy - Upper Right -->
+                <!-- Enemy -->
                 <div id="enemy-container" class="absolute top-14 right-2 z-10 transition-all duration-500">
                      <div class="relative">
                         <div id="boss-badge" class="hidden absolute -top-6 left-1/2 transform -translate-x-1/2 bg-red-600 text-white font-black text-[10px] md:text-xs px-2 py-0.5 rounded shadow-lg border border-red-400 z-20 animate-bounce">
@@ -214,7 +214,7 @@
                                 <span class="text-slate-500 mr-1">HP</span>
                                 <span id="enemy-hp-text"></span>
                             </div>
-                            <div class="w-full h-1.5 md:h-2 bg-slate-200 rounded-full border border-slate-300 overflow-hidden mb-0.5">
+                            <div class="w-full h-1.5 md:h-2 bg-slate-200 rounded-full border border-slate-300 overflow-hidden">
                                 <div id="enemy-hp-bar" class="h-full bg-green-500 w-full transition-all duration-500"></div>
                             </div>
                             <!-- Added ATK Display -->
@@ -303,19 +303,19 @@
 
     <!-- SCREEN 3: SUMMARY -->
     <div id="summary-screen" class="screen h-full w-full bg-slate-900 items-center justify-center p-4">
-        <div class="bg-white border-4 border-yellow-400 rounded-3xl p-8 max-w-md w-full text-center shadow-2xl relative max-h-[90vh] overflow-y-auto">
+        <div class="bg-white border-4 border-yellow-400 rounded-3xl p-6 max-w-md w-full text-center shadow-2xl relative max-h-[90vh] overflow-y-auto">
             <div class="absolute -top-6 left-1/2 transform -translate-x-1/2 bg-blue-600 px-8 py-2 rounded-full border-4 border-white shadow-lg">
                 <h2 id="victory-title" class="text-xl font-black text-white uppercase tracking-widest">Time's Up!</h2>
             </div>
             
-            <div class="mt-8 flex flex-col items-center justify-center mb-6">
+            <div class="mt-8 flex flex-col items-center justify-center mb-2">
                 <!-- Dynamic Ending Image -->
-                <img id="ending-img" src="Husky5.png" class="w-40 h-40 object-contain animate-bounce mb-4 drop-shadow-xl">
+                <img id="ending-img" src="Husky5.png" class="w-32 h-32 object-contain animate-bounce mb-2 drop-shadow-xl">
                 
                 <div class="relative flex items-center justify-center">
-                    <!-- Increased star size to w-64 h-64 to fit 4 digits -->
-                    <i data-lucide="star" class="text-yellow-400 w-64 h-64 fill-current animate-spin-slow"></i>
-                    <div id="final-score" class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-white font-black text-5xl drop-shadow-lg stroke-black" style="-webkit-text-stroke: 2px black;">0</div>
+                    <!-- Resized star size to w-48 h-48 -->
+                    <i data-lucide="star" class="text-yellow-400 w-48 h-48 fill-current animate-spin-slow"></i>
+                    <div id="final-score" class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-white font-black text-4xl drop-shadow-lg stroke-black" style="-webkit-text-stroke: 2px black;">0</div>
                 </div>
                 
                 <!-- Extra Stats -->
@@ -1060,6 +1060,15 @@
             setTimeout(() => {
                 playHitSound();
                 playerSprite.classList.add('animate-hit');
+                
+                let monsterDamage = 10;
+                switch(level) {
+                    case 1: monsterDamage = 10; break;
+                    case 2: monsterDamage = 12; break;
+                    case 3: monsterDamage = 15; break;
+                    case 4: monsterDamage = 18; break;
+                    case 5: monsterDamage = 25; break;
+                }
                 
                 playerHP -= monsterDamage;
                 if(playerHP < 0) playerHP = 0;
