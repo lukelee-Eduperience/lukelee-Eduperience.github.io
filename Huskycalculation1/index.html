@@ -41,24 +41,20 @@
         .timer-bar { transition: width 0.1s linear; }
         .levelup-text { text-shadow: 4px 4px 0px #000, -2px -2px 0px #000; }
         .numpad-btn { @apply bg-slate-700 text-white font-bold rounded-lg shadow-md active:bg-slate-600 active:scale-95 transition-transform flex items-center justify-center text-xl select-none; height: 44px; }
-        
-        /* Leaderboard Styles */
-        .leaderboard-item:nth-child(1) .rank { color: #fbbf24; } 
-        .leaderboard-item:nth-child(2) .rank { color: #9ca3af; } 
-        .leaderboard-item:nth-child(3) .rank { color: #b45309; } 
     </style>
 </head>
+<!-- Use h-[100dvh] for mobile browser compatibility -->
 <body class="font-sans overflow-hidden bg-slate-900 text-slate-800 touch-manipulation h-[100dvh]">
 
-    <!-- Global Timer -->
+    <!-- Global Game Timer Display (Fixed Top Center - Visible in Game) -->
     <div id="global-timer-container" class="fixed top-2 left-1/2 transform -translate-x-1/2 z-50 hidden">
         <div class="bg-slate-800/90 text-white border-2 border-yellow-400 px-4 py-1 rounded-2xl font-mono text-xl font-bold shadow-2xl flex items-center gap-2">
             <i data-lucide="clock" class="w-4 h-4 text-yellow-400"></i>
-            <span id="global-time-display">90</span>
+            <span id="global-time-display">60</span>
         </div>
     </div>
 
-    <!-- Level Up Overlay -->
+    <!-- LEVEL UP OVERLAY SCENE -->
     <div id="levelup-overlay" class="fixed inset-0 z-[60] bg-black/80 hidden flex flex-col items-center justify-center backdrop-blur-sm">
         <div class="absolute inset-0 flex items-center justify-center overflow-hidden z-0">
             <div class="w-[200vmax] h-[200vmax] bg-[conic-gradient(from_0deg,transparent_0_20deg,#fbbf24_20deg_40deg,transparent_40deg_60deg,#fbbf24_60deg_80deg,transparent_80deg_100deg,#fbbf24_100deg_120deg,transparent_120deg_140deg,#fbbf24_140deg_160deg,transparent_160deg_180deg,#fbbf24_180deg_200deg,transparent_200deg_220deg,#fbbf24_220deg_240deg,transparent_240deg_260deg,#fbbf24_260deg_280deg,transparent_280deg_300deg,#fbbf24_300deg_320deg,transparent_320deg_340deg,#fbbf24_340deg_360deg)] opacity-20 animate-rays"></div>
@@ -234,7 +230,9 @@
         let firebaseConfig;
         let appId = "husky-game";
         
+        // Environment Check
         if (typeof __firebase_config !== 'undefined') {
+            // PREVIEW ENVIRONMENT
             firebaseConfig = JSON.parse(__firebase_config);
             appId = __app_id;
             const initialToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
@@ -309,7 +307,8 @@
                     const scores = [];
                     snapshot.forEach(doc => scores.push(doc.data()));
                     scores.sort((a, b) => b.score - a.score);
-                    renderLeaderboard(scores.slice(0, 10));
+                    // Updated: Show top 5
+                    renderLeaderboard(scores.slice(0, 5));
                 }, (error) => {
                     console.error("DB Error", error);
                     document.getElementById('leaderboard-list').innerHTML = '<div class="text-red-400 text-sm">Connection Failed</div>';
@@ -326,28 +325,45 @@
             if (scores.length === 0) { list.innerHTML = '<div class="text-center text-slate-400 text-sm">No scores yet. Be the first!</div>'; return; }
             scores.forEach((entry, index) => {
                 const rank = index + 1;
+                let rankHtml = '';
+                
+                // Special visual for Top 3
+                if (index === 0) {
+                    rankHtml = `<div class="bg-yellow-100 text-yellow-600 p-1 rounded shadow-sm"><i data-lucide="crown" class="w-4 h-4 fill-current"></i></div>`;
+                } else if (index === 1) {
+                    rankHtml = `<div class="bg-slate-100 text-slate-500 p-1 rounded shadow-sm"><i data-lucide="medal" class="w-4 h-4 fill-current"></i></div>`;
+                } else if (index === 2) {
+                    rankHtml = `<div class="bg-orange-100 text-orange-600 p-1 rounded shadow-sm"><i data-lucide="medal" class="w-4 h-4 fill-current"></i></div>`;
+                } else {
+                    rankHtml = `<span class="rank font-bold text-base w-6 text-slate-400 text-center">${rank}</span>`;
+                }
+
                 const item = document.createElement('div');
-                item.className = 'leaderboard-item flex justify-between items-center bg-white p-2 rounded shadow-sm text-xs md:text-sm';
+                // Added 'border-l-4' for subtle highlight
+                const borderClass = index === 0 ? 'border-l-4 border-yellow-400' : (index === 1 ? 'border-l-4 border-slate-300' : (index === 2 ? 'border-l-4 border-orange-300' : ''));
+                
+                item.className = `leaderboard-item flex justify-between items-center bg-white p-2 rounded shadow-sm text-xs md:text-sm ${borderClass}`;
                 item.innerHTML = `
-                    <div class="flex items-center gap-2 min-w-0">
-                        <span class="rank font-black text-base w-5 text-slate-500 shrink-0">${rank}</span>
+                    <div class="flex items-center gap-3 min-w-0">
+                        ${rankHtml}
                         <span class="font-bold text-slate-700 truncate">${entry.name}</span>
                     </div>
                     <span class="font-mono font-bold text-blue-600 ml-2 shrink-0">${entry.score}</span>`;
                 list.appendChild(item);
             });
+            lucide.createIcons(); // Re-init icons for dynamic content
         }
     </script>
 
     <!-- GAME LOGIC -->
     <script>
-        // Variables
+        // Variables & Logic Same as Before
         let currentLang = 'en';
         let score = 0;
         let level = 1;
         const EXP_NEEDED = 2; 
         const MAX_LEVEL = 5; 
-        const GAME_DURATION = 90; // Changed to 90 seconds
+        const GAME_DURATION = 90; 
         
         let playerHP = 100;
         let playerMaxHP = 100;
@@ -406,7 +422,7 @@
             }
         };
 
-        // Functions
+        // Game Functions (Abbreviated for length, logic identical to previous working version)
         function appendNumber(num) { if(isProcessing || !isGameActive || isPaused || currentInput.length >= 3) return; currentInput += num; updateAnswerDisplay(); }
         function clearInput() { if(isProcessing || !isGameActive || isPaused) return; currentInput = ""; updateAnswerDisplay(); }
         function updateAnswerDisplay() { const display = document.getElementById('answer-display'); display.innerText = currentInput === "" ? "?" : currentInput; if(currentInput !== "") display.classList.add('text-yellow-400'); else display.classList.remove('text-yellow-400'); }
@@ -541,7 +557,7 @@
                         if (isBossKill) { 
                              const bossTimeBonus = globalTimeLeft * 10;
                              score += bossTimeBonus;
-                             showVictoryScene(); // NEW: Show scene first, then endGame inside
+                             showVictoryScene(); 
                              return;
                         }
                         setTimeout(() => { cleanupAttackAnim(); generateProblem(); }, 1500);
