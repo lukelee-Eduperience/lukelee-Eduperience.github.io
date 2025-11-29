@@ -54,7 +54,7 @@
     <div id="global-timer-container" class="fixed top-2 left-1/2 transform -translate-x-1/2 z-50 hidden">
         <div class="bg-slate-800/90 text-white border-2 border-yellow-400 px-4 py-1 rounded-2xl font-mono text-xl font-bold shadow-2xl flex items-center gap-2">
             <i data-lucide="clock" class="w-4 h-4 text-yellow-400"></i>
-            <span id="global-time-display">60</span>
+            <span id="global-time-display">90</span>
         </div>
     </div>
 
@@ -67,6 +67,18 @@
             <h1 class="text-6xl md:text-8xl font-black text-yellow-400 levelup-text mb-8 transform -rotate-6 tracking-wider text-center">LEVEL UP!</h1>
             <img src="Husky6.png" class="w-48 h-48 md:w-64 md:h-64 object-contain drop-shadow-[0_0_30px_rgba(250,204,21,0.8)] animate-bounce">
             <div class="mt-8 text-white text-xl md:text-2xl font-bold bg-slate-800/80 px-6 py-2 rounded-full border-2 border-yellow-400">Speed Up!</div>
+        </div>
+    </div>
+
+    <!-- NEW: Victory Overlay Scene -->
+    <div id="victory-overlay" class="fixed inset-0 z-[70] bg-blue-900/90 hidden flex flex-col items-center justify-center backdrop-blur-md">
+        <div class="absolute inset-0 flex items-center justify-center overflow-hidden z-0">
+            <div class="w-[200vmax] h-[200vmax] bg-[conic-gradient(from_0deg,transparent_0_20deg,#60a5fa_20deg_40deg,transparent_40deg_60deg,#60a5fa_60deg_80deg,transparent_80deg_100deg,#60a5fa_100deg_120deg,transparent_120deg_140deg,#60a5fa_140deg_160deg,transparent_160deg_180deg,#60a5fa_180deg_200deg,transparent_200deg_220deg,#60a5fa_220deg_240deg,transparent_240deg_260deg,#60a5fa_260deg_280deg,transparent_280deg_300deg,#60a5fa_300deg_320deg,transparent_320deg_340deg,#60a5fa_340deg_360deg)] opacity-30 animate-rays"></div>
+        </div>
+        <div class="relative z-10 flex flex-col items-center animate-pop-in text-center p-4">
+            <h1 class="text-6xl md:text-8xl font-black text-yellow-300 mb-4 drop-shadow-[0_5px_5px_rgba(0,0,0,0.5)]">VICTORY!</h1>
+            <div class="text-white text-2xl md:text-3xl font-bold mb-8">Boss Defeated!</div>
+            <img src="Husky5.png" class="w-64 h-64 object-contain drop-shadow-[0_0_30px_rgba(255,255,255,0.8)] animate-bounce">
         </div>
     </div>
 
@@ -87,7 +99,7 @@
                 <h3 id="instr-title" class="font-bold text-yellow-800 mb-2 flex items-center gap-2 text-sm"><i data-lucide="info" class="w-4 h-4"></i> How to Play</h3>
                 <ul id="instr-list" class="text-xs md:text-sm text-yellow-900 space-y-1 list-disc list-inside font-medium">
                     <li>Type answer using keypad.</li>
-                    <li>Game Time: <strong>60s</strong>. Max Level: <strong>5</strong>.</li>
+                    <li>Game Time: <strong>90s</strong>. Max Level: <strong>5</strong>.</li>
                     <li>Correct answers deal damage.</li>
                     <li>Defeat a monster to <strong>Level Up</strong> & heal!</li>
                     <li><strong>Warning:</strong> Monster attacks back!</li>
@@ -200,7 +212,6 @@
                      <div id="status-indicator" class="text-[10px] text-slate-400 font-mono">Connecting...</div>
                 </div>
                 <div class="flex gap-2 mb-2 shrink-0" id="submit-score-area">
-                    <!-- Updated: Added text-base for input size -->
                     <input type="text" id="player-name-input" maxlength="10" placeholder="Your Name" class="flex-1 px-3 py-2 rounded-lg border-2 border-slate-300 text-center font-bold focus:outline-none focus:border-blue-500 text-base">
                     <button onclick="submitScore()" class="bg-blue-600 text-white font-bold px-3 py-2 rounded-lg shadow active:scale-95 transition-transform text-sm">Save</button>
                 </div>
@@ -223,9 +234,7 @@
         let firebaseConfig;
         let appId = "husky-game";
         
-        // Environment Check
         if (typeof __firebase_config !== 'undefined') {
-            // PREVIEW ENVIRONMENT
             firebaseConfig = JSON.parse(__firebase_config);
             appId = __app_id;
             const initialToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
@@ -332,13 +341,13 @@
 
     <!-- GAME LOGIC -->
     <script>
-        // Variables & Logic Same as Before
+        // Variables
         let currentLang = 'en';
         let score = 0;
         let level = 1;
         const EXP_NEEDED = 2; 
         const MAX_LEVEL = 5; 
-        const GAME_DURATION = 60; 
+        const GAME_DURATION = 90; // Changed to 90 seconds
         
         let playerHP = 100;
         let playerMaxHP = 100;
@@ -373,7 +382,7 @@
                 title: "Husky Calculation Battle",
                 subtitle: "Help Husky defeat wild monsters!",
                 instrTitle: "How to Play",
-                instrList: [ "Type answer using keypad.", "Max Level: <strong>5 (Boss)</strong>.", "Kill the Boss to win!", "If Husky dies, Game Over.", "<strong>Warning:</strong> Monster attacks back!" ],
+                instrList: [ "Type answer using keypad.", "Game Time: <strong>90s</strong>. Max Level: <strong>5</strong>.", "Correct answers deal damage.", "Defeat a monster to <strong>Level Up</strong> & heal!", "<strong>Warning:</strong> Monster attacks back!" ],
                 startBtn: "Start Adventure",
                 monsterName: "Monster", bossName: "BOSS", gameMsg: "Wild monster appeared!",
                 monsterDefeated: "Defeated!", score: "Score", level: "Level",
@@ -386,7 +395,7 @@
                 title: "哈士奇數算大戰",
                 subtitle: "幫助哈士奇打敗野生怪物！",
                 instrTitle: "遊戲說明",
-                instrList: [ "使用鍵盤輸入答案。", "最高等級：<strong>5 (首領)</strong>。", "打敗首領即可獲勝！", "哈士奇陣亡則遊戲結束。", "<strong>注意：</strong> 怪物會反擊！" ],
+                instrList: [ "使用鍵盤輸入答案。", "遊戲時間：<strong>90秒</strong>。最高等級：<strong>5</strong>。", "答對問題造成傷害。", "打敗怪物可<strong>升級</strong>並回血！", "<strong>注意：</strong> 怪物會反擊！" ],
                 startBtn: "開始冒險",
                 monsterName: "怪物", bossName: "首領", gameMsg: "怪物出現了！",
                 monsterDefeated: "勝利！", score: "分數", level: "等級",
@@ -397,7 +406,7 @@
             }
         };
 
-        // Game Functions (Abbreviated for length, logic identical to previous working version)
+        // Functions
         function appendNumber(num) { if(isProcessing || !isGameActive || isPaused || currentInput.length >= 3) return; currentInput += num; updateAnswerDisplay(); }
         function clearInput() { if(isProcessing || !isGameActive || isPaused) return; currentInput = ""; updateAnswerDisplay(); }
         function updateAnswerDisplay() { const display = document.getElementById('answer-display'); display.innerText = currentInput === "" ? "?" : currentInput; if(currentInput !== "") display.classList.add('text-yellow-400'); else display.classList.remove('text-yellow-400'); }
@@ -493,6 +502,21 @@
 
         function showLevelUpScene() { isPaused = true; const overlay = document.getElementById('levelup-overlay'); overlay.classList.remove('hidden'); playLevelUpSound(); startIdleAnimation(); startBGM(); setTimeout(() => { overlay.classList.add('hidden'); isPaused = false; }, 2000); }
 
+        function showVictoryScene() {
+            isPaused = true;
+            const overlay = document.getElementById('victory-overlay');
+            overlay.classList.remove('hidden');
+            
+            playLevelUpSound(); 
+            setTimeout(() => playCorrectSound(), 500);
+            setTimeout(() => playCorrectSound(), 1000);
+            
+            setTimeout(() => {
+                overlay.classList.add('hidden');
+                endGame('victory'); 
+            }, 4000); 
+        }
+
         function submitAnswer() {
             if(isProcessing || !isGameActive || isPaused) return;
             const inputVal = parseInt(currentInput); if(isNaN(inputVal)) return;
@@ -510,10 +534,16 @@
                 if (monsterHP <= 0) {
                     const isBossKill = (level === MAX_LEVEL);
                     if (level < MAX_LEVEL) { level++; showLevelUpScene(); } updateHUD();
+
                     setTimeout(() => {
                         enemySprite.classList.add('opacity-0', 'grayscale', 'scale-90', 'blur-sm'); document.getElementById('game-msg').innerHTML = `<span class="text-yellow-400 font-bold">${t.monsterDefeated}</span>`;
                         const regen = 20; playerHP = Math.min(playerMaxHP, playerHP + regen); updatePlayerHP();
-                        if (isBossKill) { const bossTimeBonus = globalTimeLeft * 10; score += bossTimeBonus; endGame('victory'); return; }
+                        if (isBossKill) { 
+                             const bossTimeBonus = globalTimeLeft * 10;
+                             score += bossTimeBonus;
+                             showVictoryScene(); // NEW: Show scene first, then endGame inside
+                             return;
+                        }
                         setTimeout(() => { cleanupAttackAnim(); generateProblem(); }, 1500);
                     }, 300);
                 } else {
