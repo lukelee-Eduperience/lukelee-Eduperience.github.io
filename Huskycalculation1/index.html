@@ -103,7 +103,6 @@
         .leaderboard-item:nth-child(3) .rank { color: #b45309; } /* Bronze */
     </style>
 </head>
-<!-- Use h-[100dvh] for mobile browser compatibility -->
 <body class="font-sans overflow-hidden bg-slate-900 text-slate-800 touch-manipulation h-[100dvh]">
 
     <!-- Global Game Timer Display (Fixed Top Center - Visible in Game) -->
@@ -170,8 +169,8 @@
     <!-- SCREEN 2: GAMEPLAY -->
     <div id="game-screen" class="screen h-[100dvh] w-full bg-slate-800 flex-col items-center relative overflow-hidden">
         
-        <!-- Battle Scene -->
-        <div class="w-full h-[30vh] md:h-[45vh] relative bg-gradient-to-b from-blue-300 to-green-300 flex justify-center overflow-hidden border-b-4 border-slate-900 shrink-0">
+        <!-- Battle Scene - Increased Height slightly -->
+        <div class="w-full h-[35vh] md:h-[45vh] relative bg-gradient-to-b from-blue-300 to-green-300 flex justify-center overflow-hidden border-b-4 border-slate-900 shrink-0">
              <div class="absolute bottom-0 w-full h-12 bg-green-600 skew-y-1 transform origin-bottom-right opacity-80"></div>
              <div class="absolute bottom-4 w-full h-12 bg-green-500 -skew-y-2 transform origin-bottom-left"></div>
              
@@ -301,46 +300,46 @@
         </div>
     </div>
 
-    <!-- SCREEN 3: SUMMARY -->
+    <!-- SCREEN 3: SUMMARY (FIXED CLIPPING) -->
     <div id="summary-screen" class="screen h-full w-full bg-slate-900 items-center justify-center p-4">
-        <div class="bg-white border-4 border-yellow-400 rounded-3xl p-6 max-w-md w-full text-center shadow-2xl relative max-h-[90vh] overflow-y-auto">
+        <!-- Added overflow-visible to ensure badge sticks out safely -->
+        <div class="bg-white border-4 border-yellow-400 rounded-3xl p-6 max-w-md w-full text-center shadow-2xl relative overflow-visible flex flex-col">
+            <!-- Badge moved outside flow via absolute but ensure parent allows showing it -->
             <div class="absolute -top-5 left-1/2 transform -translate-x-1/2 bg-blue-600 px-6 py-2 rounded-full border-4 border-white shadow-lg min-w-[200px] z-10">
                 <h2 id="victory-title" class="text-lg md:text-xl font-black text-white uppercase tracking-widest">Time's Up!</h2>
             </div>
             
-            <div class="mt-8 flex flex-col items-center justify-center mb-4">
-                <!-- Dynamic Ending Image (Slightly Smaller) -->
+            <!-- Top Content (Image & Score) -->
+            <div class="mt-8 flex flex-col items-center justify-center mb-4 shrink-0">
                 <img id="ending-img" src="Husky5.png" class="w-28 h-28 object-contain animate-bounce mb-3 drop-shadow-xl">
                 
-                <!-- New Compact Score Display (No Star) -->
                 <div class="flex flex-col items-center bg-yellow-50 border-4 border-yellow-400 rounded-2xl px-10 py-2 shadow-md transform -rotate-1">
                     <span class="text-[10px] font-bold text-yellow-600 uppercase tracking-widest mb-0.5">Final Score</span>
                     <span id="final-score" class="text-5xl font-black text-slate-800 leading-none">0</span>
                 </div>
                 
-                <!-- Extra Stats -->
                 <div id="time-bonus-display" class="mt-2 text-green-600 font-bold text-xs hidden bg-green-50 px-3 py-1 rounded-full border border-green-200">
                     Time Bonus: +<span id="time-bonus-val">0</span>
                 </div>
             </div>
 
-            <p id="victory-msg" class="text-lg mb-4 font-bold text-slate-700">Great training session!</p>
+            <p id="victory-msg" class="text-lg mb-4 font-bold text-slate-700 shrink-0">Great training session!</p>
             
-            <!-- LEADERBOARD SECTION -->
-            <div class="w-full bg-slate-100 rounded-xl p-3 mb-4 border-2 border-slate-200">
-                <!-- Input for Name -->
-                <div class="flex gap-2 mb-4" id="submit-score-area">
-                    <input type="text" id="player-name-input" maxlength="10" placeholder="Your Name" class="flex-1 px-3 py-2 rounded-lg border-2 border-slate-300 text-center font-bold focus:outline-none focus:border-blue-500">
-                    <button onclick="submitScore()" class="bg-blue-600 text-white font-bold px-4 py-2 rounded-lg shadow active:scale-95 transition-transform">Save</button>
+            <!-- SCROLLABLE LEADERBOARD AREA -->
+            <div class="w-full bg-slate-100 rounded-xl p-3 mb-4 border-2 border-slate-200 flex-1 min-h-0 flex flex-col overflow-hidden">
+                <h3 class="text-center font-bold text-slate-600 mb-2 uppercase tracking-wide shrink-0">🏆 Leaderboard</h3>
+                
+                <div class="flex gap-2 mb-2 shrink-0" id="submit-score-area">
+                    <input type="text" id="player-name-input" maxlength="10" placeholder="Your Name" class="flex-1 px-3 py-2 rounded-lg border-2 border-slate-300 text-center font-bold focus:outline-none focus:border-blue-500 text-sm">
+                    <button onclick="submitScore()" class="bg-blue-600 text-white font-bold px-3 py-2 rounded-lg shadow active:scale-95 transition-transform text-sm">Save</button>
                 </div>
                 
-                <!-- List -->
-                <div id="leaderboard-list" class="space-y-2 max-h-40 overflow-y-auto">
+                <div id="leaderboard-list" class="space-y-2 overflow-y-auto pr-1 flex-1">
                     <div class="text-center text-slate-400 text-sm">Loading...</div>
                 </div>
             </div>
             
-            <button onclick="goToStartScreen()" class="w-full bg-green-500 hover:bg-green-400 text-white font-bold py-3 px-6 rounded-xl transition-all shadow-lg border-b-4 border-green-700 flex items-center justify-center gap-2 active:translate-y-1 active:shadow-none">
+            <button onclick="goToStartScreen()" class="w-full bg-green-500 hover:bg-green-400 text-white font-bold py-3 px-6 rounded-xl transition-all shadow-lg border-b-4 border-green-700 flex items-center justify-center gap-2 active:translate-y-1 active:shadow-none shrink-0">
                 <i data-lucide="refresh-cw" class="w-5 h-5"></i> <span id="replay-btn-text">Battle Again</span>
             </button>
         </div>
@@ -352,20 +351,21 @@
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
+        // FIREBASE CONFIGURATION
         let firebaseConfig;
-        let appId = "husky-game"; // Default ID for local use
-        let dbCollectionPath = "leaderboard"; // Default path
+        let appId = "husky-game"; 
+        let dbCollectionPath = "leaderboard"; 
 
-        // CHECK: Are we in the Preview Environment?
+        // CHECK ENVIRONMENT
         if (typeof __firebase_config !== 'undefined') {
-            // YES: Use the environment's auto-configured backend
+            // PREVIEW ENV
             firebaseConfig = JSON.parse(__firebase_config);
             appId = __app_id;
             const initialToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
             window.getDbCollection = (db) => collection(db, 'artifacts', appId, 'public', 'data', 'leaderboard');
             window.getInitialToken = () => initialToken;
         } else {
-            // NO: Use YOUR Provided Config for GitHub Pages
+            // PRODUCTION / GITHUB PAGES
             firebaseConfig = {
                 apiKey: "AIzaSyByPxGPOSCLA7slRhLGvy0KjP4OGY2gcBY",
                 authDomain: "husky-calculation-battle.firebaseapp.com",
@@ -376,7 +376,6 @@
                 measurementId: "G-J823KXVD8T"
             };
             
-            // For production/Github, simple root collection
             window.getDbCollection = (db) => collection(db, 'leaderboard');
             window.getInitialToken = () => null;
         }
@@ -388,7 +387,6 @@
             const db = getFirestore(app);
             let currentUser = null;
 
-            // Auth Logic
             async function initAuth() {
                 const token = window.getInitialToken();
                 if (token) {
@@ -406,10 +404,9 @@
                 }
             });
 
-            // Save Score Function
             window.submitScore = async () => {
                 if (!currentUser) {
-                    alert("Connecting to leaderboard...");
+                    alert("Connecting...");
                     return;
                 }
                 
@@ -429,12 +426,10 @@
                     document.getElementById('submit-score-area').style.display = 'none';
                 } catch (e) {
                     console.error("Error saving score", e);
-                    alert("Error saving score. Please check your internet.");
                     nameInput.disabled = false;
                 }
             };
 
-            // Realtime Listener
             function listenToLeaderboard(db) {
                 const colRef = window.getDbCollection(db);
                 
@@ -444,7 +439,6 @@
                         scores.push(doc.data());
                     });
                     
-                    // Client-side sort (Descending)
                     scores.sort((a, b) => b.score - a.score);
                     const topScores = scores.slice(0, 10);
                     renderLeaderboard(topScores);
@@ -471,11 +465,11 @@
             scores.forEach((entry, index) => {
                 const rank = index + 1;
                 const item = document.createElement('div');
-                item.className = 'leaderboard-item flex justify-between items-center bg-white p-2 rounded shadow-sm';
+                item.className = 'leaderboard-item flex justify-between items-center bg-white p-2 rounded shadow-sm text-sm';
                 item.innerHTML = `
                     <div class="flex items-center gap-2">
-                        <span class="rank font-black text-lg w-6">${rank}</span>
-                        <span class="font-bold text-slate-700 truncate max-w-[120px]">${entry.name}</span>
+                        <span class="rank font-black text-base w-5 text-slate-500">${rank}</span>
+                        <span class="font-bold text-slate-700 truncate max-w-[100px]">${entry.name}</span>
                     </div>
                     <span class="font-mono font-bold text-blue-600">${entry.score}</span>
                 `;
