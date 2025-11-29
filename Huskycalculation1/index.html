@@ -41,20 +41,24 @@
         .timer-bar { transition: width 0.1s linear; }
         .levelup-text { text-shadow: 4px 4px 0px #000, -2px -2px 0px #000; }
         .numpad-btn { @apply bg-slate-700 text-white font-bold rounded-lg shadow-md active:bg-slate-600 active:scale-95 transition-transform flex items-center justify-center text-xl select-none; height: 44px; }
+        
+        /* Leaderboard Styles */
+        .leaderboard-item:nth-child(1) .rank { color: #fbbf24; } 
+        .leaderboard-item:nth-child(2) .rank { color: #9ca3af; } 
+        .leaderboard-item:nth-child(3) .rank { color: #b45309; } 
     </style>
 </head>
-<!-- Use h-[100dvh] for mobile browser compatibility -->
 <body class="font-sans overflow-hidden bg-slate-900 text-slate-800 touch-manipulation h-[100dvh]">
 
-    <!-- Global Game Timer Display (Fixed Top Center - Visible in Game) -->
+    <!-- Global Timer -->
     <div id="global-timer-container" class="fixed top-2 left-1/2 transform -translate-x-1/2 z-50 hidden">
         <div class="bg-slate-800/90 text-white border-2 border-yellow-400 px-4 py-1 rounded-2xl font-mono text-xl font-bold shadow-2xl flex items-center gap-2">
             <i data-lucide="clock" class="w-4 h-4 text-yellow-400"></i>
-            <span id="global-time-display">60</span>
+            <span id="global-time-display">90</span>
         </div>
     </div>
 
-    <!-- LEVEL UP OVERLAY SCENE -->
+    <!-- Level Up Overlay -->
     <div id="levelup-overlay" class="fixed inset-0 z-[60] bg-black/80 hidden flex flex-col items-center justify-center backdrop-blur-sm">
         <div class="absolute inset-0 flex items-center justify-center overflow-hidden z-0">
             <div class="w-[200vmax] h-[200vmax] bg-[conic-gradient(from_0deg,transparent_0_20deg,#fbbf24_20deg_40deg,transparent_40deg_60deg,#fbbf24_60deg_80deg,transparent_80deg_100deg,#fbbf24_100deg_120deg,transparent_120deg_140deg,#fbbf24_140deg_160deg,transparent_160deg_180deg,#fbbf24_180deg_200deg,transparent_200deg_220deg,#fbbf24_220deg_240deg,transparent_240deg_260deg,#fbbf24_260deg_280deg,transparent_280deg_300deg,#fbbf24_300deg_320deg,transparent_320deg_340deg,#fbbf24_340deg_360deg)] opacity-20 animate-rays"></div>
@@ -66,7 +70,7 @@
         </div>
     </div>
 
-    <!-- NEW: Victory Overlay Scene -->
+    <!-- Victory Overlay -->
     <div id="victory-overlay" class="fixed inset-0 z-[70] bg-blue-900/90 hidden flex flex-col items-center justify-center backdrop-blur-md">
         <div class="absolute inset-0 flex items-center justify-center overflow-hidden z-0">
             <div class="w-[200vmax] h-[200vmax] bg-[conic-gradient(from_0deg,transparent_0_20deg,#60a5fa_20deg_40deg,transparent_40deg_60deg,#60a5fa_60deg_80deg,transparent_80deg_100deg,#60a5fa_100deg_120deg,transparent_120deg_140deg,#60a5fa_140deg_160deg,transparent_160deg_180deg,#60a5fa_180deg_200deg,transparent_200deg_220deg,#60a5fa_220deg_240deg,transparent_240deg_260deg,#60a5fa_260deg_280deg,transparent_280deg_300deg,#60a5fa_300deg_320deg,transparent_320deg_340deg,#60a5fa_340deg_360deg)] opacity-30 animate-rays"></div>
@@ -186,13 +190,13 @@
         </div>
     </div>
 
-    <!-- SCREEN 3: SUMMARY -->
-    <div id="summary-screen" class="screen h-full w-full bg-slate-900 items-center justify-center p-4">
-        <div class="bg-white border-4 border-yellow-400 rounded-3xl p-6 max-w-md w-full text-center shadow-2xl relative overflow-visible flex flex-col">
+    <!-- SCREEN 3: SUMMARY - UPDATED LAYOUT & HEIGHT -->
+    <div id="summary-screen" class="screen h-full w-full bg-slate-900 items-center justify-center px-4 pt-20 pb-4"> <!-- Increased top padding -->
+        <div class="bg-white border-4 border-yellow-400 rounded-3xl p-6 max-w-md w-full text-center shadow-2xl relative overflow-visible flex flex-col h-[75vh]"> <!-- Increased height to 75vh -->
             <div class="absolute -top-5 left-1/2 transform -translate-x-1/2 bg-blue-600 px-6 py-2 rounded-full border-4 border-white shadow-lg min-w-[200px] z-10">
                 <h2 id="victory-title" class="text-lg md:text-xl font-black text-white uppercase tracking-widest">Time's Up!</h2>
             </div>
-            <div class="mt-8 flex flex-col items-center justify-center mb-4 shrink-0">
+            <div class="mt-8 flex flex-col items-center justify-center mb-2 shrink-0">
                 <img id="ending-img" src="Husky5.png" class="w-28 h-28 object-contain animate-bounce mb-3 drop-shadow-xl">
                 <div class="flex flex-col items-center bg-yellow-50 border-4 border-yellow-400 rounded-2xl px-10 py-2 shadow-md transform -rotate-1">
                     <span class="text-[10px] font-bold text-yellow-600 uppercase tracking-widest mb-0.5">Final Score</span>
@@ -230,16 +234,14 @@
         let firebaseConfig;
         let appId = "husky-game";
         
-        // Environment Check
         if (typeof __firebase_config !== 'undefined') {
-            // PREVIEW ENVIRONMENT
             firebaseConfig = JSON.parse(__firebase_config);
             appId = __app_id;
             const initialToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
             window.getDbCollection = (db) => collection(db, 'artifacts', appId, 'public', 'data', 'leaderboard');
             window.getInitialToken = () => initialToken;
         } else {
-            // PRODUCTION (GitHub Pages) - YOUR CONFIG HERE
+            // PRODUCTION
             firebaseConfig = {
               apiKey: "AIzaSyByPxGPOSCLA7slRhLGvy0KjP4OGY2gcBY",
               authDomain: "husky-calculation-battle.firebaseapp.com",
@@ -307,7 +309,6 @@
                     const scores = [];
                     snapshot.forEach(doc => scores.push(doc.data()));
                     scores.sort((a, b) => b.score - a.score);
-                    // Updated: Show top 5
                     renderLeaderboard(scores.slice(0, 5));
                 }, (error) => {
                     console.error("DB Error", error);
@@ -326,22 +327,13 @@
             scores.forEach((entry, index) => {
                 const rank = index + 1;
                 let rankHtml = '';
-                
-                // Special visual for Top 3
-                if (index === 0) {
-                    rankHtml = `<div class="bg-yellow-100 text-yellow-600 p-1 rounded shadow-sm"><i data-lucide="crown" class="w-4 h-4 fill-current"></i></div>`;
-                } else if (index === 1) {
-                    rankHtml = `<div class="bg-slate-100 text-slate-500 p-1 rounded shadow-sm"><i data-lucide="medal" class="w-4 h-4 fill-current"></i></div>`;
-                } else if (index === 2) {
-                    rankHtml = `<div class="bg-orange-100 text-orange-600 p-1 rounded shadow-sm"><i data-lucide="medal" class="w-4 h-4 fill-current"></i></div>`;
-                } else {
-                    rankHtml = `<span class="rank font-bold text-base w-6 text-slate-400 text-center">${rank}</span>`;
-                }
-
-                const item = document.createElement('div');
-                // Added 'border-l-4' for subtle highlight
+                if (index === 0) { rankHtml = `<div class="bg-yellow-100 text-yellow-600 p-1 rounded shadow-sm"><i data-lucide="crown" class="w-4 h-4 fill-current"></i></div>`; } 
+                else if (index === 1) { rankHtml = `<div class="bg-slate-100 text-slate-500 p-1 rounded shadow-sm"><i data-lucide="medal" class="w-4 h-4 fill-current"></i></div>`; } 
+                else if (index === 2) { rankHtml = `<div class="bg-orange-100 text-orange-600 p-1 rounded shadow-sm"><i data-lucide="medal" class="w-4 h-4 fill-current"></i></div>`; } 
+                else { rankHtml = `<span class="rank font-bold text-base w-6 text-slate-400 text-center">${rank}</span>`; }
                 const borderClass = index === 0 ? 'border-l-4 border-yellow-400' : (index === 1 ? 'border-l-4 border-slate-300' : (index === 2 ? 'border-l-4 border-orange-300' : ''));
                 
+                const item = document.createElement('div');
                 item.className = `leaderboard-item flex justify-between items-center bg-white p-2 rounded shadow-sm text-xs md:text-sm ${borderClass}`;
                 item.innerHTML = `
                     <div class="flex items-center gap-3 min-w-0">
@@ -351,13 +343,13 @@
                     <span class="font-mono font-bold text-blue-600 ml-2 shrink-0">${entry.score}</span>`;
                 list.appendChild(item);
             });
-            lucide.createIcons(); // Re-init icons for dynamic content
+            lucide.createIcons(); 
         }
     </script>
 
     <!-- GAME LOGIC -->
     <script>
-        // Variables & Logic Same as Before
+        // Variables
         let currentLang = 'en';
         let score = 0;
         let level = 1;
@@ -422,7 +414,7 @@
             }
         };
 
-        // Game Functions (Abbreviated for length, logic identical to previous working version)
+        // Game Functions
         function appendNumber(num) { if(isProcessing || !isGameActive || isPaused || currentInput.length >= 3) return; currentInput += num; updateAnswerDisplay(); }
         function clearInput() { if(isProcessing || !isGameActive || isPaused) return; currentInput = ""; updateAnswerDisplay(); }
         function updateAnswerDisplay() { const display = document.getElementById('answer-display'); display.innerText = currentInput === "" ? "?" : currentInput; if(currentInput !== "") display.classList.add('text-yellow-400'); else display.classList.remove('text-yellow-400'); }
