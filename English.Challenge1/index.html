@@ -10,25 +10,34 @@
         @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&display=swap');
 
         :root {
-            --primary-bg: #f0f9ff;
+            /* Husky STEAM Lab Inspired Palette */
+            --primary-bg: #f0f9ff;      /* Lighter, friendlier blue tint */
             --board-bg: #ffffff;
-            --text-main: #0f172a;
-            --text-sub: #64748b;
+            
+            /* Text Colors */
+            --text-main: #0f172a;       /* Dark Slate */
+            --text-sub: #64748b;        /* Light Slate */
+            
+            /* Tile Colors */
             --tile-default: #ffffff;
             --tile-border: #cbd5e1;
             --tile-text: #334155;
-            --correct-color: #10b981;
-            --present-color: #f59e0b;
-            --absent-color: #94a3b8;
-            --brand-blue: #0ea5e9;
-            --brand-dark: #0f172a;
+            
+            /* Status Colors */
+            --correct-color: #10b981;   /* Tech Green */
+            --present-color: #f59e0b;   /* Engineering Amber */
+            --absent-color: #94a3b8;    /* Slate Grey */
+            
+            /* Brand Colors */
+            --brand-blue: #0ea5e9;      /* Sky Blue / Tech Blue */
+            --brand-dark: #0f172a;      /* Husky Dark */
         }
 
         body {
             font-family: 'Nunito', sans-serif;
             background-color: var(--primary-bg);
             background-image: radial-gradient(#bae6fd 1px, transparent 1px);
-            background-size: 24px 24px;
+            background-size: 24px 24px; /* Slightly larger, friendlier grid */
             touch-action: manipulation;
             color: var(--text-main);
         }
@@ -46,32 +55,32 @@
 
         /* Game Board Area */
         .game-container {
-            max-width: 600px;
+            max-width: 500px; /* Reduced width */
             width: 100%;
             margin: 0 auto;
         }
 
         .hint-container {
             background: white;
-            border-radius: 20px;
+            border-radius: 16px;
             border: 2px solid #e0f2fe;
-            box-shadow: 0 8px 0 -2px #e0f2fe;
+            box-shadow: 0 4px 0 -1px #e0f2fe;
         }
 
-        /* Tile Styling */
+        /* Tile Styling - Adjusted sizes */
         .tile {
             width: 100%;
             aspect-ratio: 1;
             background-color: var(--tile-default);
             border: 2px solid var(--tile-border);
-            border-radius: 12px;
+            border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 2rem;
+            font-size: 1.75rem; /* Reduced font size */
             font-weight: 900;
             color: var(--tile-text);
-            box-shadow: 0 4px 0 #cbd5e1;
+            box-shadow: 0 3px 0 #cbd5e1;
             transition: transform 0.1s, border-color 0.2s, background-color 0.3s;
             user-select: none;
         }
@@ -79,7 +88,7 @@
         @media (max-width: 400px) {
             .tile {
                 font-size: 1.5rem;
-                border-radius: 8px;
+                border-radius: 6px;
                 box-shadow: 0 2px 0 #cbd5e1;
             }
         }
@@ -94,21 +103,21 @@
         .tile.correct {
             background-color: var(--correct-color);
             border-color: #059669;
-            box-shadow: 0 4px 0 #047857;
+            box-shadow: 0 3px 0 #047857;
             color: white;
             text-shadow: 0 1px 2px rgba(0,0,0,0.1);
         }
         .tile.present {
             background-color: var(--present-color);
             border-color: #d97706;
-            box-shadow: 0 4px 0 #b45309;
+            box-shadow: 0 3px 0 #b45309;
             color: white;
             text-shadow: 0 1px 2px rgba(0,0,0,0.1);
         }
         .tile.absent {
             background-color: var(--absent-color);
             border-color: #64748b;
-            box-shadow: 0 4px 0 #475569;
+            box-shadow: 0 3px 0 #475569;
             color: white;
         }
 
@@ -116,8 +125,8 @@
         .row {
             display: grid;
             grid-template-columns: repeat(5, 1fr);
-            gap: 0.5rem;
-            margin-bottom: 0.75rem;
+            gap: 0.375rem; /* gap-1.5 */
+            margin-bottom: 0.5rem; /* Reduced margin */
             opacity: 0;
             transform: translateY(10px);
             animation: slideUp 0.3s ease-out forwards;
@@ -133,16 +142,17 @@
         
         .key {
             background-color: #f8fafc;
-            border-radius: 8px;
+            border-radius: 6px;
             font-weight: 800;
             color: #475569;
             box-shadow: 0 3px 0 #cbd5e1;
             transition: all 0.1s active;
-            height: 52px;
+            height: 44px; /* Reduced height */
             display: flex;
             align-items: center;
             justify-content: center;
             border: 1px solid #e2e8f0;
+            font-size: 0.9rem;
         }
         
         .key:active {
@@ -189,14 +199,6 @@
             100% { transform: translateY(0px) rotate(3deg); }
         }
 
-        /* Thinking Husky Animation */
-        @keyframes peekUp {
-            0% { transform: translateY(100%); }
-            10% { transform: translateY(0); }
-            90% { transform: translateY(0); }
-            100% { transform: translateY(100%); }
-        }
-
         .animate-flip { animation: flip 0.6s ease forwards; }
         .animate-float { animation: float 3s ease-in-out infinite; }
         
@@ -204,20 +206,20 @@
         #thinking-husky {
             position: fixed;
             bottom: 0;
-            left: 20px;
-            width: 120px;
-            z-index: 5; /* Above board, below keyboard/modal */
-            transform: translateY(100%); /* Hidden by default */
+            left: 10px;
+            width: 120px; /* Reduced size */
+            z-index: 50;
+            transform: translateY(100%); 
             transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             pointer-events: none;
         }
         #thinking-husky.peeking {
-            transform: translateY(10px); /* Peek up */
+            transform: translateY(10px); 
         }
 
         /* Scrollbar */
         .custom-scroll::-webkit-scrollbar {
-            width: 6px;
+            width: 4px;
         }
         .custom-scroll::-webkit-scrollbar-track {
             background: #f1f5f9;
@@ -226,64 +228,61 @@
             background: #cbd5e1;
             border-radius: 10px;
         }
-        .custom-scroll::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8;
-        }
     </style>
 </head>
-<body class="h-screen w-screen flex flex-col overflow-hidden">
+<body class="h-screen w-screen flex flex-col overflow-hidden text-sm md:text-base">
 
     <!-- COVER PAGE -->
-    <section id="cover-view" class="view-section active overflow-y-auto bg-white p-6 items-center justify-center text-center">
-        <div class="max-w-md w-full flex flex-col gap-2 animate-fade-in">
-            <div class="flex flex-col items-center gap-2">
-                <!-- Husky 8: Game Icon -->
-                <div class="w-32 h-32 flex items-center justify-center animate-float">
+    <section id="cover-view" class="view-section active overflow-y-auto bg-white p-4 items-center justify-center text-center">
+        <div class="max-w-sm w-full flex flex-col gap-2 animate-fade-in">
+            <div class="flex flex-col items-center gap-1">
+                <!-- Husky 8: Game Icon (Reduced Size) -->
+                <div class="w-24 h-24 flex items-center justify-center animate-float">
                     <img src="Husky8.png" alt="Husky Lab Icon" class="w-full h-full object-contain drop-shadow-xl">
                 </div>
                 
                 <div>
-                    <h1 class="text-3xl font-black text-slate-800 tracking-tight mb-1">Husky <span class="text-sky-500">STEAM Lab</span></h1>
-                    <h2 class="text-lg font-bold text-slate-400 tracking-wide uppercase">English Word Challenge</h2>
+                    <h1 class="text-2xl font-black text-slate-800 tracking-tight mb-0.5">Husky <span class="text-sky-500">STEAM Lab</span></h1>
+                    <h2 class="text-base font-bold text-slate-400 tracking-wide uppercase">English Word Challenge</h2>
                 </div>
                 
-                <div class="inline-flex items-center gap-2 px-4 py-1.5 bg-green-100 text-green-700 rounded-full text-xs font-bold uppercase tracking-wider mb-1">
-                    <i class="fas fa-graduation-cap"></i> Learning Goal: 5 Words
+                <div class="inline-flex items-center gap-2 px-3 py-1 bg-green-100 text-green-700 rounded-full text-[10px] font-bold uppercase tracking-wider mb-1">
+                    <i class="fas fa-graduation-cap"></i> Goal: 5 Words
                 </div>
             </div>
 
-            <div class="bg-white p-6 rounded-2xl border-2 border-slate-100 text-left space-y-5 shadow-lg relative overflow-hidden">
-                <div class="absolute top-0 right-0 w-20 h-20 bg-yellow-50 rounded-full -mr-8 -mt-8 opacity-50"></div>
-                <h3 class="font-extrabold text-slate-700 text-lg border-b border-slate-100 pb-3 mb-2 flex items-center gap-2">
+            <div class="bg-white p-4 rounded-xl border-2 border-slate-100 text-left space-y-3 shadow-md relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-16 h-16 bg-yellow-50 rounded-full -mr-6 -mt-6 opacity-50"></div>
+                <h3 class="font-extrabold text-slate-700 text-base border-b border-slate-100 pb-2 mb-1 flex items-center gap-2">
                     <i class="fas fa-clipboard-list text-sky-500"></i> Your Mission
                 </h3>
                 
-                <div class="flex items-start gap-4 group">
-                    <div class="bg-sky-100 text-sky-600 w-10 h-10 rounded-xl flex items-center justify-center font-black text-lg flex-none group-hover:scale-110 transition-transform">1</div>
+                <div class="flex items-start gap-3 group">
+                    <div class="bg-sky-100 text-sky-600 w-8 h-8 rounded-lg flex items-center justify-center font-black text-base flex-none group-hover:scale-110 transition-transform">1</div>
                     <div>
-                        <div class="font-bold text-slate-700">Guess the Words</div>
-                        <p class="text-slate-500 text-sm leading-tight">Use the hints to find the secret English word.</p>
+                        <div class="font-bold text-slate-700 text-sm">Guess the Words</div>
+                        <p class="text-slate-500 text-xs leading-tight">Use the hints to find the secret English word.</p>
                     </div>
                 </div>
 
-                <div class="flex items-start gap-4 group">
-                    <div class="bg-purple-100 text-purple-600 w-10 h-10 rounded-xl flex items-center justify-center font-black text-lg flex-none group-hover:scale-110 transition-transform">2</div>
+                <div class="flex items-start gap-3 group">
+                    <div class="bg-purple-100 text-purple-600 w-8 h-8 rounded-lg flex items-center justify-center font-black text-base flex-none group-hover:scale-110 transition-transform">2</div>
                     <div>
-                        <div class="font-bold text-slate-700">Game Rules</div>
-                        <p class="text-slate-500 text-sm leading-tight">You have 5 chances. Green means correct, Yellow means wrong spot.</p>
+                        <div class="font-bold text-slate-700 text-sm">Game Rules</div>
+                        <p class="text-slate-500 text-xs leading-tight">You have 5 chances. Green means correct, Yellow means wrong spot.</p>
                     </div>
                 </div>
 
-                <div class="flex items-start gap-4 group">
-                    <div class="bg-amber-100 text-amber-600 w-10 h-10 rounded-xl flex items-center justify-center font-black text-lg flex-none group-hover:scale-110 transition-transform">3</div>
+                <div class="flex items-start gap-3 group">
+                    <div class="bg-amber-100 text-amber-600 w-8 h-8 rounded-lg flex items-center justify-center font-black text-base flex-none group-hover:scale-110 transition-transform">3</div>
                     <div>
-                        <div class="font-bold text-slate-700">Check Meanings</div>
-                        <p class="text-slate-500 text-sm leading-tight">Learn the definition for every word you find.</p>
+                        <div class="font-bold text-slate-700 text-sm">Check Meanings</div>
+                        <p class="text-slate-500 text-xs leading-tight">Learn the definition for every word you find.</p>
                     </div>
                 </div>
             </div>
 
-            <button onclick="startSession()" class="btn-primary w-full py-5 rounded-2xl text-xl font-black uppercase tracking-wider flex items-center justify-center gap-3 transform transition hover:scale-[1.02] active:scale-[0.98]">
+            <button onclick="startSession()" class="btn-primary w-full py-3 rounded-xl text-lg font-black uppercase tracking-wider flex items-center justify-center gap-2 transform transition hover:scale-[1.02] active:scale-[0.98]">
                 <i class="fas fa-rocket"></i> Start Mission
             </button>
         </div>
@@ -293,75 +292,75 @@
     <!-- GAME PAGE -->
     <section id="game-view" class="view-section relative">
         <!-- Top Bar -->
-        <header class="flex-none p-4 bg-white border-b border-sky-100 z-10">
-            <div class="max-w-[600px] mx-auto flex justify-between items-center">
+        <header class="flex-none p-2 bg-white border-b border-sky-100 z-10">
+            <div class="max-w-[500px] mx-auto flex justify-between items-center">
                 <div class="flex items-center gap-2">
                     <!-- Progress -->
-                    <div id="progress-badge" class="px-3 py-1.5 bg-slate-50 rounded-xl flex items-center gap-2 border border-slate-200 shadow-sm">
-                        <i class="fas fa-layer-group text-slate-400"></i>
-                        <span id="progress-display" class="font-black text-lg text-slate-700">Word 1/5</span>
+                    <div id="progress-badge" class="px-2.5 py-1 bg-slate-50 rounded-lg flex items-center gap-1.5 border border-slate-200 shadow-sm">
+                        <i class="fas fa-layer-group text-slate-400 text-xs"></i>
+                        <span id="progress-display" class="font-black text-base text-slate-700">Word 1/5</span>
                     </div>
                 </div>
 
-                <div class="flex items-center gap-4">
+                <div class="flex items-center gap-3">
                      <!-- Skips -->
-                     <button id="skip-btn" onclick="skipWord()" class="text-xs font-bold text-slate-400 hover:text-sky-500 transition flex flex-col items-center leading-none group">
-                        <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center mb-1 group-hover:bg-sky-100 group-hover:text-sky-600 transition-colors">
-                            <i class="fas fa-forward text-sm"></i>
+                     <button id="skip-btn" onclick="skipWord()" class="text-[10px] font-bold text-slate-400 hover:text-sky-500 transition flex flex-col items-center leading-none group">
+                        <div class="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center mb-0.5 group-hover:bg-sky-100 group-hover:text-sky-600 transition-colors">
+                            <i class="fas fa-forward text-xs"></i>
                         </div>
-                        <span>SKIP <span id="skips-left" class="bg-slate-200 px-1 rounded-sm text-[10px]">3</span></span>
+                        <span>SKIP <span id="skips-left" class="bg-slate-200 px-1 rounded-sm">3</span></span>
                     </button>
 
                     <!-- Score -->
-                    <div class="pl-4 border-l border-slate-100 text-right">
-                        <span class="text-[10px] text-slate-400 font-bold uppercase block leading-none mb-1">Points</span>
-                        <span id="score-display" class="font-black text-2xl text-sky-500 leading-none">0</span>
+                    <div class="pl-3 border-l border-slate-100 text-right">
+                        <span class="text-[9px] text-slate-400 font-bold uppercase block leading-none mb-0.5">Points</span>
+                        <span id="score-display" class="font-black text-xl text-sky-500 leading-none">0</span>
                     </div>
                 </div>
             </div>
         </header>
 
         <!-- Scrollable Game Area -->
-        <main class="flex-1 overflow-y-auto flex flex-col items-center p-4 relative">
-            <div class="game-container flex flex-col gap-6">
+        <main class="flex-1 overflow-y-auto flex flex-col items-center p-2 relative">
+            <div class="game-container flex flex-col gap-3"> <!-- Reduced gap -->
                 
                 <!-- Hint Section -->
-                <div class="hint-container p-6 text-center relative overflow-hidden">
+                <div class="hint-container p-3 text-center relative overflow-hidden">
                     <div class="absolute top-0 right-0 w-24 h-24 bg-sky-50 rounded-full -mr-10 -mt-10 z-0 opacity-50"></div>
                     <div class="absolute bottom-0 left-0 w-16 h-16 bg-yellow-50 rounded-full -ml-8 -mb-8 z-0 opacity-50"></div>
                     
-                    <h2 class="relative z-10 text-xs font-extrabold text-slate-400 uppercase tracking-widest mb-3 flex items-center justify-center gap-2">
+                    <h2 class="relative z-10 text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mb-1 flex items-center justify-center gap-2">
                         <i class="fas fa-lightbulb text-yellow-400"></i> Word Hints
                     </h2>
-                    <div id="hint-display" class="relative z-10 flex justify-center gap-3 text-4xl font-black text-slate-700 tracking-wider font-mono">
+                    <div id="hint-display" class="relative z-10 flex justify-center gap-2 text-3xl font-black text-slate-700 tracking-wider font-mono">
                         <!-- Hint populated by JS -->
                     </div>
                 </div>
 
                 <!-- Dynamic Board -->
-                <div id="board-container" class="w-full max-w-[400px] mx-auto">
+                <div id="board-container" class="w-full max-w-[350px] mx-auto">
                     <!-- Rows added dynamically -->
                 </div>
 
                 <!-- Submit Button -->
-                <div class="w-full max-w-[400px] mx-auto">
-                    <button onclick="submitGuess()" id="submit-btn" class="btn-primary w-full py-4 rounded-xl font-black text-lg tracking-wide uppercase flex items-center justify-center gap-2 group shadow-lg shadow-sky-200">
+                <div class="w-full max-w-[350px] mx-auto">
+                    <button onclick="submitGuess()" id="submit-btn" class="btn-primary w-full py-3 rounded-xl font-black text-base tracking-wide uppercase flex items-center justify-center gap-2 group shadow-lg shadow-sky-200">
                         <span>Check Word</span>
-                        <i class="fas fa-check-circle text-xl"></i>
+                        <i class="fas fa-check-circle text-lg"></i>
                     </button>
                 </div>
                 
-                <div class="h-4"></div>
+                <div class="h-2"></div>
             </div>
             
-            <!-- Husky 9: Thinking Dog (Appears intermittently) -->
+            <!-- Husky 9: Thinking Dog -->
             <img id="thinking-husky" src="Husky9.png" alt="Thinking Husky">
         </main>
 
         <!-- Keyboard -->
-        <div class="keyboard-container flex-none p-2 pb-8 md:p-4 z-20 relative">
-            <div class="max-w-[600px] mx-auto flex flex-col gap-2">
-                <div class="flex justify-center gap-1.5 w-full">
+        <div class="keyboard-container flex-none p-2 pb-3 md:p-3 z-20 relative">
+            <div class="max-w-[600px] mx-auto flex flex-col gap-1.5">
+                <div class="flex justify-center gap-1 w-full">
                     <button class="key flex-1" data-key="Q">Q</button>
                     <button class="key flex-1" data-key="W">W</button>
                     <button class="key flex-1" data-key="E">E</button>
@@ -373,7 +372,7 @@
                     <button class="key flex-1" data-key="O">O</button>
                     <button class="key flex-1" data-key="P">P</button>
                 </div>
-                <div class="flex justify-center gap-1.5 w-full px-4">
+                <div class="flex justify-center gap-1 w-full px-3">
                     <button class="key flex-1" data-key="A">A</button>
                     <button class="key flex-1" data-key="S">S</button>
                     <button class="key flex-1" data-key="D">D</button>
@@ -384,7 +383,7 @@
                     <button class="key flex-1" data-key="K">K</button>
                     <button class="key flex-1" data-key="L">L</button>
                 </div>
-                <div class="flex justify-center gap-1.5 w-full px-8">
+                <div class="flex justify-center gap-1 w-full px-6">
                     <button class="key flex-1" data-key="Z">Z</button>
                     <button class="key flex-1" data-key="X">X</button>
                     <button class="key flex-1" data-key="C">C</button>
@@ -392,7 +391,7 @@
                     <button class="key flex-1" data-key="B">B</button>
                     <button class="key flex-1" data-key="N">N</button>
                     <button class="key flex-1" data-key="M">M</button>
-                    <button class="key w-14 bg-rose-50 text-rose-500 border-rose-100 hover:bg-rose-100 shadow-[0_3px_0_#fda4af]" data-key="BACKSPACE">
+                    <button class="key w-12 bg-rose-50 text-rose-500 border-rose-100 hover:bg-rose-100 shadow-[0_3px_0_#fda4af]" data-key="BACKSPACE">
                         <i class="fas fa-backspace"></i>
                     </button>
                 </div>
@@ -401,36 +400,36 @@
         
         <!-- DICTIONARY MODAL (Shown on Win/Skip/Fail) -->
         <div id="dict-modal" class="absolute inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm hidden">
-            <div id="dict-modal-content" class="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl flex flex-col gap-4 animate-popIn border-t-8 border-green-500 relative">
+            <div id="dict-modal-content" class="bg-white rounded-2xl p-4 w-full max-w-xs shadow-2xl flex flex-col gap-3 animate-popIn border-t-8 border-green-500 relative">
                 
                 <!-- Husky 10: Happy Dog (Shown only on Correct) -->
-                <img id="happy-husky" src="Husky10.png" class="absolute -top-16 -right-4 w-24 h-24 object-contain hidden z-50 drop-shadow-lg" alt="Happy Husky">
+                <img id="happy-husky" src="Husky10.png" class="absolute -top-14 -right-2 w-20 h-20 object-contain hidden z-50 drop-shadow-lg" alt="Happy Husky">
 
                 <div class="text-center">
-                    <div id="dict-icon-bg" class="inline-block p-3 rounded-full bg-green-100 text-green-600 mb-2 shadow-sm">
-                        <i id="dict-icon" class="fas fa-check text-2xl"></i>
+                    <div id="dict-icon-bg" class="inline-block p-2 rounded-full bg-green-100 text-green-600 mb-1 shadow-sm">
+                        <i id="dict-icon" class="fas fa-check text-xl"></i>
                     </div>
-                    <h2 id="dict-title" class="text-2xl font-black text-slate-800 tracking-tight">CORRECT!</h2>
-                    <div id="dict-subtitle" class="text-xs font-bold text-green-600 bg-green-50 inline-block px-3 py-1 rounded-full">+20 Pts</div>
+                    <h2 id="dict-title" class="text-xl font-black text-slate-800 tracking-tight">CORRECT!</h2>
+                    <div id="dict-subtitle" class="text-[10px] font-bold text-green-600 bg-green-50 inline-block px-2 py-0.5 rounded-full">+20 Pts</div>
                 </div>
                 
-                <!-- Image Container (Resized to h-48) -->
-                <div class="w-full h-48 bg-slate-50 rounded-2xl overflow-hidden border-2 border-slate-100 relative shadow-inner">
+                <!-- Image Container (Resized to h-36) -->
+                <div class="w-full h-36 bg-slate-50 rounded-xl overflow-hidden border-2 border-slate-100 relative shadow-inner">
                     <div id="dict-img-loader" class="absolute inset-0 flex items-center justify-center text-slate-300">
-                        <i class="fas fa-spinner fa-spin text-3xl"></i>
+                        <i class="fas fa-spinner fa-spin text-2xl"></i>
                     </div>
                     <img id="dict-img" class="w-full h-full object-cover relative z-10 opacity-0 transition-opacity duration-500 hover:scale-105 transition-transform duration-700" alt="Word Illustration">
                 </div>
                 
-                <div class="bg-blue-50 p-4 rounded-2xl border border-blue-100 text-left">
-                    <div class="flex justify-between items-end mb-2 border-b border-blue-100 pb-2">
-                        <h3 id="dict-word" class="text-xl font-black text-blue-600">WORD</h3>
-                        <span id="dict-pos" class="hidden text-[10px] font-bold uppercase px-2 py-1 rounded-lg text-white tracking-wider shadow-sm"></span>
+                <div class="bg-blue-50 p-3 rounded-xl border border-blue-100 text-left">
+                    <div class="flex justify-between items-end mb-1 border-b border-blue-100 pb-1">
+                        <h3 id="dict-word" class="text-lg font-black text-blue-600">WORD</h3>
+                        <span id="dict-pos" class="hidden text-[10px] font-bold uppercase px-2 py-0.5 rounded text-white tracking-wider shadow-sm"></span>
                     </div>
-                    <p id="dict-def" class="text-slate-600 text-sm font-medium leading-relaxed">Loading definition...</p>
+                    <p id="dict-def" class="text-slate-600 text-xs font-medium leading-relaxed">Loading definition...</p>
                 </div>
 
-                <button id="dict-btn" onclick="nextWordFromModal()" class="btn-primary w-full py-4 rounded-xl font-black text-lg uppercase tracking-wider shadow-lg shadow-sky-200">
+                <button id="dict-btn" onclick="nextWordFromModal()" class="btn-primary w-full py-3 rounded-xl font-black text-base uppercase tracking-wider shadow-lg shadow-sky-200">
                     Next Word <i class="fas fa-arrow-right ml-1"></i>
                 </button>
             </div>
@@ -440,46 +439,49 @@
 
     <!-- SUMMARY PAGE -->
     <section id="summary-view" class="view-section bg-slate-900 items-center justify-center p-4 text-center overflow-y-auto">
-        <div class="max-w-md w-full bg-white rounded-3xl p-6 shadow-2xl animate-fade-in flex flex-col items-center gap-5 my-8 relative overflow-hidden">
-            <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-sky-400 via-purple-400 to-sky-400"></div>
+        <div class="max-w-sm w-full bg-white rounded-3xl p-5 shadow-2xl animate-fade-in flex flex-col items-center gap-4 my-4 relative">
+            <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-sky-400 via-purple-400 to-sky-400 rounded-t-3xl"></div>
             
             <!-- Husky 11: Learned Dog -->
-            <div class="w-28 h-28 bg-yellow-50 rounded-full flex items-center justify-center shadow-lg border-4 border-white -mt-2 mb-2 overflow-hidden">
-                <img src="Husky11.png" alt="Learned Husky" class="w-full h-full object-contain">
+            <div class="w-20 h-20 bg-yellow-50 rounded-full flex items-center justify-center shadow-lg border-4 border-white -mt-2 mb-1 relative z-10">
+                <img src="Husky11.png" alt="Learned Husky" class="w-full h-full object-contain rounded-full">
             </div>
             
             <div>
-                <h2 class="text-3xl font-black text-slate-800 tracking-tight">Great Job!</h2>
-                <p class="text-slate-400 font-bold uppercase tracking-widest text-xs mt-1">Session Complete</p>
+                <h2 class="text-2xl font-black text-slate-800 tracking-tight">Great Job!</h2>
+                <p class="text-slate-400 font-bold uppercase tracking-widest text-[10px] mt-0.5">Session Complete</p>
             </div>
 
-            <div class="flex gap-4 w-full">
-                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 flex-1">
-                    <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Total Score</div>
-                    <div id="final-score" class="text-4xl font-black text-sky-500">0</div>
+            <div class="flex gap-3 w-full">
+                <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 flex-1">
+                    <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Total Score</div>
+                    <div id="final-score" class="text-3xl font-black text-sky-500">0</div>
                 </div>
-                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 flex-1">
-                    <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Words Found</div>
-                    <div id="final-words" class="text-4xl font-black text-slate-700">0</div>
+                <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 flex-1">
+                    <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Words Found</div>
+                    <div id="final-words" class="text-3xl font-black text-slate-700">0</div>
                 </div>
             </div>
 
             <!-- Learned Words List -->
-            <div class="w-full text-left">
-                <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-3 pl-1 flex items-center gap-2">
+            <div class="w-full text-left flex-1 min-h-0 flex flex-col">
+                <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 pl-1 flex items-center gap-2">
                     <i class="fas fa-book-open"></i> Knowledge Gained
                 </h3>
-                <div id="summary-list" class="bg-slate-50 border border-slate-100 rounded-2xl max-h-80 overflow-y-auto custom-scroll p-2.5 flex flex-col gap-2.5 shadow-inner">
+                <div id="summary-list" class="bg-slate-50 border border-slate-100 rounded-xl max-h-48 overflow-y-auto custom-scroll p-2 flex flex-col gap-2 shadow-inner">
                     <!-- Populated by JS -->
-                    <div class="p-6 text-center text-slate-400 text-sm font-medium">No words solved yet!</div>
+                    <div class="p-4 text-center text-slate-400 text-xs font-medium">No words solved yet!</div>
                 </div>
             </div>
 
-            <button onclick="showCoverPage()" class="btn-primary w-full py-4 rounded-xl font-black text-lg uppercase flex items-center justify-center gap-2 mt-2 shadow-lg shadow-sky-200">
+            <button onclick="showCoverPage()" class="btn-primary w-full py-3 rounded-xl font-black text-base uppercase flex items-center justify-center gap-2 mt-1 shadow-lg shadow-sky-200">
                 <i class="fas fa-redo"></i> Play Again
             </button>
         </div>
     </section>
+
+    <!-- Thinking Husky (Moved to body) -->
+    <img id="thinking-husky" src="Husky9.png" alt="Thinking Husky">
 
     <!-- Toast -->
     <div id="toast" class="fixed top-24 left-1/2 transform -translate-x-1/2 bg-slate-800 text-white px-6 py-3 rounded-full shadow-xl transition-all duration-300 opacity-0 translate-y-4 font-bold text-sm pointer-events-none z-[60] flex items-center gap-2">
@@ -753,16 +755,16 @@
                     }
 
                     // Thumbnail logic
-                    const thumb = item.img ? `<img src="${item.img}" class="w-14 h-14 rounded-xl object-cover bg-slate-100 shrink-0 border border-slate-100">` : '';
+                    const thumb = item.img ? `<img src="${item.img}" class="w-10 h-10 rounded-lg object-cover bg-slate-100 shrink-0 border border-slate-100">` : '';
 
                     el.innerHTML = `
                         ${thumb}
                         <div class="flex-1 min-w-0">
-                            <div class="flex items-center flex-wrap mb-1">
-                                <span class="font-black text-sky-600 mr-1 text-lg">${item.word}</span>
+                            <div class="flex items-center flex-wrap mb-0.5">
+                                <span class="font-black text-sky-600 mr-1 text-sm">${item.word}</span>
                                 ${posBadge}
                             </div>
-                            <div class="text-xs text-slate-500 leading-relaxed font-medium truncate">${item.def}</div>
+                            <div class="text-[10px] text-slate-500 leading-relaxed font-medium truncate">${item.def}</div>
                         </div>
                     `;
                     summaryList.appendChild(el);
@@ -954,10 +956,10 @@
             state.roundResult = resultType;
             
             // Reset Styles
-            dictModalContent.className = "bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl flex flex-col gap-4 animate-popIn border-t-8 relative";
-            dictIconBg.className = "inline-block p-3 rounded-full mb-2 shadow-sm";
-            dictIcon.className = "text-2xl fas";
-            dictSubtitle.className = "text-xs font-bold inline-block px-3 py-1 rounded-full";
+            dictModalContent.className = "bg-white rounded-2xl p-4 w-full max-w-xs shadow-2xl flex flex-col gap-3 animate-popIn border-t-8 relative";
+            dictIconBg.className = "inline-block p-2 rounded-full mb-1 shadow-sm";
+            dictIcon.className = "text-xl fas";
+            dictSubtitle.className = "text-[10px] font-bold inline-block px-2 py-0.5 rounded-full";
             happyHusky.classList.add('hidden'); // Reset Happy Dog
             
             // Apply Styles based on Result Type
@@ -1005,7 +1007,7 @@
             
             if (entry.pos) {
                 dictPos.textContent = entry.pos;
-                dictPos.className = `text-[10px] font-bold uppercase px-2 py-1 rounded-lg text-white tracking-wider shadow-sm ${getPosColor(entry.pos)}`;
+                dictPos.className = `text-[10px] font-bold uppercase px-2 py-0.5 rounded text-white tracking-wider shadow-sm ${getPosColor(entry.pos)}`;
                 dictPos.classList.remove('hidden');
             } else {
                 dictPos.classList.add('hidden');
