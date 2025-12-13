@@ -3,100 +3,184 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Safety Officer AI | ESG Governance Project</title>
+    <title>My AI x ESG Portfolio</title>
     <style>
-        /* This section creates the "Look" (CSS) */
+        /* --- CSS STYLES (The Look) --- */
         body {
-            font-family: 'Verdana', sans-serif;
-            background-color: #003366; /* Dark Blue for Professionalism */
-            color: white;
-            text-align: center;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f4f4f9; /* Light Grey background */
+            color: #333;
             margin: 0;
-            padding: 20px;
+            padding: 0;
         }
 
+        /* 1. HERO SECTION (Profile) */
         header {
-            background-color: #ffcc00; /* Safety Yellow */
-            color: #003366;
-            padding: 20px;
-            border-radius: 15px;
-            margin-bottom: 30px;
-            border: 4px solid white;
+            background: linear-gradient(135deg, #00b09b, #96c93d); /* Green Gradient for ESG */
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
         }
 
-        h1 {
-            margin: 0;
-            font-size: 2.5em;
-            text-transform: uppercase;
-        }
-
-        .game-container {
+        .profile-pic {
+            width: 150px;
+            height: 150px;
             background-color: white;
-            width: 80%;
-            max-width: 600px; /* Keeps it from getting too big */
-            height: 400px;    /* Typical Scratch size */
-            margin: 0 auto;   /* Centers the box */
-            border-radius: 20px;
-            border: 5px solid #ffcc00;
+            border-radius: 50%; /* Makes it a circle */
+            border: 5px solid rgba(255,255,255, 0.5);
+            margin: 0 auto 20px auto;
+            /* Placeholder image logic */
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #333;
-            box-shadow: 0px 0px 20px rgba(255, 255, 255, 0.2);
-        }
-
-        .description {
-            background-color: rgba(255, 255, 255, 0.1);
-            margin: 30px auto;
-            padding: 20px;
-            width: 80%;
-            border-radius: 15px;
-            line-height: 1.6;
-        }
-
-        .highlight {
-            color: #ffcc00;
+            color: #aaa;
             font-weight: bold;
+            overflow: hidden; /* Crops image to circle */
+        }
+        
+        /* If they have a real photo, they replace the <img> src below */
+        .profile-pic img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .bio h1 { margin: 0; font-size: 2.5em; }
+        .bio p { font-size: 1.2em; opacity: 0.9; max-width: 600px; margin: 10px auto; }
+
+        /* 2. PROJECT LIST SECTION */
+        .container {
+            max-width: 800px; /* Center column */
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .project-card {
+            background: white;
+            border-radius: 15px;
+            margin-bottom: 40px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .project-header {
+            padding: 15px 25px;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Color Coding for ESG */
+        .env { background-color: #2ecc71; } /* Green */
+        .soc { background-color: #3498db; } /* Blue */
+        .gov { background-color: #f1c40f; color: #333; } /* Yellow */
+
+        .project-body {
+            padding: 25px;
+            text-align: center;
+        }
+
+        .project-description {
+            text-align: left;
+            margin-bottom: 20px;
+            color: #666;
+        }
+
+        /* The Box where the Scratch Game lives */
+        .embed-box {
+            background-color: #eee;
+            width: 100%;
+            height: 400px; /* Standard Scratch Size */
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px dashed #ccc;
         }
 
         footer {
+            text-align: center;
+            padding: 20px;
+            color: #888;
+            font-size: 0.9em;
             margin-top: 50px;
-            font-size: 0.8em;
-            opacity: 0.7;
         }
     </style>
 </head>
 <body>
 
     <header>
-        <h1>🚧 The Safety Officer 🚧</h1>
-        <p>An AI Project for ESG Governance</p>
+        <div class="profile-pic">
+            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" alt="Avatar">
+        </div>
+        <div class="bio">
+            <h1>Hi, I'm [Student Name]</h1>
+            <p>
+                I am a 10-year-old AI Developer passionate about saving the planet. 
+                Welcome to my ESG Project Portfolio.
+            </p>
+        </div>
     </header>
 
-    <div class="game-container">
-        
-        <h3>[ PASTE YOUR GAME HERE ]</h3>
-        
-        </div>
+    <div class="container">
 
-    <div class="description">
-        <h2>How It Works</h2>
-        <p>
-            This project uses <span class="highlight">Artificial Intelligence</span> to enforce safety rules.
-            I trained a computer vision model to recognize two states:
-        </p>
-        <ul style="text-align: left; display: inline-block;">
-            <li>✅ <strong>Safe:</strong> When a worker is wearing a helmet.</li>
-            <li>❌ <strong>Unsafe:</strong> When a worker is unprotected.</li>
-        </ul>
-        <p>
-            If the AI sees an unsafe worker, it automatically locks the factory gate. 
-            This represents the <strong>"G" (Governance)</strong> in ESG by ensuring strict compliance with safety laws.
-        </p>
+        <article class="project-card">
+            <div class="project-header env">
+                <h2>♻️ The Smart Recycler</h2>
+                <span>Environment</span>
+            </div>
+            <div class="project-body">
+                <p class="project-description">
+                    <strong>The Problem:</strong> People often throw plastic in the wrong bin.<br>
+                    <strong>My Solution:</strong> I trained a computer vision model to distinguish between Plastic and Paper.
+                </p>
+                
+                <div class="embed-box">
+                    [ PASTE ENVIRONMENT CODE HERE ]
+                </div>
+            </div>
+        </article>
+
+        <article class="project-card">
+            <div class="project-header soc">
+                <h2>👋 Sign Language Translator</h2>
+                <span>Social</span>
+            </div>
+            <div class="project-body">
+                <p class="project-description">
+                    <strong>The Problem:</strong> It is hard for non-verbal students to communicate.<br>
+                    <strong>My Solution:</strong> An app that recognizes hand gestures and turns them into speech.
+                </p>
+
+                <div class="embed-box">
+                    [ PASTE SOCIAL CODE HERE ]
+                </div>
+            </div>
+        </article>
+
+        <article class="project-card">
+            <div class="project-header gov">
+                <h2>🚧 The Safety Officer</h2>
+                <span>Governance</span>
+            </div>
+            <div class="project-body">
+                <p class="project-description">
+                    <strong>The Problem:</strong> Factories can be dangerous if rules aren't followed.<br>
+                    <strong>My Solution:</strong> An AI gatekeeper that checks for safety helmets.
+                </p>
+
+                <div class="embed-box">
+                    [ PASTE GOVERNANCE CODE HERE ]
+                </div>
+            </div>
+        </article>
+
     </div>
 
     <footer>
-        Created by [Student Name] | Powered by Scratch & TensorFlow
+        <p>Built with HTML, CSS, and Scratch.</p>
+        <p><strong>Powered by TensorFlow.js</strong></p>
     </footer>
 
 </body>
