@@ -10,34 +10,25 @@
         @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&display=swap');
 
         :root {
-            /* Husky STEAM Lab Inspired Palette */
-            --primary-bg: #f0f9ff;      /* Lighter, friendlier blue tint */
+            --primary-bg: #f0f9ff;
             --board-bg: #ffffff;
-            
-            /* Text Colors */
-            --text-main: #0f172a;       /* Dark Slate */
-            --text-sub: #64748b;        /* Light Slate */
-            
-            /* Tile Colors */
+            --text-main: #0f172a;
+            --text-sub: #64748b;
             --tile-default: #ffffff;
             --tile-border: #cbd5e1;
             --tile-text: #334155;
-            
-            /* Status Colors */
-            --correct-color: #10b981;   /* Tech Green */
-            --present-color: #f59e0b;   /* Engineering Amber */
-            --absent-color: #94a3b8;    /* Slate Grey */
-            
-            /* Brand Colors */
-            --brand-blue: #0ea5e9;      /* Sky Blue / Tech Blue */
-            --brand-dark: #0f172a;      /* Husky Dark */
+            --correct-color: #10b981;
+            --present-color: #f59e0b;
+            --absent-color: #94a3b8;
+            --brand-blue: #0ea5e9;
+            --brand-dark: #0f172a;
         }
 
         body {
             font-family: 'Nunito', sans-serif;
             background-color: var(--primary-bg);
             background-image: radial-gradient(#bae6fd 1px, transparent 1px);
-            background-size: 24px 24px; /* Slightly larger, friendlier grid */
+            background-size: 24px 24px;
             touch-action: manipulation;
             color: var(--text-main);
         }
@@ -198,8 +189,31 @@
             100% { transform: translateY(0px) rotate(3deg); }
         }
 
+        /* Thinking Husky Animation */
+        @keyframes peekUp {
+            0% { transform: translateY(100%); }
+            10% { transform: translateY(0); }
+            90% { transform: translateY(0); }
+            100% { transform: translateY(100%); }
+        }
+
         .animate-flip { animation: flip 0.6s ease forwards; }
         .animate-float { animation: float 3s ease-in-out infinite; }
+        
+        /* Husky 9 positioning */
+        #thinking-husky {
+            position: fixed;
+            bottom: 0;
+            left: 20px;
+            width: 120px;
+            z-index: 5; /* Above board, below keyboard/modal */
+            transform: translateY(100%); /* Hidden by default */
+            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            pointer-events: none;
+        }
+        #thinking-husky.peeking {
+            transform: translateY(10px); /* Peek up */
+        }
 
         /* Scrollbar */
         .custom-scroll::-webkit-scrollbar {
@@ -221,17 +235,19 @@
 
     <!-- COVER PAGE -->
     <section id="cover-view" class="view-section active overflow-y-auto bg-white p-6 items-center justify-center text-center">
-        <div class="max-w-md w-full flex flex-col gap-8 animate-fade-in">
-            <div class="flex flex-col items-center gap-4">
-                <div class="w-28 h-28 bg-gradient-to-br from-sky-400 to-sky-600 rounded-3xl flex items-center justify-center text-white text-6xl font-bold shadow-xl shadow-sky-200 animate-float transform rotate-3">
-                    <i class="fas fa-flask"></i>
+        <div class="max-w-md w-full flex flex-col gap-2 animate-fade-in">
+            <div class="flex flex-col items-center gap-2">
+                <!-- Husky 8: Game Icon -->
+                <div class="w-32 h-32 flex items-center justify-center animate-float">
+                    <img src="Husky8.png" alt="Husky Lab Icon" class="w-full h-full object-contain drop-shadow-xl">
                 </div>
+                
                 <div>
                     <h1 class="text-3xl font-black text-slate-800 tracking-tight mb-1">Husky <span class="text-sky-500">STEAM Lab</span></h1>
                     <h2 class="text-lg font-bold text-slate-400 tracking-wide uppercase">English Word Challenge</h2>
                 </div>
                 
-                <div class="inline-flex items-center gap-2 px-4 py-1.5 bg-green-100 text-green-700 rounded-full text-xs font-bold uppercase tracking-wider">
+                <div class="inline-flex items-center gap-2 px-4 py-1.5 bg-green-100 text-green-700 rounded-full text-xs font-bold uppercase tracking-wider mb-1">
                     <i class="fas fa-graduation-cap"></i> Learning Goal: 5 Words
                 </div>
             </div>
@@ -245,24 +261,24 @@
                 <div class="flex items-start gap-4 group">
                     <div class="bg-sky-100 text-sky-600 w-10 h-10 rounded-xl flex items-center justify-center font-black text-lg flex-none group-hover:scale-110 transition-transform">1</div>
                     <div>
-                        <div class="font-bold text-slate-700">Crack the Code</div>
-                        <p class="text-slate-500 text-sm leading-tight">Guess the secret word. Use the green hints!</p>
+                        <div class="font-bold text-slate-700">Guess the Words</div>
+                        <p class="text-slate-500 text-sm leading-tight">Use the hints to find the secret English word.</p>
                     </div>
                 </div>
 
                 <div class="flex items-start gap-4 group">
                     <div class="bg-purple-100 text-purple-600 w-10 h-10 rounded-xl flex items-center justify-center font-black text-lg flex-none group-hover:scale-110 transition-transform">2</div>
                     <div>
-                        <div class="font-bold text-slate-700">5 Chances</div>
-                        <p class="text-slate-500 text-sm leading-tight">You have 5 guesses per word. If you miss, we'll show you the answer.</p>
+                        <div class="font-bold text-slate-700">Game Rules</div>
+                        <p class="text-slate-500 text-sm leading-tight">You have 5 chances. Green means correct, Yellow means wrong spot.</p>
                     </div>
                 </div>
 
                 <div class="flex items-start gap-4 group">
                     <div class="bg-amber-100 text-amber-600 w-10 h-10 rounded-xl flex items-center justify-center font-black text-lg flex-none group-hover:scale-110 transition-transform">3</div>
                     <div>
-                        <div class="font-bold text-slate-700">Learn & Grow</div>
-                        <p class="text-slate-500 text-sm leading-tight">Discover pictures and meanings for every word.</p>
+                        <div class="font-bold text-slate-700">Check Meanings</div>
+                        <p class="text-slate-500 text-sm leading-tight">Learn the definition for every word you find.</p>
                     </div>
                 </div>
             </div>
@@ -306,7 +322,7 @@
         </header>
 
         <!-- Scrollable Game Area -->
-        <main class="flex-1 overflow-y-auto flex flex-col items-center p-4">
+        <main class="flex-1 overflow-y-auto flex flex-col items-center p-4 relative">
             <div class="game-container flex flex-col gap-6">
                 
                 <!-- Hint Section -->
@@ -337,10 +353,13 @@
                 
                 <div class="h-4"></div>
             </div>
+            
+            <!-- Husky 9: Thinking Dog (Appears intermittently) -->
+            <img id="thinking-husky" src="Husky9.png" alt="Thinking Husky">
         </main>
 
         <!-- Keyboard -->
-        <div class="keyboard-container flex-none p-2 pb-8 md:p-4">
+        <div class="keyboard-container flex-none p-2 pb-8 md:p-4 z-20 relative">
             <div class="max-w-[600px] mx-auto flex flex-col gap-2">
                 <div class="flex justify-center gap-1.5 w-full">
                     <button class="key flex-1" data-key="Q">Q</button>
@@ -382,17 +401,21 @@
         
         <!-- DICTIONARY MODAL (Shown on Win/Skip/Fail) -->
         <div id="dict-modal" class="absolute inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm hidden">
-            <div id="dict-modal-content" class="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl flex flex-col gap-4 animate-popIn border-t-8 border-green-500">
+            <div id="dict-modal-content" class="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl flex flex-col gap-4 animate-popIn border-t-8 border-green-500 relative">
+                
+                <!-- Husky 10: Happy Dog (Shown only on Correct) -->
+                <img id="happy-husky" src="Husky10.png" class="absolute -top-16 -right-4 w-24 h-24 object-contain hidden z-50 drop-shadow-lg" alt="Happy Husky">
+
                 <div class="text-center">
                     <div id="dict-icon-bg" class="inline-block p-3 rounded-full bg-green-100 text-green-600 mb-2 shadow-sm">
                         <i id="dict-icon" class="fas fa-check text-2xl"></i>
                     </div>
                     <h2 id="dict-title" class="text-2xl font-black text-slate-800 tracking-tight">CORRECT!</h2>
-                    <div id="dict-subtitle" class="text-xs font-bold text-green-600 bg-green-50 inline-block px-3 py-1 rounded-full">+10 Pts</div>
+                    <div id="dict-subtitle" class="text-xs font-bold text-green-600 bg-green-50 inline-block px-3 py-1 rounded-full">+20 Pts</div>
                 </div>
                 
-                <!-- Image Container -->
-                <div class="w-full aspect-[4/3] bg-slate-50 rounded-2xl overflow-hidden border-2 border-slate-100 relative shadow-inner">
+                <!-- Image Container (Resized to h-48) -->
+                <div class="w-full h-48 bg-slate-50 rounded-2xl overflow-hidden border-2 border-slate-100 relative shadow-inner">
                     <div id="dict-img-loader" class="absolute inset-0 flex items-center justify-center text-slate-300">
                         <i class="fas fa-spinner fa-spin text-3xl"></i>
                     </div>
@@ -420,8 +443,9 @@
         <div class="max-w-md w-full bg-white rounded-3xl p-6 shadow-2xl animate-fade-in flex flex-col items-center gap-5 my-8 relative overflow-hidden">
             <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-sky-400 via-purple-400 to-sky-400"></div>
             
-            <div class="w-20 h-20 bg-yellow-100 rounded-full flex items-center justify-center text-4xl shadow-lg border-4 border-white -mt-2">
-                🏆
+            <!-- Husky 11: Learned Dog -->
+            <div class="w-28 h-28 bg-yellow-50 rounded-full flex items-center justify-center shadow-lg border-4 border-white -mt-2 mb-2 overflow-hidden">
+                <img src="Husky11.png" alt="Learned Husky" class="w-full h-full object-contain">
             </div>
             
             <div>
@@ -620,7 +644,7 @@
             grid: [],
             currentGuess: "",
             status: "idle", // idle, playing, paused, ended
-            maxRows: 5, // Reduced from 6 to 5
+            maxRows: 5,
             wordLength: 5,
             
             // Session Stats
@@ -632,9 +656,9 @@
             wordLimit: 5,
             wordsPlayed: 0,
             
-            // Dictionary Data & Image Caching
-            currentImageUrl: null, 
-            solvedHistory: [] 
+            // Dictionary Data (No Image Promise)
+            solvedHistory: [],
+            thinkingInterval: null
         };
 
         // DOM Elements
@@ -666,11 +690,15 @@
         const dictImg = document.getElementById('dict-img');
         const dictImgLoader = document.getElementById('dict-img-loader');
         const dictBtn = document.getElementById('dict-btn');
+        const happyHusky = document.getElementById('happy-husky');
 
         // Summary Elements
         const finalScore = document.getElementById('final-score');
         const finalWords = document.getElementById('final-words');
         const summaryList = document.getElementById('summary-list');
+        
+        // Thinking Husky
+        const thinkingHusky = document.getElementById('thinking-husky');
 
         // --- View Management ---
         function switchView(viewName) {
@@ -694,6 +722,7 @@
             
             updateHUD();
             switchView('game');
+            startThinkingAnimation();
             
             // Load First Word
             loadNextWord();
@@ -702,6 +731,7 @@
         function endSession() {
             state.status = "ended";
             dictModal.classList.add('hidden'); // Ensure modal is closed
+            stopThinkingAnimation();
             
             // Populate Summary
             finalScore.textContent = state.score;
@@ -758,6 +788,28 @@
                 skipBtn.classList.remove('opacity-50', 'pointer-events-none');
             }
         }
+        
+        // --- Thinking Animation Logic ---
+        function startThinkingAnimation() {
+            stopThinkingAnimation(); // clear existing if any
+            // Interval: Every 12 seconds, peek for 3 seconds
+            state.thinkingInterval = setInterval(() => {
+                if (state.status === 'playing') {
+                    thinkingHusky.classList.add('peeking');
+                    setTimeout(() => {
+                        thinkingHusky.classList.remove('peeking');
+                    }, 3000);
+                }
+            }, 12000);
+        }
+        
+        function stopThinkingAnimation() {
+            if (state.thinkingInterval) {
+                clearInterval(state.thinkingInterval);
+                state.thinkingInterval = null;
+            }
+            thinkingHusky.classList.remove('peeking');
+        }
 
         // --- Game Round Logic ---
 
@@ -768,13 +820,7 @@
             state.status = "playing";
             state.roundResult = null;
             
-            // --- START PRELOADING IMAGE IMMEDIATELY ---
-            const seed = Math.random();
-            state.currentImageUrl = `https://image.pollinations.ai/prompt/realistic%20photograph%20of%20${state.secretWord.toLowerCase()}?width=400&height=300&nologo=true&seed=${seed}`;
-            
-            const imgPreloader = new Image();
-            imgPreloader.src = state.currentImageUrl;
-            // ------------------------------------------
+            // Removed Image Fetch Logic
 
             // UI Reset
             boardContainer.innerHTML = '';
@@ -782,6 +828,7 @@
             resetKeyboard();
             generateHint();
             dictModal.classList.add('hidden');
+            happyHusky.classList.add('hidden'); // Reset Happy Dog
             
             // Update HUD to show correct word number
             updateHUD();
@@ -907,10 +954,11 @@
             state.roundResult = resultType;
             
             // Reset Styles
-            dictModalContent.className = "bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl flex flex-col gap-4 animate-popIn border-t-8";
+            dictModalContent.className = "bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl flex flex-col gap-4 animate-popIn border-t-8 relative";
             dictIconBg.className = "inline-block p-3 rounded-full mb-2 shadow-sm";
             dictIcon.className = "text-2xl fas";
             dictSubtitle.className = "text-xs font-bold inline-block px-3 py-1 rounded-full";
+            happyHusky.classList.add('hidden'); // Reset Happy Dog
             
             // Apply Styles based on Result Type
             if (resultType === 'win') {
@@ -918,9 +966,12 @@
                 dictIconBg.classList.add("bg-green-100", "text-green-600");
                 dictIcon.classList.add("fa-check");
                 dictTitle.textContent = "CORRECT!";
-                dictSubtitle.textContent = "+10 Pts";
+                dictSubtitle.textContent = "+20 Pts";
                 dictSubtitle.classList.add("text-green-600", "bg-green-50");
                 dictBtn.innerHTML = 'Next Word <i class="fas fa-arrow-right ml-1"></i>';
+                
+                // Show Happy Husky only on Win
+                happyHusky.classList.remove('hidden');
             } else if (resultType === 'skip') {
                 dictModalContent.classList.add("border-amber-500");
                 dictIconBg.classList.add("bg-amber-100", "text-amber-600");
@@ -947,22 +998,7 @@
             dictImg.classList.remove('opacity-100');
             dictImg.classList.add('opacity-0');
             dictImgLoader.style.display = 'flex';
-
-            // USE PRELOADED IMAGE
-            let imgUrl;
-            if (word === state.secretWord && state.currentImageUrl) {
-                imgUrl = state.currentImageUrl;
-            } else {
-                imgUrl = `https://image.pollinations.ai/prompt/realistic%20photograph%20of%20${word.toLowerCase()}?width=400&height=300&nologo=true&seed=${Math.random()}`;
-            }
             
-            dictImg.src = imgUrl;
-            dictImg.onload = () => {
-                dictImgLoader.style.display = 'none';
-                dictImg.classList.remove('opacity-0');
-                dictImg.classList.add('opacity-100');
-            };
-
             // Dictionary content
             const entry = LOCAL_DICT[word] || { pos: "Word", def: "Great job finding this word!" };
             dictDef.textContent = entry.def;
@@ -974,6 +1010,16 @@
             } else {
                 dictPos.classList.add('hidden');
             }
+
+            // --- PLACEHOLDER IMAGE LOADING ---
+            const imgUrl = `https://placehold.co/800x600/e0f2fe/0ea5e9?text=${encodeURIComponent(word)}`;
+            
+            dictImg.src = imgUrl;
+            dictImg.onload = () => {
+                dictImgLoader.style.display = 'none';
+                dictImg.classList.remove('opacity-0');
+                dictImg.classList.add('opacity-100');
+            };
             
             // Add to history
             state.solvedHistory.push({ word: word, def: entry.def, pos: entry.pos, img: imgUrl });
@@ -985,7 +1031,7 @@
             
             // Apply score if won
             if (state.roundResult === 'win') {
-                state.score += 10;
+                state.score += 20;
             }
             
             // Check if session complete (5 words)
