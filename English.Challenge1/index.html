@@ -10,18 +10,27 @@
         @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&display=swap');
 
         :root {
-            --primary-bg: #f0f9ff;
+            /* Husky STEAM Lab Inspired Palette */
+            --primary-bg: #f0f9ff;      /* Lighter, friendlier blue tint */
             --board-bg: #ffffff;
-            --text-main: #0f172a;
-            --text-sub: #64748b;
+            
+            /* Text Colors */
+            --text-main: #0f172a;       /* Dark Slate */
+            --text-sub: #64748b;        /* Light Slate */
+            
+            /* Tile Colors */
             --tile-default: #ffffff;
             --tile-border: #cbd5e1;
             --tile-text: #334155;
-            --correct-color: #10b981;
-            --present-color: #f59e0b;
-            --absent-color: #94a3b8;
-            --brand-blue: #0ea5e9;
-            --brand-dark: #0f172a;
+            
+            /* Status Colors */
+            --correct-color: #10b981;   /* Tech Green */
+            --present-color: #f59e0b;   /* Engineering Amber */
+            --absent-color: #94a3b8;    /* Slate Grey */
+            
+            /* Brand Colors */
+            --brand-blue: #0ea5e9;      /* Sky Blue / Tech Blue */
+            --brand-dark: #0f172a;      /* Husky Dark */
         }
 
         body {
@@ -202,8 +211,8 @@
             position: absolute;
             bottom: 0;
             left: 10px;
-            width: 80px; /* Smaller to fit in box */
-            z-index: 15; 
+            width: 80px; 
+            z-index: 5; /* FIX: Lowered Z-Index so text (z-10) is readable over dog */
             transform: translateY(100%); 
             transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             pointer-events: none;
@@ -228,7 +237,12 @@
 <body class="w-screen flex flex-col overflow-hidden text-sm md:text-base">
 
     <!-- COVER PAGE -->
-    <section id="cover-view" class="view-section active overflow-y-auto bg-white p-4 items-center justify-center text-center">
+    <section id="cover-view" class="view-section active overflow-y-auto bg-white p-4 items-center justify-center text-center relative">
+        <!-- Audio Toggle (Cover) -->
+        <button onclick="toggleAudio()" class="absolute top-4 right-4 w-10 h-10 bg-slate-50 rounded-full flex items-center justify-center shadow-sm border border-slate-200 text-slate-400 hover:text-sky-500 hover:bg-sky-50 transition z-50 audio-btn">
+            <i class="fas fa-volume-up"></i>
+        </button>
+
         <div class="max-w-sm w-full flex flex-col gap-2 animate-fade-in">
             <div class="flex flex-col items-center gap-1">
                 <!-- Husky 8: Game Icon -->
@@ -272,7 +286,7 @@
                     <div class="bg-amber-100 text-amber-600 w-8 h-8 rounded-lg flex items-center justify-center font-black text-base flex-none group-hover:scale-110 transition-transform">3</div>
                     <div>
                         <div class="font-bold text-slate-700 text-sm">Check Meanings</div>
-                        <p class="text-slate-500 text-xs leading-tight">Learn the definition for every word you find.</p>
+                        <p class="text-slate-500 text-xs leading-tight">Learn the meaning for every word you find.</p>
                     </div>
                 </div>
             </div>
@@ -280,6 +294,10 @@
             <button onclick="startSession()" class="btn-primary w-full py-3 rounded-xl text-lg font-black uppercase tracking-wider flex items-center justify-center gap-2 transform transition hover:scale-[1.02] active:scale-[0.98]">
                 <i class="fas fa-rocket"></i> Start Mission
             </button>
+
+            <p class="text-[10px] text-slate-300 font-bold uppercase tracking-widest mt-2">
+                Powered by AI Generation
+            </p>
         </div>
     </section>
 
@@ -298,6 +316,11 @@
                 </div>
 
                 <div class="flex items-center gap-3">
+                    <!-- Audio Toggle (Game) -->
+                    <button onclick="toggleAudio()" class="w-8 h-8 bg-slate-50 rounded-full flex items-center justify-center border border-slate-100 text-slate-400 hover:text-sky-500 hover:bg-sky-50 transition audio-btn">
+                        <i class="fas fa-volume-up text-xs"></i>
+                    </button>
+
                      <!-- Skips -->
                      <button id="skip-btn" onclick="skipWord()" class="text-[10px] font-bold text-slate-400 hover:text-sky-500 transition flex flex-col items-center leading-none group">
                         <div class="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center mb-0.5 group-hover:bg-sky-100 group-hover:text-sky-600 transition-colors">
@@ -443,7 +466,7 @@
             </div>
             
             <div>
-                <h2 class="text-2xl font-black text-slate-800 tracking-tight">Great Job!</h2>
+                <h2 id="summary-title" class="text-2xl font-black text-slate-800 tracking-tight">Great Job!</h2>
                 <p class="text-slate-400 font-bold uppercase tracking-widest text-[10px] mt-0.5">Session Complete</p>
             </div>
 
@@ -481,12 +504,116 @@
     </div>
 
     <script>
+        // --- AUDIO ENGINE ---
+        const AudioEngine = {
+            ctx: null,
+            isMuted: false,
+            bgmInterval: null,
+            
+            init: function() {
+                if (!this.ctx) {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                if (this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            },
+            toggle: function() {
+                this.isMuted = !this.isMuted;
+                this.updateUI();
+                if (this.isMuted) {
+                    this.stopBGM();
+                } else {
+                    this.startBGM();
+                }
+                return this.isMuted;
+            },
+            updateUI: function() {
+                const btns = document.querySelectorAll('.audio-btn i');
+                btns.forEach(icon => {
+                    if (this.isMuted) {
+                        icon.className = 'fas fa-volume-mute text-rose-400';
+                    } else {
+                        icon.className = 'fas fa-volume-up';
+                    }
+                });
+            },
+            playTone: function(freq, type, duration, delay = 0, vol = 0.1) {
+                if (!this.ctx || this.isMuted) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = type;
+                osc.frequency.value = freq;
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                
+                const now = this.ctx.currentTime + delay;
+                osc.start(now);
+                gain.gain.setValueAtTime(vol, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+                osc.stop(now + duration);
+            },
+            // Generative BGM: Play a soft pentatonic note every so often
+            playBackgroundNote: function() {
+                if (this.isMuted) return;
+                const pentatonic = [261.63, 293.66, 329.63, 392.00, 440.00, 523.25]; // C4 Pentatonic
+                // Pick a random note
+                const freq = pentatonic[Math.floor(Math.random() * pentatonic.length)];
+                // Play soft sine wave (very relaxing)
+                this.playTone(freq, 'sine', 0.8, 0, 0.03); 
+            },
+            startBGM: function() {
+                if (this.bgmInterval) clearInterval(this.bgmInterval);
+                // Play a note every 800ms to create a generative melody
+                this.bgmInterval = setInterval(() => {
+                    if (state.status === 'playing') {
+                        this.playBackgroundNote();
+                    }
+                }, 800);
+            },
+            stopBGM: function() {
+                if (this.bgmInterval) {
+                    clearInterval(this.bgmInterval);
+                    this.bgmInterval = null;
+                }
+            },
+            playPop: function() {
+                this.init();
+                this.playTone(600, 'sine', 0.1, 0, 0.05);
+            },
+            playBonk: function() {
+                this.init();
+                this.playTone(150, 'sawtooth', 0.15, 0, 0.1);
+                this.playTone(100, 'sawtooth', 0.15, 0.05, 0.1);
+            },
+            playChime: function() {
+                this.init();
+                this.playTone(523.25, 'sine', 0.3, 0, 0.2); // C5
+                this.playTone(659.25, 'sine', 0.3, 0.1, 0.2); // E5
+                this.playTone(783.99, 'sine', 0.6, 0.2, 0.2); // G5
+            },
+            playFanfare: function() {
+                this.init();
+                const t = 0.15;
+                this.playTone(523.25, 'square', t, 0, 0.1); // C5
+                this.playTone(523.25, 'square', t, t, 0.1); 
+                this.playTone(523.25, 'square', t, t*2, 0.1); 
+                this.playTone(659.25, 'square', t*3, t*3, 0.1); // E5
+                this.playTone(783.99, 'square', t*3, t*4, 0.1); // G5
+                this.playTone(1046.50, 'square', 0.8, t*5, 0.1); // C6
+            }
+        };
+
+        function toggleAudio() {
+            AudioEngine.toggle();
+        }
+
         const WORD_LIST = [
             "ANGRY", "APPLE", "BEACH", "BOARD", "BRAIN", "BREAD", "BRUSH", "CANDY", 
             "CATCH", "CHAIR", "CHEST", "CHORD", "CLASS", "CLEAN", "CLICK", "CLIMB", 
             "CLOCK", "CLOUD", "COLOR", "CREAM", "DANCE", "DIRTY", "DREAM", "DRINK", 
             "DRIVE", "EAGLE", "EARTH", "ENTER", "FEAST", "FIELD", "FLOOR", "FRUIT", 
-            "FUNNY", "GHOST", "GIANT", "GLASS", "GOOSE", "GRAPE", "GRASS", "GREEN", 
+            "FUNNY", "GLOBE", "GIANT", "GLASS", "GOOSE", "GRAPE", "GRASS", "GREEN", 
             "HAPPY", "HEART", "HEAVY", "HORSE", "HOUSE", "JUICE", "LAUGH", "LEARN", 
             "LEMON", "LIGHT", "LUNCH", "MAGIC", "MELON", "METAL", "MONEY", "MOUSE", 
             "MOUTH", "MUSIC", "NIGHT", "NOISE", "NURSE", "OCEAN", "ONION", "PAINT", 
@@ -535,7 +662,7 @@
             "FLOOR": { pos: "Noun", def: "The part of a room that you stand on." },
             "FRUIT": { pos: "Noun", def: "The sweet and fleshy part of a plant that you can eat." },
             "FUNNY": { pos: "Adjective", def: "Causing laughter; making you giggle." },
-            "GHOST": { pos: "Noun", def: "A spirit or spooky character often seen at Halloween." },
+            "GLOBE": { pos: "Noun", def: "A round ball that shows a map of the Earth." },
             "GIANT": { pos: "Noun", def: "An imaginary being of human form but superhuman size." },
             "GLASS": { pos: "Noun", def: "A hard, clear material used for windows and drinking cups." },
             "GOOSE": { pos: "Noun", def: "A large water bird with a long neck." },
@@ -707,6 +834,10 @@
         // --- Session Logic ---
 
         function startSession() {
+            AudioEngine.init(); // Init audio context on user gesture
+            // Start BGM immediately
+            AudioEngine.startBGM();
+            
             // Reset Session Stats
             state.score = 0;
             state.skipsLeft = 3;
@@ -726,7 +857,25 @@
             state.status = "ended";
             dictModal.classList.add('hidden'); // Ensure modal is closed
             stopThinkingAnimation();
+            AudioEngine.stopBGM(); // Stop background music
+            AudioEngine.playFanfare();
             
+            // Set dynamic summary title based on score
+            const summaryTitle = document.getElementById('summary-title');
+            if (state.score === 100) {
+                summaryTitle.textContent = "Perfect Score!";
+                summaryTitle.className = "text-2xl font-black text-sky-500 tracking-tight";
+            } else if (state.score >= 60) {
+                summaryTitle.textContent = "Well Done!";
+                summaryTitle.className = "text-2xl font-black text-green-500 tracking-tight";
+            } else if (state.score >= 20) {
+                summaryTitle.textContent = "Good Job!";
+                summaryTitle.className = "text-2xl font-black text-slate-800 tracking-tight";
+            } else {
+                summaryTitle.textContent = "Good Effort!";
+                summaryTitle.className = "text-2xl font-black text-slate-600 tracking-tight";
+            }
+
             // Populate Summary
             finalScore.textContent = state.score;
             finalWords.textContent = state.solvedHistory.length;
@@ -786,7 +935,9 @@
         // --- Thinking Animation Logic ---
         function startThinkingAnimation() {
             stopThinkingAnimation(); // clear existing if any
-            // Interval: Every 12 seconds, peek for 3 seconds
+            // Interval: Every 8 seconds (7s wait + 1s peek), peek for 3 seconds
+            // Actually, CSS transition handles the peek. 
+            // We want it to appear more frequently.
             state.thinkingInterval = setInterval(() => {
                 if (state.status === 'playing') {
                     thinkingHusky.classList.add('peeking');
@@ -794,7 +945,7 @@
                         thinkingHusky.classList.remove('peeking');
                     }, 3000);
                 }
-            }, 12000);
+            }, 8000); // Decreased from 12000 to 8000
         }
         
         function stopThinkingAnimation() {
@@ -881,6 +1032,7 @@
 
             if (key === "BACKSPACE") {
                 state.currentGuess = state.currentGuess.slice(0, -1);
+                AudioEngine.playPop(); // Sound
                 updateCurrentRow();
                 return;
             }
@@ -888,6 +1040,7 @@
             if (/^[A-Z]$/.test(key)) {
                 if (state.currentGuess.length < 5) {
                     state.currentGuess += key;
+                    AudioEngine.playPop(); // Sound
                     updateCurrentRow();
                 }
             }
@@ -919,6 +1072,7 @@
             const guess = state.currentGuess;
             if (guess.length !== 5) {
                 showToast("Enter 5 letters");
+                AudioEngine.playBonk(); // Sound
                 shakeRow(state.grid.length);
                 return;
             }
@@ -956,6 +1110,7 @@
             
             // Apply Styles based on Result Type
             if (resultType === 'win') {
+                AudioEngine.playChime(); // Sound
                 dictModalContent.classList.add("border-green-500");
                 dictIconBg.classList.add("bg-green-100", "text-green-600");
                 dictIcon.classList.add("fa-check");
@@ -967,6 +1122,7 @@
                 // Show Happy Husky only on Win
                 happyHusky.classList.remove('hidden');
             } else if (resultType === 'skip') {
+                AudioEngine.playBonk(); // Sound
                 dictModalContent.classList.add("border-amber-500");
                 dictIconBg.classList.add("bg-amber-100", "text-amber-600");
                 dictIcon.classList.add("fa-forward");
@@ -975,6 +1131,7 @@
                 dictSubtitle.classList.add("text-amber-600", "bg-amber-50");
                 dictBtn.innerHTML = 'Next Word <i class="fas fa-arrow-right ml-1"></i>';
             } else if (resultType === 'fail') {
+                AudioEngine.playBonk(); // Sound
                 dictModalContent.classList.add("border-red-500");
                 dictIconBg.classList.add("bg-red-100", "text-red-600");
                 dictIcon.classList.add("fa-times");
