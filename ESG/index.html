@@ -5,18 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My AI x ESG Portfolio</title>
     <style>
-        /* --- CSS STYLES (The Look) --- */
+        /* --- CSS STYLES --- */
         body {
             font-family: 'Helvetica Neue', Arial, sans-serif;
-            background-color: #f4f4f9; /* Light Grey background */
+            background-color: #f4f4f9;
             color: #333;
             margin: 0;
             padding: 0;
         }
 
-        /* 1. HERO SECTION (Profile) */
+        /* 1. HERO SECTION */
         header {
-            background: linear-gradient(135deg, #00b09b, #96c93d); /* Green Gradient for ESG */
+            background: linear-gradient(135deg, #00b09b, #96c93d);
             color: white;
             padding: 40px 20px;
             text-align: center;
@@ -26,19 +26,15 @@
             width: 150px;
             height: 150px;
             background-color: white;
-            border-radius: 50%; /* Makes it a circle */
+            border-radius: 50%;
             border: 5px solid rgba(255,255,255, 0.5);
             margin: 0 auto 20px auto;
-            /* Placeholder image logic */
+            overflow: hidden;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #aaa;
-            font-weight: bold;
-            overflow: hidden; /* Crops image to circle */
         }
-        
-        /* If they have a real photo, they replace the <img> src below */
+
         .profile-pic img {
             width: 100%;
             height: 100%;
@@ -48,9 +44,9 @@
         .bio h1 { margin: 0; font-size: 2.5em; }
         .bio p { font-size: 1.2em; opacity: 0.9; max-width: 600px; margin: 10px auto; }
 
-        /* 2. PROJECT LIST SECTION */
+        /* 2. PROJECT CARD DESIGN */
         .container {
-            max-width: 800px; /* Center column */
+            max-width: 1000px; /* Made wider to fit video side-by-side */
             margin: 0 auto;
             padding: 20px;
         }
@@ -58,7 +54,7 @@
         .project-card {
             background: white;
             border-radius: 15px;
-            margin-bottom: 40px;
+            margin-bottom: 50px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
             overflow: hidden;
         }
@@ -71,40 +67,90 @@
             align-items: center;
         }
 
-        /* Color Coding for ESG */
-        .env { background-color: #2ecc71; } /* Green */
-        .soc { background-color: #3498db; } /* Blue */
-        .gov { background-color: #f1c40f; color: #333; } /* Yellow */
+        .env { background-color: #2ecc71; }
+        .soc { background-color: #3498db; }
+        .gov { background-color: #f1c40f; color: #333; }
 
         .project-body {
             padding: 25px;
-            text-align: center;
         }
 
-        .project-description {
-            text-align: left;
-            margin-bottom: 20px;
-            color: #666;
+        /* NEW: Student Written Style Section */
+        .student-voice {
+            background-color: #fff9c4; /* Post-it Note Yellow */
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            border-left: 5px solid #fbc02d;
+            font-family: 'Comic Sans MS', 'Chalkboard SE', 'Marker Felt', sans-serif; /* Handwritten feel */
+            color: #444;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.05);
         }
 
-        /* The Box where the Scratch Game lives */
+        .student-voice h3 {
+            margin-top: 0;
+            font-size: 1.1em;
+            color: #d35400;
+        }
+
+        /* NEW: Two-Column Media Layout */
+        .media-row {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap; /* Stacks on mobile */
+        }
+
+        .media-col {
+            flex: 1; /* Both take equal width */
+            min-width: 300px; /* Don't get smaller than phone screen */
+        }
+
+        .label {
+            font-weight: bold;
+            color: #777;
+            margin-bottom: 5px;
+            display: block;
+            text-transform: uppercase;
+            font-size: 0.8em;
+        }
+
+        /* Embed Box (Game) */
         .embed-box {
             background-color: #eee;
             width: 100%;
-            height: 400px; /* Standard Scratch Size */
+            height: 300px;
+            border-radius: 10px;
+            border: 2px dashed #ccc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #888;
+        }
+
+        /* Video Placeholder */
+        .video-box {
+            background-color: #333;
+            width: 100%;
+            height: 300px;
             border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
-            border: 2px dashed #ccc;
+            color: white;
+            flex-direction: column;
+        }
+
+        .play-icon {
+            font-size: 40px;
+            opacity: 0.7;
+            margin-bottom: 10px;
         }
 
         footer {
             text-align: center;
-            padding: 20px;
+            padding: 30px;
             color: #888;
             font-size: 0.9em;
-            margin-top: 50px;
         }
     </style>
 </head>
@@ -112,14 +158,11 @@
 
     <header>
         <div class="profile-pic">
-            <img src="Husky.png" alt="Student Profile Picture">
+            <img src="Husky.png" alt="Student Profile">
         </div>
         <div class="bio">
             <h1>Hi, I'm [Student Name]</h1>
-            <p>
-                I am a 10-year-old AI Developer passionate about saving the planet. 
-                Welcome to my ESG Project Portfolio.
-            </p>
+            <p>I am a 10-year-old AI Developer using code to help the planet (ESG).</p>
         </div>
     </header>
 
@@ -131,14 +174,34 @@
                 <span>Environment</span>
             </div>
             <div class="project-body">
-                <p class="project-description">
-                    <strong>The Problem:</strong> People often throw plastic in the wrong bin.<br>
-                    <strong>My Solution:</strong> I trained a computer vision model to distinguish between Plastic and Paper.
-                </p>
                 
-                <div class="embed-box">
-                    [ PASTE ENVIRONMENT CODE HERE ]
+                <div class="student-voice">
+                    <h3>📝 My Dev Log</h3>
+                    <p>
+                        "I chose this project because I saw people throwing cans in the trash at school. 
+                        The hardest part was teaching the AI to see the difference between clear plastic and white paper, 
+                        but I fixed it by taking more photos!"
+                    </p>
                 </div>
+
+                <div class="media-row">
+                    <div class="media-col">
+                        <span class="label">Try My App</span>
+                        <div class="embed-box">
+                            [ PASTE GAME CODE HERE ]
+                        </div>
+                    </div>
+
+                    <div class="media-col">
+                        <span class="label">My Presentation</span>
+                        <div class="video-box">
+                            <div class="play-icon">▶</div>
+                            <span>Video Coming Soon</span>
+                            
+                            </div>
+                    </div>
+                </div>
+
             </div>
         </article>
 
@@ -148,14 +211,31 @@
                 <span>Social</span>
             </div>
             <div class="project-body">
-                <p class="project-description">
-                    <strong>The Problem:</strong> It is hard for non-verbal students to communicate.<br>
-                    <strong>My Solution:</strong> An app that recognizes hand gestures and turns them into speech.
-                </p>
-
-                <div class="embed-box">
-                    [ PASTE SOCIAL CODE HERE ]
+                
+                <div class="student-voice">
+                    <h3>📝 My Dev Log</h3>
+                    <p>
+                        "I wanted to help people communicate. I used a 'Pose Model' which tracks skeletons. 
+                        My favorite part is when the Scratch Cat speaks the words out loud using Text-to-Speech!"
+                    </p>
                 </div>
+
+                <div class="media-row">
+                    <div class="media-col">
+                        <span class="label">Try My App</span>
+                        <div class="embed-box">
+                            [ PASTE GAME CODE HERE ]
+                        </div>
+                    </div>
+                    <div class="media-col">
+                        <span class="label">My Presentation</span>
+                        <div class="video-box">
+                            <div class="play-icon">▶</div>
+                            <span>Video Coming Soon</span>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </article>
 
@@ -165,22 +245,38 @@
                 <span>Governance</span>
             </div>
             <div class="project-body">
-                <p class="project-description">
-                    <strong>The Problem:</strong> Factories can be dangerous if rules aren't followed.<br>
-                    <strong>My Solution:</strong> An AI gatekeeper that checks for safety helmets.
-                </p>
-
-                <div class="embed-box">
-                    [ PASTE GOVERNANCE CODE HERE ]
+                
+                <div class="student-voice">
+                    <h3>📝 My Dev Log</h3>
+                    <p>
+                        "Safety rules are important (Governance). I made an AI gatekeeper. 
+                        If you don't wear a helmet, the gate won't open. This proves AI can help keep workers safe."
+                    </p>
                 </div>
+
+                <div class="media-row">
+                    <div class="media-col">
+                        <span class="label">Try My App</span>
+                        <div class="embed-box">
+                            [ PASTE GAME CODE HERE ]
+                        </div>
+                    </div>
+                    <div class="media-col">
+                        <span class="label">My Presentation</span>
+                        <div class="video-box">
+                            <div class="play-icon">▶</div>
+                            <span>Video Coming Soon</span>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </article>
 
     </div>
 
     <footer>
-        <p>Built with HTML, CSS, and Scratch.</p>
-        <p><strong>Powered by TensorFlow.js</strong></p>
+        <p>Built with ❤️ using Scratch, CoSpaces & TensorFlow.js</p>
     </footer>
 
 </body>
