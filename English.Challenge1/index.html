@@ -213,7 +213,7 @@
             bottom: 0;
             right: 10px; 
             width: 80px; 
-            z-index: 5; 
+            z-index: 25; /* Higher than text/buttons to cover the line */
             transform: translateY(100%); 
             transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             pointer-events: none;
@@ -275,7 +275,7 @@
                     <div class="bg-purple-100 text-purple-600 w-8 h-8 rounded-lg flex items-center justify-center font-black text-base flex-none group-hover:scale-110 transition-transform">2</div>
                     <div>
                         <div class="font-bold text-slate-700 text-sm">Need Help?</div>
-                        <p class="text-slate-500 text-xs leading-tight">Use the Dictionary button to see the meaning, but it costs 10 points!</p>
+                        <p class="text-slate-500 text-xs leading-tight">You can see the meaning, but the word score drops to 10 points.</p>
                     </div>
                 </div>
 
@@ -351,7 +351,7 @@
                     <!-- Dictionary Button & Text -->
                     <div class="relative z-20 flex flex-col items-center gap-2">
                         <button id="show-hint-btn" onclick="useHint()" class="btn-hint px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wide flex items-center gap-2 hover:bg-orange-50">
-                            <i class="fas fa-book"></i> Show Meaning (-10 Pts)
+                            <i class="fas fa-book"></i> Show Meaning (Max 10 Pts)
                         </button>
                         
                         <div id="hint-def-box" class="hidden w-full text-left pt-2 border-t border-slate-100 mt-1">
@@ -950,7 +950,7 @@
             hintDefText.textContent = entry.def;
             hintDefBox.classList.remove('hidden');
             showHintBtn.classList.add('hidden');
-            showToast("Hint used! Max score: 10 Pts");
+            showToast("Hint used! Round score capped at 10 Pts");
         }
 
         function skipWord() {
