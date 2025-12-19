@@ -297,5 +297,27 @@
         </p>
     </footer>
 
-</body>
+<script>
+        // 1. Select all the game boxes (Scratch & CoSpaces)
+        const gameBoxes = document.querySelectorAll('.embed-box');
+        let isHoveringGame = false;
+
+        // 2. Detect if mouse is inside a game box
+        gameBoxes.forEach(box => {
+            box.addEventListener('mouseenter', () => { isHoveringGame = true; });
+            box.addEventListener('mouseleave', () => { isHoveringGame = false; });
+        });
+
+        // 3. Listen for keyboard presses
+        window.addEventListener("keydown", function(e) {
+            // List of keys that usually scroll the page (Arrows + Spacebar)
+            const keysToBlock = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'];
+
+            // If user is hovering over a game AND presses a scroll key...
+            if(keysToBlock.includes(e.code) && isHoveringGame) {
+                e.preventDefault(); // STOP the page from scrolling
+            }
+        }, false);
+    </script>
+    </body>
 </html>
