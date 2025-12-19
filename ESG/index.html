@@ -358,29 +358,30 @@
         </p>
     </footer>
 
-    <script>
-        const boxes = document.querySelectorAll('.embed-box');
+<script>
+        // 1. Check if the device has a real mouse (Desktop)
+        // The script will ONLY run if the device supports "hovering" (like a mouse cursor)
+        if (window.matchMedia("(hover: hover)").matches) {
+            
+            const boxes = document.querySelectorAll('.embed-box');
 
-        boxes.forEach(box => {
-            box.addEventListener('mouseenter', () => {
-                // 1. Calculate how wide the scrollbar is
-                const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
-                
-                // 2. Add that width as padding so content doesn't move
-                document.body.style.paddingRight = `${scrollbarWidth}px`;
-                
-                // 3. Lock the scrollbar
-                document.body.style.overflow = 'hidden'; 
-            });
+            boxes.forEach(box => {
+                box.addEventListener('mouseenter', () => {
+                    // Calculate scrollbar width
+                    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+                    document.body.style.paddingRight = `${scrollbarWidth}px`;
+                    
+                    // Lock scrolling (Only on Desktop)
+                    document.body.style.overflow = 'hidden'; 
+                });
 
-            box.addEventListener('mouseleave', () => {
-                // 1. Unlock the scrollbar
-                document.body.style.overflow = 'auto';
-                
-                // 2. Remove the padding
-                document.body.style.paddingRight = '0px';
+                box.addEventListener('mouseleave', () => {
+                    // Unlock scrolling
+                    document.body.style.overflow = 'auto';
+                    document.body.style.paddingRight = '0px';
+                });
             });
-        });
+        }
     </script>
     </body>
 </html>
