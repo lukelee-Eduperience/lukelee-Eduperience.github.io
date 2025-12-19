@@ -46,7 +46,7 @@
 
         /* 2. PROJECT CARD DESIGN */
         .container {
-            max-width: 1000px; /* Made wider to fit video side-by-side */
+            max-width: 1100px; /* Wider to fit Scratch player comfortably */
             margin: 0 auto;
             padding: 20px;
         }
@@ -75,14 +75,14 @@
             padding: 25px;
         }
 
-        /* NEW: Student Written Style Section */
+        /* Student Written Style Section */
         .student-voice {
-            background-color: #fff9c4; /* Post-it Note Yellow */
+            background-color: #fff9c4;
             padding: 15px 20px;
             border-radius: 10px;
             margin-bottom: 25px;
             border-left: 5px solid #fbc02d;
-            font-family: 'Comic Sans MS', 'Chalkboard SE', 'Marker Felt', sans-serif; /* Handwritten feel */
+            font-family: 'Comic Sans MS', 'Chalkboard SE', 'Marker Felt', sans-serif;
             color: #444;
             box-shadow: 2px 2px 5px rgba(0,0,0,0.05);
         }
@@ -93,16 +93,16 @@
             color: #d35400;
         }
 
-        /* NEW: Two-Column Media Layout */
+        /* Two-Column Media Layout */
         .media-row {
             display: flex;
             gap: 20px;
-            flex-wrap: wrap; /* Stacks on mobile */
+            flex-wrap: wrap;
         }
 
         .media-col {
-            flex: 1; /* Both take equal width */
-            min-width: 300px; /* Don't get smaller than phone screen */
+            flex: 1;
+            min-width: 350px; /* Ensures column doesn't get too skinny for Scratch */
         }
 
         .label {
@@ -114,24 +114,24 @@
             font-size: 0.8em;
         }
 
-        /* Embed Box (Game) */
+        /* --- THE FIX: Updated Heights for Scratch --- */
         .embed-box {
             background-color: #eee;
             width: 100%;
-            height: 300px;
+            height: 410px; /* UPDATED: Fits Scratch perfectly */
             border-radius: 10px;
             border: 2px dashed #ccc;
             display: flex;
             align-items: center;
             justify-content: center;
             color: #888;
+            overflow: hidden;
         }
 
-        /* Video Placeholder */
         .video-box {
             background-color: #333;
             width: 100%;
-            height: 300px;
+            height: 410px; /* UPDATED: Matches embed-box height */
             border-radius: 10px;
             display: flex;
             align-items: center;
@@ -140,17 +140,15 @@
             flex-direction: column;
         }
 
-        .play-icon {
-            font-size: 40px;
-            opacity: 0.7;
-            margin-bottom: 10px;
-        }
+        .play-icon { font-size: 40px; opacity: 0.7; margin-bottom: 10px; }
 
         footer {
             text-align: center;
             padding: 30px;
             color: #888;
             font-size: 0.9em;
+            margin-top: 50px;
+            border-top: 1px solid #ddd;
         }
     </style>
 </head>
@@ -188,7 +186,14 @@
                     <div class="media-col">
                         <span class="label">Try My App</span>
                         <div class="embed-box">
-                            <iframe src="https://scratch.mit.edu/projects/1257810291/embed" allowtransparency="true" width="500" height="300" frameborder="0" scrolling="no" allowfullscreen></iframe>
+                            <iframe src="https://scratch.mit.edu/projects/1257810291/embed" 
+                                    allowtransparency="true" 
+                                    width="100%" 
+                                    height="100%" 
+                                    frameborder="0" 
+                                    scrolling="no" 
+                                    allowfullscreen>
+                            </iframe>
                         </div>
                     </div>
 
@@ -197,8 +202,7 @@
                         <div class="video-box">
                             <div class="play-icon">▶</div>
                             <span>Video Coming Soon</span>
-                            
-                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -224,9 +228,17 @@
                     <div class="media-col">
                         <span class="label">Try My App</span>
                         <div class="embed-box">
-                            <iframe src="https://scratch.mit.edu/projects/1257810876/embed" allowtransparency="true" width="485" height="402" frameborder="0" scrolling="no" allowfullscreen></iframe>
+                            <iframe src="https://scratch.mit.edu/projects/1257810876/embed" 
+                                    allowtransparency="true" 
+                                    width="100%" 
+                                    height="100%" 
+                                    frameborder="0" 
+                                    scrolling="no" 
+                                    allowfullscreen>
+                            </iframe>
                         </div>
                     </div>
+                    
                     <div class="media-col">
                         <span class="label">My Presentation</span>
                         <div class="video-box">
@@ -258,9 +270,17 @@
                     <div class="media-col">
                         <span class="label">Try My App</span>
                         <div class="embed-box">
-                            <iframe src="https://scratch.mit.edu/projects/1257811263/embed" allowtransparency="true" width="485" height="402" frameborder="0" scrolling="no" allowfullscreen></iframe>
+                            <iframe src="https://scratch.mit.edu/projects/1257811263/embed" 
+                                    allowtransparency="true" 
+                                    width="100%" 
+                                    height="100%" 
+                                    frameborder="0" 
+                                    scrolling="no" 
+                                    allowfullscreen>
+                            </iframe>
                         </div>
                     </div>
+                    
                     <div class="media-col">
                         <span class="label">My Presentation</span>
                         <div class="video-box">
@@ -275,7 +295,7 @@
 
     </div>
 
-<footer>
+    <footer>
         <p style="font-size: 1.1em; color: #555;">
             <strong>AI for Good:</strong> Coding for the Planet, Designing for People.
         </p>
