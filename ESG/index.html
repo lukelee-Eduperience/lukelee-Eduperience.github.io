@@ -46,7 +46,7 @@
 
         /* 2. PROJECT CARD DESIGN */
         .container {
-            max-width: 1100px; /* Wider to fit Scratch player comfortably */
+            max-width: 1100px;
             margin: 0 auto;
             padding: 20px;
         }
@@ -67,15 +67,17 @@
             align-items: center;
         }
 
-        .env { background-color: #2ecc71; }
-        .soc { background-color: #3498db; }
-        .gov { background-color: #f1c40f; color: #333; }
+        /* Color Classes */
+        .env { background-color: #2ecc71; } /* Green */
+        .soc { background-color: #3498db; } /* Blue */
+        .gov { background-color: #f1c40f; color: #333; } /* Yellow */
+        .art { background-color: #e74c3c; } /* Red for Christmas */
 
         .project-body {
             padding: 25px;
         }
 
-        /* Student Written Style Section */
+        /* Student Voice Section */
         .student-voice {
             background-color: #fff9c4;
             padding: 15px 20px;
@@ -93,7 +95,7 @@
             color: #d35400;
         }
 
-        /* Two-Column Media Layout */
+        /* Media Layout */
         .media-row {
             display: flex;
             gap: 20px;
@@ -102,7 +104,7 @@
 
         .media-col {
             flex: 1;
-            min-width: 350px; /* Ensures column doesn't get too skinny for Scratch */
+            min-width: 350px;
         }
 
         .label {
@@ -114,11 +116,11 @@
             font-size: 0.8em;
         }
 
-        /* --- THE FIX: Updated Heights for Scratch --- */
+        /* Embed Box Logic */
         .embed-box {
             background-color: #eee;
             width: 100%;
-            height: 410px; /* UPDATED: Fits Scratch perfectly */
+            height: 410px; /* Default for Scratch */
             border-radius: 10px;
             border: 2px dashed #ccc;
             display: flex;
@@ -131,7 +133,8 @@
         .video-box {
             background-color: #333;
             width: 100%;
-            height: 410px; /* UPDATED: Matches embed-box height */
+            height: 100%; /* Fills the column */
+            min-height: 410px; 
             border-radius: 10px;
             display: flex;
             align-items: center;
@@ -172,40 +175,25 @@
                 <span>Environment</span>
             </div>
             <div class="project-body">
-                
                 <div class="student-voice">
                     <h3>📝 My Dev Log</h3>
                     <p>
                         "I chose this project because I saw people throwing cans in the trash at school. 
-                        The hardest part was teaching the AI to see the difference between clear plastic and white paper, 
-                        but I fixed it by taking more photos!"
+                        The hardest part was teaching the AI to see the difference between clear plastic and white paper."
                     </p>
                 </div>
-
                 <div class="media-row">
                     <div class="media-col">
                         <span class="label">Try My App</span>
                         <div class="embed-box">
-                            <iframe src="https://scratch.mit.edu/projects/1257810291/embed" 
-                                    allowtransparency="true" 
-                                    width="100%" 
-                                    height="100%" 
-                                    frameborder="0" 
-                                    scrolling="no" 
-                                    allowfullscreen>
-                            </iframe>
+                            <iframe src="https://scratch.mit.edu/projects/1257810291/embed" allowtransparency="true" width="100%" height="100%" frameborder="0" scrolling="no" allowfullscreen></iframe>
                         </div>
                     </div>
-
                     <div class="media-col">
                         <span class="label">My Presentation</span>
-                        <div class="video-box">
-                            <div class="play-icon">▶</div>
-                            <span>Video Coming Soon</span>
-                        </div>
+                        <div class="video-box"><div class="play-icon">▶</div><span>Video Coming Soon</span></div>
                     </div>
                 </div>
-
             </div>
         </article>
 
@@ -215,39 +203,24 @@
                 <span>Social</span>
             </div>
             <div class="project-body">
-                
                 <div class="student-voice">
                     <h3>📝 My Dev Log</h3>
                     <p>
-                        "I wanted to help people communicate. I used a 'Pose Model' which tracks skeletons. 
-                        My favorite part is when the Scratch Cat speaks the words out loud using Text-to-Speech!"
+                        "I wanted to help people communicate. My favorite part is when the Scratch Cat speaks the words out loud using Text-to-Speech!"
                     </p>
                 </div>
-
                 <div class="media-row">
                     <div class="media-col">
                         <span class="label">Try My App</span>
                         <div class="embed-box">
-                            <iframe src="https://scratch.mit.edu/projects/1257810876/embed" 
-                                    allowtransparency="true" 
-                                    width="100%" 
-                                    height="100%" 
-                                    frameborder="0" 
-                                    scrolling="no" 
-                                    allowfullscreen>
-                            </iframe>
+                            <iframe src="https://scratch.mit.edu/projects/1257810876/embed" allowtransparency="true" width="100%" height="100%" frameborder="0" scrolling="no" allowfullscreen></iframe>
                         </div>
                     </div>
-                    
                     <div class="media-col">
                         <span class="label">My Presentation</span>
-                        <div class="video-box">
-                            <div class="play-icon">▶</div>
-                            <span>Video Coming Soon</span>
-                        </div>
+                        <div class="video-box"><div class="play-icon">▶</div><span>Video Coming Soon</span></div>
                     </div>
                 </div>
-
             </div>
         </article>
 
@@ -257,33 +230,53 @@
                 <span>Governance</span>
             </div>
             <div class="project-body">
+                <div class="student-voice">
+                    <h3>📝 My Dev Log</h3>
+                    <p>
+                        "Safety rules are important. I made an AI gatekeeper. If you don't wear a helmet, the gate won't open."
+                    </p>
+                </div>
+                <div class="media-row">
+                    <div class="media-col">
+                        <span class="label">Try My App</span>
+                        <div class="embed-box">
+                            <iframe src="https://scratch.mit.edu/projects/1257811263/embed" allowtransparency="true" width="100%" height="100%" frameborder="0" scrolling="no" allowfullscreen></iframe>
+                        </div>
+                    </div>
+                    <div class="media-col">
+                        <span class="label">My Presentation</span>
+                        <div class="video-box"><div class="play-icon">▶</div><span>Video Coming Soon</span></div>
+                    </div>
+                </div>
+            </div>
+        </article>
+
+        <article class="project-card">
+            <div class="project-header art">
+                <h2>🎄 Virtual Christmas World</h2>
+                <span>Social (Culture)</span>
+            </div>
+            <div class="project-body">
                 
                 <div class="student-voice">
                     <h3>📝 My Dev Log</h3>
                     <p>
-                        "Safety rules are important (Governance). I made an AI gatekeeper. 
-                        If you don't wear a helmet, the gate won't open. This proves AI can help keep workers safe."
+                        "I used VR to build a digital celebration! This helps people enjoy the festival together online, 
+                        even if they are far apart. It shows how technology brings joy to our community."
                     </p>
                 </div>
 
                 <div class="media-row">
                     <div class="media-col">
-                        <span class="label">Try My App</span>
-                        <div class="embed-box">
-                            <iframe src="https://scratch.mit.edu/projects/1257811263/embed" 
-                                    allowtransparency="true" 
-                                    width="100%" 
-                                    height="100%" 
-                                    frameborder="0" 
-                                    scrolling="no" 
-                                    allowfullscreen>
-                            </iframe>
+                        <span class="label">Explore VR World</span>
+                        <div class="embed-box" style="height: 480px; border: none;">
+                            <iframe width="100%" height="100%" frameBorder="0" src="https://edu.delightex.com/VHH-JKX"></iframe>
                         </div>
                     </div>
                     
                     <div class="media-col">
                         <span class="label">My Presentation</span>
-                        <div class="video-box">
+                        <div class="video-box" style="min-height: 480px;">
                             <div class="play-icon">▶</div>
                             <span>Video Coming Soon</span>
                         </div>
