@@ -12,9 +12,6 @@
             color: #333;
             margin: 0;
             padding: 0;
-            
-            /* CRITICAL FIX: Prevents page 'jumping' when scrollbar hides during gameplay */
-            scrollbar-gutter: stable; 
         }
 
         /* 1. HERO SECTION */
@@ -70,12 +67,12 @@
             align-items: center;
         }
 
-        /* Color Classes for Categories */
+        /* Color Classes */
         .env { background-color: #2ecc71; } /* Green */
         .soc { background-color: #3498db; } /* Blue */
         .gov { background-color: #f1c40f; color: #333; } /* Yellow */
         .art { background-color: #e74c3c; } /* Red */
-        .eng { background-color: #e67e22; } /* Orange for Engineering */
+        .eng { background-color: #e67e22; } /* Orange */
 
         .project-body {
             padding: 25px;
@@ -291,7 +288,7 @@
                 <div class="student-voice">
                     <h3>📝 My Dev Log</h3>
                     <p>
-                        "I used Tinkercad to design this prototype. I learned how to combine 3D shapes to create useful tools for sustainability."
+                        "I used Tinkercad to design a prototype. I learned how to combine 3D shapes to create useful tools for sustainability."
                     </p>
                 </div>
                 <div class="media-row">
@@ -299,6 +296,34 @@
                         <span class="label">Rotate My 3D Model</span>
                         <div class="embed-box" style="height: 480px; border: none;">
                             <iframe width="100%" height="100%" src="https://www.tinkercad.com/embed/3OYRDULtrDk?sharecode=VaGMdMihOQrwDn9iKWheuCxAHVCc4ezfpV1PYlFr1WA" frameborder="0" marginwidth="0" marginheight="0" scrolling="no"></iframe>
+                        </div>
+                    </div>
+                    <div class="media-col">
+                        <span class="label">My Presentation</span>
+                        <div class="video-box" style="height: 480px;"><div class="play-icon">▶</div><span>Video Coming Soon</span></div>
+                    </div>
+                </div>
+            </div>
+        </article>
+
+        <article class="project-card">
+            <div class="project-header" style="background-color: #9b59b6;">
+                <h2>🧮 Husky Calculation Game</h2>
+                <span>Social (Quality Education)</span>
+            </div>
+            <div class="project-body">
+                <div class="student-voice">
+                    <h3>📝 My Dev Log</h3>
+                    <p>
+                        "I built this web game to make math fun! Quality Education is a key part of ESG. 
+                        I wrote this using HTML and JavaScript to help students practice their calculation skills."
+                    </p>
+                </div>
+                <div class="media-row">
+                    <div class="media-col">
+                        <span class="label">Play My Game</span>
+                        <div class="embed-box" style="height: 480px; border: none;">
+                            <iframe src="https://lukelee-eduperience.github.io/Huskycalculation1/" width="100%" height="100%" frameborder="0" scrolling="no"></iframe>
                         </div>
                     </div>
                     <div class="media-col">
@@ -322,11 +347,27 @@
 
     <script>
         const boxes = document.querySelectorAll('.embed-box');
+
         boxes.forEach(box => {
-            box.addEventListener('mouseenter', () => { document.body.style.overflow = 'hidden'; });
-            box.addEventListener('mouseleave', () => { document.body.style.overflow = 'auto'; });
+            box.addEventListener('mouseenter', () => {
+                // 1. Calculate how wide the scrollbar is
+                const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+                
+                // 2. Add that width as padding so content doesn't move
+                document.body.style.paddingRight = `${scrollbarWidth}px`;
+                
+                // 3. Lock the scrollbar
+                document.body.style.overflow = 'hidden'; 
+            });
+
+            box.addEventListener('mouseleave', () => {
+                // 1. Unlock the scrollbar
+                document.body.style.overflow = 'auto';
+                
+                // 2. Remove the padding
+                document.body.style.paddingRight = '0px';
+            });
         });
     </script>
-
-</body>
+    </body>
 </html>
