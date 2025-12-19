@@ -12,6 +12,10 @@
             color: #333;
             margin: 0;
             padding: 0;
+            
+            /* CRITICAL FIX: This prevents the page from 'jumping' left/right 
+               when the scrollbar disappears during gameplay */
+            scrollbar-gutter: stable; 
         }
 
         /* 1. HERO SECTION */
@@ -71,7 +75,7 @@
         .env { background-color: #2ecc71; } /* Green */
         .soc { background-color: #3498db; } /* Blue */
         .gov { background-color: #f1c40f; color: #333; } /* Yellow */
-        .art { background-color: #e74c3c; } /* Red for Christmas */
+        .art { background-color: #e74c3c; } /* Red for Holiday */
 
         .project-body {
             padding: 25px;
@@ -120,7 +124,7 @@
         .embed-box {
             background-color: #eee;
             width: 100%;
-            height: 410px; /* Default for Scratch */
+            height: 410px; /* Perfect height for Scratch */
             border-radius: 10px;
             border: 2px dashed #ccc;
             display: flex;
@@ -133,8 +137,7 @@
         .video-box {
             background-color: #333;
             width: 100%;
-            height: 100%; /* Fills the column */
-            min-height: 410px; 
+            height: 410px; 
             border-radius: 10px;
             display: flex;
             align-items: center;
@@ -233,7 +236,7 @@
                 <div class="student-voice">
                     <h3>📝 My Dev Log</h3>
                     <p>
-                        "Safety rules are important. I made an AI gatekeeper. If you don't wear a helmet, the gate won't open."
+                        "Safety rules are important. I made an AI gatekeeper. If you don't wear a helmet, the gate won't open. This proves AI can help keep workers safe."
                     </p>
                 </div>
                 <div class="media-row">
@@ -257,7 +260,6 @@
                 <span>Social (Culture)</span>
             </div>
             <div class="project-body">
-                
                 <div class="student-voice">
                     <h3>📝 My Dev Log</h3>
                     <p>
@@ -265,7 +267,6 @@
                         even if they are far apart. It shows how technology brings joy to our community."
                     </p>
                 </div>
-
                 <div class="media-row">
                     <div class="media-col">
                         <span class="label">Explore VR World</span>
@@ -273,16 +274,14 @@
                             <iframe width="100%" height="100%" frameBorder="0" src="https://edu.delightex.com/VHH-JKX"></iframe>
                         </div>
                     </div>
-                    
                     <div class="media-col">
                         <span class="label">My Presentation</span>
-                        <div class="video-box" style="min-height: 480px;">
+                        <div class="video-box" style="height: 480px;">
                             <div class="play-icon">▶</div>
                             <span>Video Coming Soon</span>
                         </div>
                     </div>
                 </div>
-
             </div>
         </article>
 
@@ -297,21 +296,18 @@
         </p>
     </footer>
 
-<script>
-        // 1. Select all game boxes
+    <script>
         const boxes = document.querySelectorAll('.embed-box');
 
         boxes.forEach(box => {
-            // When mouse enters the game zone -> FREEZE the background page
+            // When mouse enters a game box -> Hide Scrollbar (Freeze Page)
             box.addEventListener('mouseenter', () => {
                 document.body.style.overflow = 'hidden'; 
-                // This temporarily hides the scrollbar so the page CANNOT move
             });
 
-            // When mouse leaves the game zone -> UNFREEZE
+            // When mouse leaves a game box -> Show Scrollbar (Unfreeze Page)
             box.addEventListener('mouseleave', () => {
                 document.body.style.overflow = 'auto';
-                // This brings the scrollbar back
             });
         });
     </script>
