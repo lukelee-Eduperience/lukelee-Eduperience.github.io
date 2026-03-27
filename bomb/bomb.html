@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>💣 20炸彈大戰</title>
+    <style>
+        body { font-family: '微軟正黑體', sans-serif; text-align: center; background-color: #ffeaa7; padding: 20px; }
+        #game-container { max-width: 500px; margin: auto; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 8px 20px rgba(0,0,0,0.2); }
+        .bomb-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px; margin: 25px 0; justify-items: center; }
+        .bomb { font-size: 40px; filter: drop-shadow(2px 2px 2px #ccc); transition: all 0.4s ease; }
+        .bomb.removed { opacity: 0; transform: translateY(20px) rotate(45deg); pointer-events: none; }
+        button { padding: 12px 24px; font-size: 18px; cursor: pointer; border: none; border-radius: 10px; background-color: #d63031; color: white; margin: 5px; transition: 0.2s; }
+        button:hover { background-color: #ff7675; transform: scale(1.05); }
+        button:disabled { background-color: #fab1a0; cursor: not-allowed; }
+        .status { margin: 20px 0; font-weight: bold; font-size: 1.4em; color: #2d3436; }
+        .log { font-size: 1em; color: #636e72; background: #dfe6e9; padding: 10px; border-radius: 5px; height: 30px; line-height: 30px; }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <h1>💣 20 炸彈挑戰</h1>
+    <p>剩最後一個炸彈的人就輸了！</p>
+    
+    <div id="setup">
+        <div style="margin-bottom: 20px;">
+            <label>模式：</label>
+            <select id="mode" style="font-size: 16px; padding: 5px;">
+                <option value="pve">對戰電腦 (PvE)</option>
+                <option value="pvp">朋友對戰 (PvP)</option>
+            </select>
+        </div>
+        <button onclick="startGame()">開始遊戲</button>
+    </div>
+
+    <div id="game-area" style="display:none;">
+        <div class="bomb-grid" id="bombGrid"></div>
+        <div class="status" id="status">剩餘炸彈：20</div>
+        <div id="controls">
+            <button class="btn-move" onclick="playerAction(1)">拿 1 個</button>
+            <button class="btn-move" onclick="playerAction(2)">拿 2 個</button>
+            <button class="btn-move" onclick="playerAction(3)">拿 3 個</button>
+        </div>
+        <p class="log" id="gameLog">遊戲開始！你先請。</p>
+        <button style="background-color: #636e72; margin-top: 20px; font-size: 14px;" onclick="resetGame()">回主選單</button>
+    </div>
+</div>
+
+<script>
+    let totalBombs = 20;
+    let currentBombs = 20;
+    let turn = 1; // 1: 玩家, 2: 電腦或玩家2
+    let isPvE = true;
+
+    function startGame() {
+        currentBombs = 20;
+        turn = 1;
+        isPvE = document.getElementById('mode').value === 'pve';
+        document.getElementById('setup').style.display = 'none';
+        document.getElementById('game-area').style.display = 'block';
+        document.getElementById('gameLog').innerText = "遊戲開始！請選擇你要拿走的數量。";
+        renderBombs();
+    }
+
+    function renderBombs() {
+        const grid = document.getElementById('bombGrid');
+        grid.innerHTML = '';
+        for (let i = 0; i < totalBombs; i++) {
+            const div = document.createElement('div');
+            div.className = 'bomb' + (i >= currentBombs ? ' removed' : '');
+            div.innerText = '💣';
+            grid.appendChild(div);
+        }
+        document.getElementById('status').innerText = `剩餘炸彈：${currentBombs}`;
+        
+        // 如果炸彈不夠拿，禁用按鈕
+        const buttons = document.querySelectorAll('.btn-move');
+        buttons.forEach((btn, index) => {
+            btn.disabled = (index + 1) > currentBombs;
+        });
+    }
+
+    function playerAction(count) {
+        processMove(count);
+        
+        if (currentBombs > 0 && isPvE && turn === 2) {
+            disableButtons(true);
+            setTimeout(computerMove, 1000);
+        }
+    }
+
+    function processMove(count) {
+        let playerName = isPvE && turn === 2 ? "電腦" : `玩家 ${turn}`;
+        document.getElementById('gameLog').innerText = `${playerName} 拿走了 ${count} 個。`;
+        
+        currentBombs -= count;
+        renderBombs();
+
+        if (currentBombs === 0) {
+            setTimeout(() => {
+                alert(`💥 砰！${playerName} 拿到了最後一顆炸彈，輸掉了！`);
+                resetGame();
+            }, 100);
+            return;
+        }
+
+        turn = turn === 1 ? 2 : 1;
+    }
+
+    function computerMove() {
+        // 必勝邏輯：目標留給對方 (4n + 1) 個，即 17, 13, 9, 5, 1
+        let move = (currentBombs - 1) % 4;
+        if (move === 0) move = 1; // 如果已經在安全數字，電腦只能隨便拿
+        processMove(move);
+        disableButtons(false);
+    }
+
+    function disableButtons(disabled) {
+        document.querySelectorAll('.btn-move').forEach(btn => btn.disabled = disabled);
+    }
+
+    function resetGame() {
+        document.getElementById('setup').style.display = 'block';
+        document.getElementById('game-area').style.display = 'none';
+    }
+</script>
+</body>
+</html>
