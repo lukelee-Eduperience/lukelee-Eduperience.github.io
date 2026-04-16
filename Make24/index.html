@@ -256,12 +256,40 @@
 
         initAuth();
 
+        // 核心運算：驗證題目是否有解
+        function isSolvable(nums) {
+            if (nums.length === 1) {
+                return Math.abs(nums[0] - 24) < 0.001;
+            }
+            for (let i = 0; i < nums.length; i++) {
+                for (let j = 0; j < nums.length; j++) {
+                    if (i === j) continue;
+                    const nextNums = [];
+                    for (let k = 0; k < nums.length; k++) {
+                        if (k !== i && k !== j) nextNums.push(nums[k]);
+                    }
+                    const combinations = [
+                        nums[i] + nums[j],
+                        nums[i] - nums[j],
+                        nums[j] - nums[i],
+                        nums[i] * nums[j]
+                    ];
+                    if (nums[j] !== 0) combinations.push(nums[i] / nums[j]);
+                    if (nums[i] !== 0) combinations.push(nums[j] / nums[i]);
+
+                    for (let res of combinations) {
+                        if (isSolvable([...nextNums, res])) return true;
+                    }
+                }
+            }
+            return false;
+        }
+
         function startGame() {
             document.getElementById('setup-view').classList.add('hidden');
             document.getElementById('play-view').classList.remove('hidden');
             document.getElementById('ingame-reset').classList.remove('hidden');
             
-            // 修正：手動綁定事件
             document.getElementById('ingame-reset').onclick = () => { 
                 if(confirm('要清空分數重新開始嗎？')) location.reload(); 
             };
@@ -274,12 +302,17 @@
         }
 
         function nextQuestion() {
-            currentNumbers = Array.from({length: 4}, () => Math.floor(Math.random() * 9) + 1);
+            // 不斷嘗試生成數字，直到 isSolvable 傳回 true
+            let nums;
+            do {
+                nums = Array.from({length: 4}, () => Math.floor(Math.random() * 9) + 1);
+            } while (!isSolvable(nums));
+            
+            currentNumbers = nums;
             window.clearExpr();
             questionStartTime = Date.now();
         }
 
-        // 修正：確保函數掛載到 window
         window.skipQuestion = () => {
             if(confirm('確定要跳過這一題嗎？')) {
                 showFeedback("SKIPPED", true);
@@ -294,7 +327,6 @@
                 const btn = document.createElement('button');
                 const isUsed = usedIndices.has(idx);
                 btn.className = `num-btn`;
-                // 如果已使用，在 JS 中直接修改樣式
                 if (isUsed) {
                     btn.disabled = true;
                 }
@@ -347,7 +379,6 @@
                 if (Math.abs(result - 24) < 0.0001) {
                     const timeTaken = (Date.now() - questionStartTime) / 1000;
                     let timeBonus = 0;
-                    // 改為 20 秒內有加成
                     if (timeTaken < 20) {
                         timeBonus = Math.floor((20 - timeTaken) * 5); 
                     }
