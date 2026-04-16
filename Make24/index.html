@@ -4,113 +4,217 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>數學小先鋒：合 24 巔峰對抗賽</title>
-    <!-- 使用 Tailwind CSS 進行現代化 UI 設計 -->
+    <!-- 使用 Tailwind CSS 進行基礎佈局 -->
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <style>
-        .num-btn { @apply bg-blue-500 text-white font-bold py-4 px-6 rounded-2xl text-3xl shadow-lg transform active:scale-95 transition-all hover:bg-blue-600; }
-        .op-btn { @apply bg-gray-100 text-gray-700 font-bold py-3 px-5 rounded-xl text-xl shadow-sm transform active:scale-95 transition-all hover:bg-gray-200 border-b-4 border-gray-300; }
-        .display-area { min-height: 100px; @apply border-4 border-indigo-100 rounded-3xl flex items-center justify-center text-3xl font-mono mb-6 bg-indigo-50 text-indigo-900 shadow-inner px-4 text-center; }
+        /* 核心 UI 美化 - 使用標準 CSS 替換 @apply 以確保瀏覽器正確渲染 */
+        .num-btn {
+            background-color: #3b82f6;
+            color: white;
+            font-weight: 900;
+            padding: 1rem 0;
+            border-radius: 1rem;
+            font-size: 1.875rem;
+            box-shadow: 0 6px 0 0 #1d4ed8;
+            transition: all 0.1s;
+            border: 2px solid #2563eb;
+            width: 100%;
+        }
+        .num-btn:active:not(:disabled) {
+            box-shadow: none;
+            transform: translateY(6px);
+        }
+        .num-btn:hover:not(:disabled) {
+            background-color: #60a5fa;
+        }
+        .num-btn:disabled {
+            opacity: 0.1;
+            box-shadow: none;
+            background-color: #e2e8f0;
+            border-color: #cbd5e1;
+        }
+
+        .op-btn {
+            background-color: #fbbf24;
+            color: #78350f;
+            font-weight: 900;
+            padding: 0.75rem 0;
+            border-radius: 0.75rem;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 0 0 #b45309;
+            transition: all 0.1s;
+            border: 2px solid #f59e0b;
+            width: 100%;
+        }
+        .op-btn:active {
+            box-shadow: none;
+            transform: translateY(4px);
+        }
+        .op-btn:hover {
+            background-color: #fcd34d;
+        }
+
+        .bracket-btn {
+            background-color: #c084fc;
+            color: #581c87;
+            font-weight: 900;
+            padding: 0.75rem 0;
+            border-radius: 0.75rem;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 0 0 #7e22ce;
+            transition: all 0.1s;
+            border: 2px solid #a855f7;
+            width: 100%;
+        }
+        .bracket-btn:active {
+            box-shadow: none;
+            transform: translateY(4px);
+        }
+
+        .control-btn {
+            font-weight: 700;
+            padding: 0.75rem 0;
+            border-radius: 0.75rem;
+            transition: all 0.1s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border: 2px solid transparent;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .control-btn:active {
+            box-shadow: none;
+            transform: translateY(2px);
+        }
+        
+        .display-area { 
+            min-height: 110px; 
+            border: 4px solid #c7d2fe;
+            border-radius: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.25rem;
+            font-family: monospace;
+            margin-bottom: 1.5rem;
+            background-color: #0f172a;
+            color: #4ade80;
+            box-shadow: inset 0 4px 10px rgba(0,0,0,0.5);
+            padding: 0 1.5rem;
+            text-align: center;
+            line-height: 1.25;
+            text-shadow: 0 0 10px rgba(74, 222, 128, 0.5);
+        }
+
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        @keyframes pulse-green { 0%, 100% { background-color: #10B981; transform: scale(1); } 50% { background-color: #059669; transform: scale(1.02); } }
-        .animate-start { animation: pulse-green 2s infinite; }
-        .leaderboard-item { @apply flex justify-between p-3 rounded-xl mb-2 transition-all transform hover:translate-x-1; }
+
+        @keyframes pulse-grow { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+        .animate-pop { animation: pulse-grow 2s infinite; }
     </style>
 </head>
-<body class="bg-indigo-50 min-h-screen flex items-center justify-center p-4">
+<body class="bg-slate-100 min-h-screen flex items-center justify-center p-4 font-sans">
 
-    <div id="game-container" class="w-full max-w-md bg-white rounded-[2.5rem] shadow-2xl overflow-hidden border-8 border-white">
+    <div id="game-container" class="w-full max-w-md bg-white rounded-[3rem] shadow-[0_20px_50px_rgba(0,0,0,0.1)] overflow-hidden border-[12px] border-indigo-600">
         <!-- 頂部資訊列 -->
         <div class="bg-indigo-600 p-5 text-white flex justify-between items-center">
-            <div class="flex items-center gap-2">
-                <span class="text-indigo-200">⏳</span>
-                <span id="timer" class="font-black text-2xl tracking-tighter">60</span><span class="text-xs ml-1 text-indigo-200 font-bold">秒</span>
+            <div class="flex items-center gap-3">
+                <div class="bg-indigo-800 px-3 py-1 rounded-full flex items-center gap-2">
+                    <span class="text-lg">⏱️</span>
+                    <span id="timer" class="font-black text-2xl w-8 text-center">60</span>
+                </div>
+                <!-- 重新開始按鈕 (遊戲中顯示) -->
+                <button id="ingame-reset" class="hidden text-xs bg-indigo-500 hover:bg-red-500 px-2 py-1 rounded-md transition-colors font-bold uppercase border border-indigo-400">Restart</button>
             </div>
-            <div class="bg-indigo-500 px-4 py-1 rounded-full flex items-center gap-2">
-                <span class="text-indigo-200 text-xs font-bold uppercase">Score</span>
-                <span id="score" class="font-black text-2xl tracking-tighter">0</span>
+            <div class="flex flex-col items-end">
+                <span class="text-[10px] font-black uppercase opacity-60">Total Score</span>
+                <span id="score" class="font-black text-3xl tracking-tighter">0</span>
             </div>
         </div>
 
         <div class="p-8">
             <!-- 1. 準備畫面 -->
             <div id="setup-view" class="text-center py-6">
-                <div class="text-7xl mb-6">🎯</div>
-                <h1 class="text-3xl font-black mb-2 text-indigo-900">數學小先鋒</h1>
-                <h2 class="text-xl font-bold mb-6 text-indigo-400">合 24 巔峰對抗賽</h2>
-                <div class="bg-yellow-50 p-4 rounded-2xl mb-8 text-sm text-yellow-700 leading-relaxed border border-yellow-100">
-                    💡 使用四個數字各一次，湊成 24。<br>
-                    越多、越快答對，分數越高！
+                <div class="text-8xl mb-6">🚀</div>
+                <h1 class="text-3xl font-black mb-2 text-indigo-900 uppercase tracking-tight">Math Pioneer</h1>
+                <h2 class="text-xl font-bold mb-8 text-indigo-400 italic">24 Challenge</h2>
+                <div class="space-y-3 mb-10 text-left bg-indigo-50 p-5 rounded-3xl border-2 border-indigo-100">
+                    <p class="text-indigo-800 text-sm font-bold flex items-center gap-2">✅ 使用四個數字各一次</p>
+                    <p class="text-indigo-800 text-sm font-bold flex items-center gap-2">✅ 組合出 24 即可得分</p>
+                    <p class="text-indigo-800 text-sm font-bold flex items-center gap-2">✅ 20 秒內答對有時效加成</p>
                 </div>
-                <button id="start-btn" class="w-full bg-green-500 text-white py-5 rounded-2xl font-black text-2xl shadow-xl hover:bg-green-600 transition-all disabled:opacity-50 animate-start" disabled>
-                    正在連接伺服器...
+                <button id="start-btn" class="w-full bg-green-500 text-white py-5 rounded-[2rem] font-black text-3xl shadow-[0_8px_0_0_#15803d] hover:bg-green-400 transition-all disabled:opacity-50 animate-pop" disabled>
+                    正在連接...
                 </button>
             </div>
 
             <!-- 2. 遊戲主畫面 -->
             <div id="play-view" class="hidden">
-                <div class="display-area" id="expression-display">請點擊數字開始</div>
+                <div class="display-area" id="expression-display">READY?</div>
                 
-                <!-- 數字區域 -->
-                <div class="grid grid-cols-2 gap-4 mb-8" id="number-buttons">
+                <!-- 數字按鈕區 -->
+                <div class="grid grid-cols-2 gap-5 mb-8" id="number-buttons">
                     <!-- JS 生成 -->
                 </div>
 
-                <!-- 運算子區域 -->
-                <div class="grid grid-cols-4 gap-3 mb-8">
+                <!-- 運算子按鈕區 -->
+                <div class="grid grid-cols-4 gap-3 mb-6">
                     <button class="op-btn" onclick="window.addOp('+')">+</button>
                     <button class="op-btn" onclick="window.addOp('-')">−</button>
                     <button class="op-btn" onclick="window.addOp('*')">×</button>
                     <button class="op-btn" onclick="window.addOp('/')">÷</button>
-                    <button class="op-btn" onclick="window.addOp('(')">(</button>
-                    <button class="op-btn" onclick="window.addOp(')')">)</button>
-                    <button class="op-btn bg-red-50 text-red-500 border-red-200" onclick="window.clearExpr()">C</button>
-                    <button class="op-btn bg-indigo-600 text-white border-indigo-700" onclick="window.checkAnswer()">OK</button>
+                    <button class="bracket-btn" onclick="window.addOp('(')">(</button>
+                    <button class="bracket-btn" onclick="window.addOp(')')">)</button>
+                    <button class="control-btn bg-red-100 text-red-600 border-red-200 hover:bg-red-200" onclick="window.clearExpr()">CLEAR</button>
+                    <button class="control-btn bg-green-600 text-white border-green-700 hover:bg-green-500" onclick="window.checkAnswer()">CHECK</button>
                 </div>
                 
+                <!-- 跳過按鈕 -->
+                <button onclick="window.skipQuestion()" class="w-full py-3 bg-slate-100 text-slate-500 rounded-xl font-black text-sm hover:bg-slate-200 border-2 border-slate-200 mb-4 tracking-widest uppercase">
+                    Skip Question ⏭️
+                </button>
+                
                 <div class="h-6 text-center">
-                    <span id="feedback" class="text-sm font-bold"></span>
+                    <span id="feedback" class="text-sm font-black uppercase tracking-widest"></span>
                 </div>
             </div>
 
             <!-- 3. 結算與排行榜 -->
             <div id="end-view" class="hidden text-center">
-                <div class="text-5xl mb-4">🏆</div>
-                <h2 class="text-3xl font-black text-indigo-900 mb-1">挑戰結束！</h2>
-                <p class="text-gray-400 mb-6">你的實力已經被記錄在英雄榜上</p>
+                <div class="text-6xl mb-4">👑</div>
+                <h2 class="text-3xl font-black text-indigo-900 mb-6 uppercase">Time's Up!</h2>
                 
-                <div class="bg-indigo-600 text-white rounded-3xl p-6 mb-8 shadow-lg">
-                    <span class="text-indigo-200 text-xs font-bold uppercase block mb-1">Final Score</span>
-                    <span id="final-score" class="text-5xl font-black">0</span>
+                <div class="bg-indigo-600 text-white rounded-[2rem] p-8 mb-8 shadow-2xl relative">
+                    <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-yellow-400 text-yellow-900 text-xs font-black px-4 py-1 rounded-full shadow-md">FINAL SCORE</div>
+                    <span id="final-score" class="text-6xl font-black">0</span>
                 </div>
                 
-                <div id="submit-section" class="mb-8">
-                    <input type="text" id="player-name" maxlength="10" placeholder="輸入你的名字" class="w-full p-4 border-2 border-indigo-100 rounded-2xl mb-4 text-center text-xl font-bold outline-none focus:border-indigo-500 transition-all shadow-sm">
-                    <button id="submit-btn" class="w-full bg-indigo-600 text-white py-4 rounded-2xl font-black text-xl hover:bg-indigo-700 shadow-lg">上傳成績</button>
+                <div id="submit-section" class="mb-10">
+                    <input type="text" id="player-name" maxlength="10" placeholder="你的名字" class="w-full p-4 border-4 border-indigo-50 rounded-2xl mb-4 text-center text-2xl font-black outline-none focus:border-indigo-500 transition-all bg-indigo-50/50">
+                    <button id="submit-btn" class="w-full bg-indigo-600 text-white py-5 rounded-2xl font-black text-2xl hover:bg-indigo-700 shadow-xl transition-all">SUBMIT SCORE</button>
                 </div>
                 
                 <div class="text-left">
-                    <div class="flex justify-between items-end mb-4 px-1">
-                        <h3 class="font-black text-indigo-900 text-xl">全班排行榜</h3>
-                        <span class="text-xs text-indigo-400 font-bold">TOP 10</span>
-                    </div>
+                    <h3 class="font-black text-indigo-900 text-xl mb-4 flex items-center gap-2">
+                        <span>📊 LEADERBOARD</span>
+                        <div class="h-1 flex-1 bg-indigo-50"></div>
+                    </h3>
                     <ul id="leaderboard" class="max-h-64 overflow-y-auto no-scrollbar pb-4">
                         <!-- 排行榜資料 -->
                     </ul>
                 </div>
                 
-                <button onclick="location.reload()" class="mt-4 text-indigo-400 font-bold hover:text-indigo-600 transition-colors text-sm">再玩一次 ↺</button>
+                <button onclick="location.reload()" class="mt-6 text-indigo-400 font-bold hover:text-indigo-600 transition-colors">PLAY AGAIN ↺</button>
             </div>
         </div>
     </div>
 
-    <!-- Firebase SDK 導入 (模組化版本) -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getDatabase, ref, push, onValue } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
-        // --- 你的 Firebase 配置 ---
         const firebaseConfig = {
             apiKey: "AIzaSyAJW-S7RYFI20hkx8qaKQVgWH6JSUHwwSE",
             authDomain: "make-24-fe999.firebaseapp.com",
@@ -122,12 +226,9 @@
             databaseURL: "https://make-24-fe999-default-rtdb.asia-southeast1.firebasedatabase.app/" 
         };
 
-        // 初始化 Firebase
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const database = getDatabase(app);
-
-        // 安全路徑
         const dbPath = `artifacts/make-24-fe999/public/data/leaderboard`;
 
         let currentNumbers = [];
@@ -139,18 +240,17 @@
         let questionStartTime = 0;
         let currentUser = null;
 
-        // 身份驗證
         const initAuth = async () => {
             try {
                 const result = await signInAnonymously(auth);
                 currentUser = result.user;
                 const startBtn = document.getElementById('start-btn');
-                startBtn.innerText = "開始挑戰！";
+                startBtn.innerText = "START GAME!";
                 startBtn.disabled = false;
                 startBtn.onclick = startGame;
             } catch (error) {
-                console.error("Firebase Error:", error);
-                document.getElementById('start-btn').innerText = "連線失敗，請重整";
+                console.error("Firebase Connection Error:", error);
+                document.getElementById('start-btn').innerText = "CONNECTION FAILED";
             }
         };
 
@@ -159,6 +259,15 @@
         function startGame() {
             document.getElementById('setup-view').classList.add('hidden');
             document.getElementById('play-view').classList.remove('hidden');
+            document.getElementById('ingame-reset').classList.remove('hidden');
+            
+            // 修正：手動綁定事件
+            document.getElementById('ingame-reset').onclick = () => { 
+                if(confirm('要清空分數重新開始嗎？')) location.reload(); 
+            };
+            
+            score = 0;
+            timeLeft = 60;
             gameActive = true;
             nextQuestion();
             startTimer();
@@ -170,21 +279,33 @@
             questionStartTime = Date.now();
         }
 
+        // 修正：確保函數掛載到 window
+        window.skipQuestion = () => {
+            if(confirm('確定要跳過這一題嗎？')) {
+                showFeedback("SKIPPED", true);
+                nextQuestion();
+            }
+        };
+
         function renderButtons() {
             const container = document.getElementById('number-buttons');
             container.innerHTML = '';
             currentNumbers.forEach((num, idx) => {
                 const btn = document.createElement('button');
                 const isUsed = usedIndices.has(idx);
-                btn.className = `num-btn ${isUsed ? 'opacity-20 bg-gray-300 shadow-none scale-90' : ''}`;
+                btn.className = `num-btn`;
+                // 如果已使用，在 JS 中直接修改樣式
+                if (isUsed) {
+                    btn.disabled = true;
+                }
                 btn.innerText = num;
-                btn.disabled = isUsed;
                 btn.onclick = () => addNumber(num, idx);
                 container.appendChild(btn);
             });
         }
 
         function addNumber(num, idx) {
+            if (usedIndices.has(idx)) return;
             usedIndices.add(idx);
             expression.push(num);
             renderButtons();
@@ -205,18 +326,18 @@
         };
 
         function updateDisplay() {
-            document.getElementById('expression-display').innerText = expression.join(' ') || '下一個動作？';
+            document.getElementById('expression-display').innerText = expression.join('') || '---';
         }
 
         function showFeedback(msg, isError = true) {
             const f = document.getElementById('feedback');
             f.innerText = msg;
-            f.className = isError ? "text-sm font-bold text-red-500" : "text-sm font-bold text-green-500";
+            f.style.color = isError ? "#ef4444" : "#22c55e";
         }
 
         window.checkAnswer = () => {
             if (usedIndices.size !== 4) {
-                showFeedback("⚠️ 必須用完四個數字！");
+                showFeedback("USE ALL NUMBERS!");
                 return;
             }
             try {
@@ -226,17 +347,21 @@
                 if (Math.abs(result - 24) < 0.0001) {
                     const timeTaken = (Date.now() - questionStartTime) / 1000;
                     let timeBonus = 0;
-                    if (timeTaken < 10) timeBonus = Math.floor((10 - timeTaken) * 10);
+                    // 改為 20 秒內有加成
+                    if (timeTaken < 20) {
+                        timeBonus = Math.floor((20 - timeTaken) * 5); 
+                    }
                     
                     score += (100 + timeBonus);
                     document.getElementById('score').innerText = score;
-                    showFeedback("✨ 答對了！+ " + (100 + timeBonus), false);
-                    setTimeout(nextQuestion, 500);
+                    showFeedback("AWESOME! +" + (100 + timeBonus), false);
+                    setTimeout(nextQuestion, 600);
                 } else {
-                    showFeedback("❌ 目前結果是 " + result + "，不是 24 哦");
+                    const displayRes = Number.isInteger(result) ? result : result.toFixed(1);
+                    showFeedback("TRY AGAIN: " + displayRes);
                 }
             } catch (e) {
-                showFeedback("⚠️ 算式錯誤，請清空重按");
+                showFeedback("ERROR IN MATH!");
             }
         };
 
@@ -252,6 +377,7 @@
         function endGame() {
             gameActive = false;
             document.getElementById('play-view').classList.add('hidden');
+            document.getElementById('ingame-reset').classList.add('hidden');
             document.getElementById('end-view').classList.remove('hidden');
             document.getElementById('final-score').innerText = score;
             document.getElementById('submit-btn').onclick = submitScore;
@@ -259,10 +385,10 @@
         }
 
         async function submitScore() {
-            const name = document.getElementById('player-name').value.trim() || "匿名小先鋒";
+            const name = document.getElementById('player-name').value.trim() || "PIONEER";
             const btn = document.getElementById('submit-btn');
             btn.disabled = true;
-            btn.innerText = "正在上傳成績...";
+            btn.innerText = "UPLOADING...";
 
             try {
                 await push(ref(database, dbPath), {
@@ -271,10 +397,11 @@
                     timestamp: Date.now(),
                     uid: currentUser.uid
                 });
-                document.getElementById('submit-section').innerHTML = `<p class="text-green-500 font-bold py-4">✅ 成績已安全同步到雲端排行榜！</p>`;
+                document.getElementById('submit-section').innerHTML = `<p class="text-green-500 font-black py-4 uppercase tracking-tighter text-center">SUCCESSFULLY UPLOADED! 🚀</p>`;
             } catch (error) {
+                console.error("Submit Error:", error);
                 btn.disabled = false;
-                btn.innerText = "上傳失敗，再試一次";
+                btn.innerText = "FAILED! RETRY?";
             }
         }
 
@@ -284,7 +411,7 @@
                 list.innerHTML = '';
                 const data = snapshot.val();
                 if (!data) {
-                    list.innerHTML = '<li class="text-center text-gray-400 py-4 italic text-sm">暫無排名數據</li>';
+                    list.innerHTML = '<li class="text-center text-gray-300 py-4 italic text-sm">NO RECORDS YET</li>';
                     return;
                 }
 
@@ -293,13 +420,13 @@
 
                 items.slice(0, 10).forEach((item, index) => {
                     const li = document.createElement('li');
-                    li.className = `leaderboard-item ${index === 0 ? 'bg-yellow-50 border-2 border-yellow-200' : 'bg-white border border-gray-100'}`;
+                    li.className = `flex justify-between items-center p-4 rounded-2xl mb-2 border-2 transition-all ${index === 0 ? 'bg-yellow-50 border-yellow-200' : 'bg-white border-slate-50'}`;
                     li.innerHTML = `
-                        <span class="flex items-center gap-3">
-                            <span class="w-8 h-8 flex items-center justify-center rounded-full ${index === 0 ? 'bg-yellow-400 text-white' : 'bg-indigo-100 text-indigo-700'} font-black text-sm">${index + 1}</span>
-                            <span class="font-bold text-gray-700">${item.name}</span>
-                        </span>
-                        <span class="font-black text-indigo-600">${item.score} <span class="text-[10px] text-indigo-300 font-normal">PTS</span></span>
+                        <div class="flex items-center gap-4">
+                            <span class="w-8 h-8 flex items-center justify-center rounded-full ${index === 0 ? 'bg-yellow-400 text-white' : 'bg-slate-100 text-slate-400'} font-black text-sm">${index + 1}</span>
+                            <span class="font-black text-slate-700 uppercase tracking-tight">${item.name}</span>
+                        </div>
+                        <span class="font-black text-indigo-600 text-lg">${item.score} <span class="text-[10px] text-indigo-300 font-bold uppercase">pts</span></span>
                     `;
                     list.appendChild(li);
                 });
