@@ -54,18 +54,18 @@
                 
                 <!-- 🏃 快銀 -->
                 <button id="btn-quicksilver" onclick="setActiveChar('Quicksilver')" class="char-btn flex-shrink-0 px-6 py-3 rounded-2xl font-black text-sm transition-all border-2 bg-slate-800/50 text-slate-400 border-slate-700 hover:bg-slate-800 flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-full overflow-hidden bg-amber-100 flex items-center justify-center shrink-0 border-2 border-amber-400">
+                    <div class="w-12 h-12 rounded-full overflow-hidden bg-amber-100 flex items-center justify-center shrink-0 border-2 border-amber-400">
                         <img src="C.png" alt="快銀" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                        <span class="text-xl hidden w-full h-full items-center justify-center">🏃</span>
+                        <span class="text-2xl hidden w-full h-full items-center justify-center">🏃</span>
                     </div>
                     快銀
                 </button>
                 
                 <!-- ⚡ 閃電俠 -->
                 <button id="btn-flash" onclick="setActiveChar('Flash')" class="char-btn flex-shrink-0 px-6 py-3 rounded-2xl font-black text-sm transition-all border-2 bg-slate-800/50 text-slate-400 border-slate-700 hover:bg-slate-800 flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-full overflow-hidden bg-red-100 flex items-center justify-center shrink-0 border-2 border-red-400">
+                    <div class="w-12 h-12 rounded-full overflow-hidden bg-red-100 flex items-center justify-center shrink-0 border-2 border-red-400">
                         <img src="B.png" alt="閃電俠" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                        <span class="text-xl hidden w-full h-full items-center justify-center">⚡</span>
+                        <span class="text-2xl hidden w-full h-full items-center justify-center">⚡</span>
                     </div>
                     閃電俠
                 </button>
@@ -113,13 +113,13 @@
                 <!-- 進攻方操作面板 -->
                 <div id="hero-panel" class="p-8 rounded-[2.5rem] border-4 transition-all shadow-sm bg-slate-50 border-slate-200">
                     <div class="flex justify-between items-center mb-6">
-                        <h3 class="font-black text-slate-800 text-xl flex items-center gap-2">
-                            <i id="hero-icon-lucide" data-lucide="zap" class="w-6 h-6 text-slate-400"></i>
+                        <h3 class="font-black text-slate-800 text-xl flex items-center gap-3">
+                            <i id="hero-icon-lucide" data-lucide="zap" class="w-8 h-8 text-slate-400"></i>
                             
                             <!-- 英雄面板動態頭像 -->
-                            <div id="hero-avatar" class="hidden w-8 h-8 rounded-full overflow-hidden border-2 shadow-sm shrink-0">
+                            <div id="hero-avatar" class="hidden w-16 h-16 rounded-full overflow-hidden border-2 shadow-sm shrink-0">
                                 <img id="hero-img-src" src="" alt="Hero" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                <span id="hero-emoji" class="text-xl hidden w-full h-full flex items-center justify-center bg-white"></span>
+                                <span id="hero-emoji" class="text-3xl hidden w-full h-full flex items-center justify-center bg-white"></span>
                             </div>
 
                             進攻方調整
@@ -162,13 +162,13 @@
                 <!-- 防禦方操作面板 (五條悟) -->
                 <div id="gojo-panel" class="p-8 rounded-[2.5rem] border-4 transition-all shadow-md bg-slate-900 border-slate-800 text-white">
                     <div class="flex justify-between items-center mb-6">
-                        <h3 id="gojo-title" class="font-black text-xl flex items-center gap-2 text-white">
-                            <i id="gojo-icon-lucide" data-lucide="shield" class="w-6 h-6 text-slate-500"></i>
+                        <h3 id="gojo-title" class="font-black text-xl flex items-center gap-3 text-white">
+                            <i id="gojo-icon-lucide" data-lucide="shield" class="w-8 h-8 text-slate-500"></i>
                             
                             <!-- 五條悟動態頭像 A.png -->
-                            <div class="w-10 h-10 rounded-full overflow-hidden border-2 border-indigo-400 shadow-sm shrink-0 bg-indigo-100 flex items-center justify-center">
+                            <div class="w-16 h-16 rounded-full overflow-hidden border-2 border-indigo-400 shadow-sm shrink-0 bg-indigo-100 flex items-center justify-center">
                                 <img src="A.png" alt="五條悟" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                <span class="text-2xl hidden w-full h-full flex items-center justify-center">🧿</span>
+                                <span class="text-3xl hidden w-full h-full flex items-center justify-center">🧿</span>
                             </div>
 
                             五條悟干預
@@ -284,14 +284,14 @@
                 btn.innerText = "關閉無下限";
                 btn.className = "px-4 py-2 rounded-full font-black text-sm uppercase tracking-widest transition-all bg-indigo-600 text-white shadow-lg";
                 document.getElementById('gojo-panel').className = "p-8 rounded-[2.5rem] border-4 transition-all shadow-md bg-indigo-50 border-indigo-200";
-                document.getElementById('gojo-title').className = "font-black text-xl flex items-center gap-2 text-indigo-900";
+                document.getElementById('gojo-title').className = "font-black text-xl flex items-center gap-3 text-indigo-900";
                 document.getElementById('gojo-inactive').classList.add('hidden');
                 document.getElementById('gojo-active').classList.remove('hidden');
             } else {
                 btn.innerText = "開啟無下限";
                 btn.className = "px-4 py-2 rounded-full font-black text-sm uppercase tracking-widest transition-all bg-slate-700 text-slate-300 hover:bg-slate-600";
                 document.getElementById('gojo-panel').className = "p-8 rounded-[2.5rem] border-4 transition-all shadow-md bg-slate-900 border-slate-800 text-white";
-                document.getElementById('gojo-title').className = "font-black text-xl flex items-center gap-2 text-white";
+                document.getElementById('gojo-title').className = "font-black text-xl flex items-center gap-3 text-white";
                 document.getElementById('gojo-inactive').classList.remove('hidden');
                 document.getElementById('gojo-active').classList.add('hidden');
                 document.getElementById('gojo-slider').value = 0;
@@ -425,7 +425,7 @@
                 const maxLabel = document.getElementById('hero-max-label');
 
                 if (activeChar === 'Quicksilver') {
-                    hAvatar.className = "w-8 h-8 rounded-full overflow-hidden border-2 shadow-sm shrink-0 border-amber-400 bg-amber-100 flex items-center justify-center";
+                    hAvatar.className = "w-16 h-16 rounded-full overflow-hidden border-2 shadow-sm shrink-0 border-amber-400 bg-amber-100 flex items-center justify-center";
                     hImgSrc.src = "C.png";
                     hEmoji.innerText = "🏃";
                     
@@ -436,7 +436,7 @@
                     minLabel.innerText = "速度慢";
                     maxLabel.innerText = "極速 (v=1000)";
                 } else if (activeChar === 'Flash') {
-                    hAvatar.className = "w-8 h-8 rounded-full overflow-hidden border-2 shadow-sm shrink-0 border-red-400 bg-red-100 flex items-center justify-center";
+                    hAvatar.className = "w-16 h-16 rounded-full overflow-hidden border-2 shadow-sm shrink-0 border-red-400 bg-red-100 flex items-center justify-center";
                     hImgSrc.src = "B.png";
                     hEmoji.innerText = "⚡";
                     
