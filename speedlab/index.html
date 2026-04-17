@@ -1,0 +1,307 @@
+import React, { useState } from 'react';
+import { MousePointer2, Calculator, Info, RotateCcw, Shield, Zap, HelpCircle, ArrowRight } from 'lucide-react';
+
+const App = () => {
+  const [activeChar, setActiveChar] = useState('Achilles');
+  const [heroSlider, setHeroSlider] = useState(0); 
+  const [isGojoActive, setIsGojoActive] = useState(false);
+  const [gojoSlider, setGojoSlider] = useState(0);
+
+  const d_base = 10;
+
+  // 核心計算邏輯
+  const calculateMath = () => {
+    // 1. 計算五條悟的影響 (d)
+    let x = 0;
+    let d_eff = d_base;
+    if (isGojoActive) {
+      x = gojoSlider / 100;
+      d_eff = x === 1 ? Infinity : d_base / (1 - x);
+    }
+
+    // 2. 計算進攻者的影響 (v 或 t)
+    let v, t;
+    if (activeChar === 'Achilles') {
+      v = 1;
+      t = d_eff === Infinity ? Infinity : d_eff / v;
+    } else if (activeChar === 'Quicksilver') {
+      v = heroSlider === 0 ? 1 : heroSlider; // v = 1 ~ 1000
+      t = d_eff === Infinity ? Infinity : d_eff / v;
+    } else if (activeChar === 'Flash') {
+      t = (100 - heroSlider) / 10; // t = 10.0 ~ 0.0
+      v = t === 0 ? Infinity : (d_eff === Infinity ? Infinity : d_eff / t);
+    }
+
+    return { d_eff, v, t, x };
+  };
+
+  const { d_eff, v, t, x } = calculateMath();
+
+  const resetAll = () => {
+    setHeroSlider(activeChar === 'Achilles' ? 50 : 0);
+    setGojoSlider(0);
+    setIsGojoActive(false);
+  };
+
+  const formatNum = (num, decimals = 2) => {
+    if (num === Infinity || num > 100000) return '∞';
+    return Number(num).toFixed(decimals).replace(/\.?0+$/, "") || "0";
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-100 font-sans p-4 md:p-8 flex items-center justify-center">
+      <div className="max-w-6xl w-full bg-white rounded-[3rem] shadow-2xl overflow-hidden border-[8px] border-white">
+        
+        {/* Header 區域 */}
+        <div className="bg-slate-900 p-8 text-white relative overflow-hidden">
+          <div className="absolute top-0 right-0 p-8 opacity-5"><Calculator size={120} /></div>
+          
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 relative z-10 gap-4">
+            <div>
+              <h1 className="text-3xl font-black italic flex items-center gap-3">
+                <span className="bg-indigo-500 p-2 rounded-xl"><Calculator size={24} className="text-white"/></span> 
+                時空數學實驗室 Pro
+              </h1>
+              <p className="text-[11px] text-indigo-300 font-bold tracking-[0.2em] uppercase mt-2">
+                代數與極限：變數替換視覺化系統
+              </p>
+            </div>
+            <button onClick={resetAll} className="flex items-center gap-2 px-4 py-3 bg-slate-800 rounded-2xl hover:bg-slate-700 transition-colors font-bold text-sm text-slate-300">
+              <RotateCcw size={18} /> 重置實驗
+            </button>
+          </div>
+
+          {/* 角色選擇器 (進攻方) */}
+          <div className="flex gap-3 overflow-x-auto no-scrollbar pb-2 relative z-10">
+            <span className="flex items-center text-xs font-black text-slate-500 uppercase tracking-widest mr-2">選擇進攻方:</span>
+            {['Achilles', 'Quicksilver', 'Flash'].map(key => {
+              const names = { Achilles: '🐢 阿基里斯', Quicksilver: '🏃 快銀', Flash: '⚡ 閃電俠' };
+              return (
+                <button
+                  key={key}
+                  onClick={() => { setActiveChar(key); setHeroSlider(key === 'Achilles' ? 50 : 0); }}
+                  className={`flex-shrink-0 px-6 py-3 rounded-2xl font-black text-sm transition-all border-2 
+                    ${activeChar === key ? 'bg-white text-slate-900 border-white shadow-[0_0_15px_rgba(255,255,255,0.2)]' : 'bg-slate-800/50 text-slate-400 border-slate-700 hover:bg-slate-800'}`}
+                >
+                  {names[key]}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* 核心內容區 */}
+        <div className="p-8 space-y-8">
+          
+          {/* 頂部：橫向公式與數值代入 */}
+          <div className="bg-indigo-50 rounded-[2.5rem] p-6 lg:p-8 border-4 border-indigo-100 shadow-inner">
+             <div className="flex items-center gap-2 mb-6">
+                <span className="bg-indigo-600 text-white px-3 py-1 rounded-lg text-xs font-black uppercase tracking-widest">核心運算</span>
+                <span className="text-sm font-bold text-indigo-900">公式對照面板</span>
+             </div>
+
+             <div className="flex flex-col lg:flex-row items-center justify-between gap-6 lg:gap-8">
+                
+                {/* 左側：抽象數學公式 */}
+                <div className="flex-1 bg-white p-6 lg:p-8 rounded-[2rem] shadow-sm border-2 border-indigo-50 w-full text-center flex flex-col justify-center min-h-[200px]">
+                    <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6">抽象數學公式</h4>
+                    <div className="flex items-center justify-center gap-2 lg:gap-4 text-xl lg:text-2xl font-black text-slate-700 font-mono tracking-tight flex-nowrap overflow-x-auto no-scrollbar py-2">
+                        
+                        {activeChar === 'Flash' ? (
+                            <>
+                                <div className="flex flex-col items-center px-2">
+                                    <span className="pb-3 whitespace-nowrap">距離 (d) {isGojoActive && <span className="text-indigo-500">÷ (1 - x)</span>}</span>
+                                    <div className="w-full h-1 bg-slate-300 rounded-full"></div>
+                                    <span className="pt-3 whitespace-nowrap">時間 (t)</span>
+                                </div>
+                                <span className="text-slate-300 mx-2">=</span>
+                                <span className="text-green-500 whitespace-nowrap">速率 (v)</span>
+                            </>
+                        ) : (
+                            <>
+                                <div className="flex flex-col items-center px-2">
+                                    <span className="pb-3 whitespace-nowrap">距離 (d) {isGojoActive && <span className="text-indigo-500">÷ (1 - x)</span>}</span>
+                                    <div className="w-full h-1 bg-slate-300 rounded-full"></div>
+                                    <span className="pt-3 whitespace-nowrap">速率 (v)</span>
+                                </div>
+                                <span className="text-slate-300 mx-2">=</span>
+                                <span className="text-indigo-600 whitespace-nowrap">時間 (t)</span>
+                            </>
+                        )}
+                    </div>
+                </div>
+
+                <div className="text-indigo-300 hidden lg:block"><ArrowRight size={40} strokeWidth={3} /></div>
+                <div className="text-indigo-300 block lg:hidden rotate-90"><ArrowRight size={40} strokeWidth={3} /></div>
+
+                {/* 右側：動態數值代入 */}
+                <div className="flex-[1.5] bg-white p-6 lg:p-8 rounded-[2rem] shadow-md border-2 border-indigo-200 w-full text-center relative overflow-hidden min-h-[200px] flex flex-col justify-center">
+                    <div className="absolute top-0 right-0 w-2 h-full bg-indigo-500"></div>
+                    <h4 className="text-[10px] font-black text-indigo-500 uppercase tracking-widest mb-6">動態數值代入</h4>
+                    
+                    <div className="text-4xl lg:text-5xl font-mono font-black flex items-center justify-center gap-2 md:gap-4 lg:gap-6 flex-nowrap overflow-x-auto no-scrollbar w-full py-2">
+                        
+                        {activeChar === 'Flash' ? (
+                            <>
+                                <div className="flex flex-col items-center px-2 min-w-[80px] md:min-w-[120px] shrink-0">
+                                    <span className="text-slate-700 pb-3 whitespace-nowrap flex items-center gap-2">
+                                        {d_base}
+                                        {isGojoActive && (
+                                            <span className="bg-indigo-50 text-indigo-600 px-3 py-1 rounded-xl border border-indigo-100 flex items-center gap-2 text-2xl lg:text-4xl">
+                                                <span className="text-indigo-300">÷</span> {formatNum(1 - x, 2)}
+                                            </span>
+                                        )}
+                                    </span>
+                                    <div className="w-full h-[6px] bg-slate-800 rounded-full"></div>
+                                    <span className="text-red-500 pt-3 whitespace-nowrap">{formatNum(t)}</span>
+                                </div>
+                                <span className="text-slate-300 text-3xl lg:text-4xl mx-2 shrink-0">=</span>
+                                <span className="text-green-500 whitespace-nowrap shrink-0">{formatNum(v)}</span>
+                            </>
+                        ) : (
+                            <>
+                                <div className="flex flex-col items-center px-2 min-w-[80px] md:min-w-[120px] shrink-0">
+                                    <span className="text-slate-700 pb-3 whitespace-nowrap flex items-center gap-2">
+                                        {d_base}
+                                        {isGojoActive && (
+                                            <span className="bg-indigo-50 text-indigo-600 px-3 py-1 rounded-xl border border-indigo-100 flex items-center gap-2 text-2xl lg:text-4xl">
+                                                <span className="text-indigo-300">÷</span> {formatNum(1 - x, 2)}
+                                            </span>
+                                        )}
+                                    </span>
+                                    <div className="w-full h-[6px] bg-slate-800 rounded-full"></div>
+                                    <span className="text-amber-500 pt-3 whitespace-nowrap">{formatNum(v)}</span>
+                                </div>
+                                <span className="text-slate-300 text-3xl lg:text-4xl mx-2 shrink-0">=</span>
+                                <span className="text-indigo-600 whitespace-nowrap shrink-0">{formatNum(t)}</span>
+                            </>
+                        )}
+                    </div>
+                </div>
+             </div>
+          </div>
+
+          {/* 底部：雙方控制面板對決 */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            
+            {/* 進攻方操作面板 */}
+            <div className={`p-8 rounded-[2.5rem] border-4 transition-all shadow-sm ${activeChar === 'Achilles' ? 'bg-slate-50 border-slate-200' : 'bg-white border-amber-100'}`}>
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="font-black text-slate-800 text-xl flex items-center gap-2">
+                  <Zap className={activeChar === 'Achilles' ? 'text-slate-400' : 'text-amber-500'} /> 
+                  進攻方調整
+                </h3>
+                <span className="text-[10px] bg-slate-200 text-slate-500 px-3 py-1 rounded-full font-black uppercase tracking-widest">Hero</span>
+              </div>
+              
+              {activeChar === 'Achilles' ? (
+                <div className="py-12 text-center text-slate-400 font-bold italic border-2 border-dashed border-slate-200 rounded-[1.5rem] text-sm">
+                   🐢 阿基里斯為基準模式 (v=1)，無法調整變數。
+                </div>
+              ) : (
+                <div>
+                  <div className="bg-slate-50 p-4 rounded-2xl mb-6 text-base text-slate-600 font-bold border border-slate-100">
+                    {activeChar === 'Quicksilver' && '🏃 快銀：操作分母「速率 v」。拉動滑桿提升速度，觀察時間如何縮短。'}
+                    {activeChar === 'Flash' && '⚡ 閃電俠：操作結果「時間 t」。當你要求極短的時間到達，速率會變多大？'}
+                  </div>
+
+                  <div className="flex justify-between items-end mb-4 px-2">
+                    <div className="font-mono font-black text-5xl text-slate-800 bg-slate-100 px-4 py-2 rounded-2xl border border-slate-200">
+                        {activeChar === 'Quicksilver' ? formatNum(v) : formatNum(t, 1)}
+                    </div>
+                    <span className="text-sm font-black text-slate-500 uppercase tracking-widest pb-2">
+                        目前的 {activeChar === 'Quicksilver' ? '速率 (v)' : '時間 (t)'}
+                    </span>
+                  </div>
+                  
+                  <input 
+                    type="range" min="0" max={activeChar === 'Quicksilver' ? 1000 : 100} 
+                    value={heroSlider} 
+                    onChange={(e) => setHeroSlider(parseInt(e.target.value))}
+                    className={`w-full h-4 rounded-full appearance-none cursor-pointer ${activeChar === 'Flash' ? 'bg-red-100 accent-red-500' : 'bg-amber-100 accent-amber-500'}`}
+                  />
+                  <div className="flex justify-between mt-4 px-2 text-sm font-black text-slate-500 uppercase">
+                    <span>{activeChar === 'Flash' ? '時間長' : '速度慢'}</span>
+                    <span>{activeChar === 'Flash' ? '瞬間 (t=0)' : '極速 (v=1000)'}</span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* 防禦方操作面板 (五條悟) */}
+            <div className={`p-8 rounded-[2.5rem] border-4 transition-all shadow-md ${isGojoActive ? 'bg-indigo-50 border-indigo-200' : 'bg-slate-900 border-slate-800 text-white'}`}>
+              <div className="flex justify-between items-center mb-6">
+                <h3 className={`font-black text-xl flex items-center gap-2 ${isGojoActive ? 'text-indigo-900' : 'text-white'}`}>
+                  <Shield className={isGojoActive ? 'text-indigo-600' : 'text-slate-500'} /> 
+                  防禦方：五條悟干預
+                </h3>
+                
+                {/* 開關按鈕 */}
+                <button 
+                  onClick={() => setIsGojoActive(!isGojoActive)}
+                  className={`px-4 py-2 rounded-full font-black text-sm uppercase tracking-widest transition-all ${isGojoActive ? 'bg-indigo-600 text-white shadow-lg' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'}`}
+                >
+                  {isGojoActive ? '關閉無下限' : '開啟無下限'}
+                </button>
+              </div>
+
+              {!isGojoActive ? (
+                <div className="py-12 text-center text-slate-500 font-bold italic border-2 border-dashed border-slate-700 rounded-[1.5rem] text-sm">
+                   點擊上方按鈕開啟「無下限術式」，強行修改空間數學法則。
+                </div>
+              ) : (
+                <div className="animate-fade-in">
+                  <div className="bg-white/60 p-4 rounded-2xl mb-6 text-base text-indigo-800 font-bold border border-indigo-100">
+                    🧿 五條悟：強行在分子「距離 d」加入極限運算 ÷ (1-x)。試著將 x 拉滿，看看對手的算式會發生什麼事！
+                  </div>
+
+                  <div className="flex justify-between items-end mb-4 px-2">
+                    <div className="font-mono font-black text-5xl text-indigo-600 bg-white px-4 py-2 rounded-2xl shadow-sm border border-indigo-100">
+                        {x.toFixed(2)}
+                    </div>
+                    <span className="text-sm font-black text-indigo-500 uppercase tracking-widest pb-2">
+                        空間干預強度 (x)
+                    </span>
+                  </div>
+                  
+                  <input 
+                    type="range" min="0" max="100" 
+                    value={gojoSlider} 
+                    onChange={(e) => setGojoSlider(parseInt(e.target.value))}
+                    className="w-full h-4 bg-indigo-200 rounded-full appearance-none cursor-pointer accent-indigo-600"
+                  />
+                  <div className="flex justify-between mt-4 px-2 text-sm font-black text-indigo-500 uppercase tracking-widest">
+                    <span>正常空間 (x=0)</span>
+                    <span>無限分割 (x=1)</span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+          </div>
+
+          {/* 老師的筆記 */}
+          <div className="bg-indigo-900 p-8 rounded-[2.5rem] text-white shadow-xl relative overflow-hidden">
+             <div className="absolute -right-4 -top-4 opacity-10 rotate-12"><HelpCircle size={100} /></div>
+             <h4 className="font-black text-indigo-400 mb-4 text-sm uppercase tracking-widest flex items-center gap-2">
+                 <HelpCircle size={18}/> 實驗室結論
+             </h4>
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-base leading-relaxed font-medium text-indigo-100">
+                 <div>
+                    <span className="text-amber-400 font-bold">🏃 當快銀遇上五條悟：</span><br/>
+                    即使你把快銀的速度 ($v$) 拉到最大，只要五條悟把空間強度 ($x$) 拉滿，分子就會爆炸成 $\infty$。結果時間 $t$ 依然是 $\infty$。這證明了**「修改物理規則 (改變分子)」比「單純提升數值 (加大分母)」還要強大**。
+                 </div>
+                 <div>
+                    <span className="text-red-400 font-bold">⚡ 當閃電俠遇上五條悟：</span><br/>
+                    閃電俠直接鎖定時間 $t=0$。在算式上，任何數除以 $0$ 都會迫使速率 $v$ 變成 $\infty$。他跳過了空間的計算過程，這就是為什麼**「不連續的瞬移 (強制令 t=0)」可以無視無下限**。
+                 </div>
+             </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default App;
